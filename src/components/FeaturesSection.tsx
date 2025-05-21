@@ -151,11 +151,11 @@ const features = [
 
 const FeaturesSection = () => {
   return (
-    <section className="py-16 bg-gray-50">
+    <section className="py-20 bg-gradient-to-b from-white to-education-light">
       <div className="container mx-auto px-4">
         <div className="text-center max-w-3xl mx-auto mb-12">
-          <h2 className="text-3xl font-bold mb-4">Recursos do Portal</h2>
-          <p className="text-gray-600">
+          <h2 className="text-3xl font-bold mb-4 text-education-primary">Recursos do Portal</h2>
+          <p className="text-gray-600 font-body">
             O EducAraraquara reúne ferramentas essenciais para facilitar a gestão educacional,
             promover a comunicação e aprimorar a experiência de aprendizagem.
           </p>
@@ -163,15 +163,16 @@ const FeaturesSection = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {features.map((feature, index) => (
-            <Card key={index} className="card-hover border-t-4 border-t-education-primary">
+            <Card key={index} className="card-hover border-0 shadow-soft overflow-hidden bg-white rounded-lg stagger-item opacity-0 animate-fade-in">
+              <div className="absolute h-1 top-0 left-0 right-0 bg-gradient-to-r from-education-primary to-education-accent"></div>
               <CardHeader className="flex flex-row items-center gap-4 pb-2">
-                <div className="bg-education-light p-2 rounded-lg">
+                <div className="bg-education-light p-3 rounded-lg">
                   {feature.icon}
                 </div>
-                <CardTitle className="text-xl">{feature.title}</CardTitle>
+                <CardTitle className="text-xl text-education-primary">{feature.title}</CardTitle>
               </CardHeader>
               <CardContent>
-                <CardDescription className="text-gray-600">
+                <CardDescription className="text-gray-600 font-body">
                   {feature.description}
                 </CardDescription>
               </CardContent>
