@@ -64,11 +64,14 @@ export default {
 					ring: 'hsl(var(--sidebar-ring))'
 				},
 				education: {
-					primary: '#0078D4',
-					secondary: '#107C41',
-					accent: '#F3B61F',
+					primary: '#004B8D', // Araraquara blue
+					secondary: '#CE2E1A', // Araraquara red
+					accent: '#F7B516', // Araraquara yellow
 					light: '#E6F2FA',
-					dark: '#004E8C'
+					dark: '#003766',
+					green: '#006633', // Additional green from Araraquara site
+					gray: '#58595B', // Text color from Araraquara site
+					lightgray: '#F2F2F2' // Background color from Araraquara site
 				}
 			},
 			borderRadius: {
@@ -118,7 +121,7 @@ export default {
 			},
 			fontFamily: {
 				sans: ['Roboto', 'sans-serif'],
-				heading: ['Open Sans', 'sans-serif']
+				heading: ['Georgia', 'serif'] // Araraquara site uses a serif font for headings
 			}
 		}
 	},

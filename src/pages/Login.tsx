@@ -35,31 +35,19 @@ const Login = () => {
   return (
     <>
       <Navbar />
-      <div className="min-h-screen bg-gray-50 py-12">
-        <div className="container mx-auto px-4">
+      <div className="min-h-screen bg-education-lightgray py-12">
+        <div className="araraquara-container">
           <div className="max-w-md mx-auto">
             <Card className="border-t-4 border-t-education-primary">
               <CardHeader className="text-center">
                 <div className="w-16 h-16 bg-education-primary rounded-full mx-auto flex items-center justify-center mb-4">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="white"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M18 8V7a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
-                    <path d="M10 8H6a4 4 0 0 0-4 4v2"></path>
-                    <circle cx="16" cy="15" r="5"></circle>
-                    <path d="M22 22a1.5 1.5 0 0 0-3 0"></path>
-                    <path d="M13 22a1.5 1.5 0 0 0-3 0"></path>
-                  </svg>
+                  <img 
+                    src="https://www.araraquara.sp.gov.br/++theme++plonegovbr.portal_araraquara/img/brasao-branco.png" 
+                    alt="Brasão de Araraquara" 
+                    className="h-10 w-auto"
+                  />
                 </div>
-                <CardTitle className="text-2xl">Portal EducAraraquara</CardTitle>
+                <CardTitle className="text-2xl text-education-primary font-heading">Portal EducAraraquara</CardTitle>
                 <CardDescription>Acesse sua conta para continuar</CardDescription>
               </CardHeader>
 
@@ -73,7 +61,7 @@ const Login = () => {
                   <TabsContent value="login">
                     <form onSubmit={handleLogin} className="space-y-4">
                       <div className="space-y-2">
-                        <label htmlFor="email" className="text-sm font-medium">
+                        <label htmlFor="email" className="text-sm font-medium text-education-gray">
                           E-mail institucional
                         </label>
                         <Input
@@ -83,12 +71,13 @@ const Login = () => {
                           onChange={(e) => setLoginEmail(e.target.value)}
                           placeholder="seu.email@educararaquara.sp.gov.br"
                           required
+                          className="border-education-gray/30 focus-visible:ring-education-primary"
                         />
                       </div>
 
                       <div className="space-y-2">
                         <div className="flex justify-between">
-                          <label htmlFor="password" className="text-sm font-medium">
+                          <label htmlFor="password" className="text-sm font-medium text-education-gray">
                             Senha
                           </label>
                         </div>
@@ -99,10 +88,11 @@ const Login = () => {
                           onChange={(e) => setLoginPassword(e.target.value)}
                           placeholder="Digite sua senha"
                           required
+                          className="border-education-gray/30 focus-visible:ring-education-primary"
                         />
                       </div>
 
-                      <Button type="submit" className="w-full">
+                      <Button type="submit" className="w-full bg-education-primary hover:bg-education-dark">
                         Entrar
                       </Button>
                     </form>
@@ -110,10 +100,10 @@ const Login = () => {
                     <div className="mt-4">
                       <div className="relative">
                         <div className="absolute inset-0 flex items-center">
-                          <span className="w-full border-t" />
+                          <span className="w-full border-t border-gray-300" />
                         </div>
                         <div className="relative flex justify-center text-xs uppercase">
-                          <span className="bg-white px-2 text-muted-foreground">
+                          <span className="bg-white px-2 text-education-gray">
                             Ou continue com
                           </span>
                         </div>
@@ -122,7 +112,7 @@ const Login = () => {
                       <div className="mt-4">
                         <Button
                           variant="outline"
-                          className="w-full border-2 flex items-center justify-center gap-2"
+                          className="w-full border-2 flex items-center justify-center gap-2 text-education-primary border-education-primary/30"
                         >
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -146,7 +136,7 @@ const Login = () => {
                   <TabsContent value="recovery">
                     <form onSubmit={handleRecovery} className="space-y-4">
                       <div className="space-y-2">
-                        <label htmlFor="recovery-email" className="text-sm font-medium">
+                        <label htmlFor="recovery-email" className="text-sm font-medium text-education-gray">
                           E-mail institucional
                         </label>
                         <Input
@@ -156,10 +146,11 @@ const Login = () => {
                           onChange={(e) => setRecoveryEmail(e.target.value)}
                           placeholder="seu.email@educararaquara.sp.gov.br"
                           required
+                          className="border-education-gray/30 focus-visible:ring-education-primary"
                         />
                       </div>
 
-                      <Button type="submit" className="w-full">
+                      <Button type="submit" className="w-full bg-education-primary hover:bg-education-dark">
                         Recuperar Senha
                       </Button>
                     </form>
@@ -168,7 +159,7 @@ const Login = () => {
               </CardContent>
 
               <CardFooter className="flex flex-col space-y-4 pt-0">
-                <div className="text-center text-sm text-gray-500">
+                <div className="text-center text-sm text-education-gray">
                   <p>
                     Problemas para acessar?{" "}
                     <Link to="/contato" className="text-education-primary hover:underline">

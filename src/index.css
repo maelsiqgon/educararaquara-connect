@@ -1,5 +1,5 @@
 
-@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700&family=Roboto:wght@300;400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700&family=Roboto:wght@300;400;500;700&family=Georgia:wght@400;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -7,44 +7,44 @@
 
 @layer base {
   :root {
-    --background: 210 50% 98%;
-    --foreground: 222.2 84% 4.9%;
+    --background: 0 0% 98%;
+    --foreground: 214 17% 22%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 214 17% 22%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 214 17% 22%;
 
-    --primary: 210 79% 42%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 209 100% 28%;
+    --primary-foreground: 0 0% 98%;
 
-    --secondary: 142 75% 28%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 359 78% 45%;
+    --secondary-foreground: 0 0% 98%;
 
-    --muted: 210 40% 96.1%;
+    --muted: 0 0% 96%;
     --muted-foreground: 215.4 16.3% 46.9%;
 
-    --accent: 40 89% 54%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 43 92% 53%;
+    --accent-foreground: 214 17% 22%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 210 79% 42%;
+    --ring: 209 100% 28%;
 
-    --radius: 0.5rem;
+    --radius: 0.25rem;
 
     --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 222.2 84% 4.9%;
-    --sidebar-primary: 210 79% 42%;
+    --sidebar-primary: 209 100% 28%;
     --sidebar-primary-foreground: 0 0% 98%;
     --sidebar-accent: 210 40% 96.1%;
     --sidebar-accent-foreground: 222.2 47.4% 11.2%;
     --sidebar-border: 214.3 31.8% 91.4%;
-    --sidebar-ring: 210 79% 42%;
+    --sidebar-ring: 209 100% 28%;
   }
 
   .dark {
@@ -57,16 +57,16 @@
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 210 79% 42%;
+    --primary: 209 100% 28%;
     --primary-foreground: 210 40% 98%;
 
-    --secondary: 142 75% 28%;
+    --secondary: 359 78% 45%;
     --secondary-foreground: 210 40% 98%;
 
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
 
-    --accent: 40 89% 54%;
+    --accent: 43 92% 53%;
     --accent-foreground: 222.2 47.4% 11.2%;
 
     --destructive: 0 62.8% 30.6%;
@@ -78,7 +78,7 @@
     
     --sidebar-background: 222.2 84% 4.9%;
     --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 210 79% 42%;
+    --sidebar-primary: 209 100% 28%;
     --sidebar-primary-foreground: 0 0% 98%;
     --sidebar-accent: 217.2 32.6% 17.5%;
     --sidebar-accent-foreground: 210 40% 98%;
@@ -119,10 +119,22 @@
   }
   
   .nav-link {
-    @apply text-gray-700 hover:text-education-primary transition-colors duration-300;
+    @apply text-education-gray hover:text-education-primary transition-colors duration-300;
   }
   
   .nav-link-active {
     @apply text-education-primary font-medium;
+  }
+
+  .araraquara-container {
+    @apply container mx-auto px-4 max-w-7xl;
+  }
+  
+  .section-title {
+    @apply text-2xl md:text-3xl font-heading font-bold text-education-primary mb-6 relative after:content-[''] after:absolute after:left-0 after:bottom-0 after:w-16 after:h-1 after:bg-education-secondary;
+  }
+  
+  .secondary-title {
+    @apply text-xl md:text-2xl font-heading font-bold text-education-green mb-4;
   }
 }

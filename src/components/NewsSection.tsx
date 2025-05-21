@@ -11,7 +11,7 @@ const newsItems = [
     description: "Pais e responsáveis já podem realizar a matrícula dos estudantes para o próximo ano letivo através do portal EducAraraquara.",
     date: "18/05/2025",
     category: "Matrículas",
-    image: "https://via.placeholder.com/600x400?text=Matriculas",
+    image: "https://www.araraquara.sp.gov.br/imagens/escola.JPG/@@images/image",
   },
   {
     id: 2,
@@ -19,7 +19,7 @@ const newsItems = [
     description: "A Secretaria de Educação entregou 15 novos laboratórios de informática em escolas da rede municipal, beneficiando mais de 8 mil alunos.",
     date: "12/05/2025",
     category: "Infraestrutura",
-    image: "https://via.placeholder.com/600x400?text=Laboratorios",
+    image: "https://www.araraquara.sp.gov.br/imagens/aula-de-informatica-lab-2.jpeg/@@images/image",
   },
   {
     id: 3,
@@ -27,24 +27,24 @@ const newsItems = [
     description: "Evento acontecerá no Centro Cultural e contará com apresentações de dança, música, teatro e exposições de trabalhos dos alunos.",
     date: "05/05/2025",
     category: "Eventos",
-    image: "https://via.placeholder.com/600x400?text=Mostra+Cultural",
+    image: "https://www.araraquara.sp.gov.br/imagens/cultura-escola.jpeg/@@images/image",
   },
 ];
 
 const NewsSection = () => {
   return (
-    <section className="py-16">
-      <div className="container mx-auto px-4">
+    <section className="py-16 bg-education-lightgray">
+      <div className="araraquara-container">
         <div className="flex justify-between items-center mb-8">
-          <h2 className="text-3xl font-bold">Últimas Notícias</h2>
-          <Button asChild variant="outline">
+          <h2 className="section-title pb-4">Últimas Notícias</h2>
+          <Button asChild variant="outline" className="border-education-primary text-education-primary hover:bg-education-light">
             <Link to="/noticias">Ver todas</Link>
           </Button>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {newsItems.map((item) => (
-            <Card key={item.id} className="overflow-hidden card-hover">
+            <Card key={item.id} className="overflow-hidden card-hover border-t-4 border-t-education-primary">
               <div className="h-48 overflow-hidden">
                 <img
                   src={item.image}
@@ -54,15 +54,15 @@ const NewsSection = () => {
               </div>
               <CardHeader className="pb-2">
                 <div className="flex justify-between items-center mb-1">
-                  <span className="text-xs font-medium text-education-primary bg-education-light px-2 py-1 rounded">
+                  <span className="text-xs font-medium text-white bg-education-primary px-2 py-1 rounded-sm">
                     {item.category}
                   </span>
-                  <span className="text-xs text-gray-500">{item.date}</span>
+                  <span className="text-xs text-education-gray">{item.date}</span>
                 </div>
-                <CardTitle className="text-xl">{item.title}</CardTitle>
+                <CardTitle className="text-xl text-education-primary">{item.title}</CardTitle>
               </CardHeader>
               <CardContent>
-                <CardDescription className="text-gray-600 line-clamp-3">
+                <CardDescription className="text-education-gray line-clamp-3">
                   {item.description}
                 </CardDescription>
               </CardContent>
