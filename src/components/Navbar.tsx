@@ -1,19 +1,14 @@
-
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Search, Menu, X, ChevronDown } from "lucide-react";
 import AccessibilityMenu from "./AccessibilityMenu";
-
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
-
-  return (
-    <header className="sticky top-0 z-50 bg-white shadow-sm">
+  return <header className="sticky top-0 z-50 bg-white shadow-sm">
       {/* Top bar - Institutional */}
       <div className="bg-education-primary text-white py-1">
         <div className="araraquara-container flex justify-between items-center">
@@ -35,11 +30,7 @@ const Navbar = () => {
           {/* Logo Section */}
           <Link to="/" className="flex items-center gap-3">
             <div className="flex items-center">
-              <img 
-                src="https://www.araraquara.sp.gov.br/++theme++plonegovbr.portal_araraquara/img/brasao.png" 
-                alt="Brasão de Araraquara" 
-                className="h-12"
-              />
+              <img alt="Brasão de Araraquara" className="h-12" src="/lovable-uploads/0032e082-f844-4918-852d-e45ad583f331.png" />
             </div>
             <div>
               <h1 className="text-lg font-bold text-education-primary">Secretaria de Educação</h1>
@@ -73,29 +64,20 @@ const Navbar = () => {
 
           {/* Login Button */}
           <div className="hidden md:block">
-            <Button 
-              asChild
-              variant="outline" 
-              className="border-2 border-education-primary text-education-primary hover:bg-education-light"
-            >
+            <Button asChild variant="outline" className="border-2 border-education-primary text-education-primary hover:bg-education-light">
               <Link to="/login">Acessar Portal</Link>
             </Button>
           </div>
 
           {/* Mobile Menu Button */}
-          <button 
-            className="md:hidden text-education-gray" 
-            onClick={toggleMenu}
-            aria-label={isMenuOpen ? "Fechar menu" : "Abrir menu"}
-          >
+          <button className="md:hidden text-education-gray" onClick={toggleMenu} aria-label={isMenuOpen ? "Fechar menu" : "Abrir menu"}>
             {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
         </div>
       </div>
 
       {/* Mobile Navigation */}
-      {isMenuOpen && (
-        <div className="md:hidden bg-white border-t animate-fade-in">
+      {isMenuOpen && <div className="md:hidden bg-white border-t animate-fade-in">
           <div className="container mx-auto px-4 py-3 flex flex-col space-y-3">
             <Link to="/" className="nav-link-active py-2">Início</Link>
             <details className="group">
@@ -119,18 +101,11 @@ const Navbar = () => {
               </button>
             </div>
             
-            <Button 
-              asChild
-              variant="outline" 
-              className="border-2 border-education-primary text-education-primary hover:bg-education-light w-full"
-            >
+            <Button asChild variant="outline" className="border-2 border-education-primary text-education-primary hover:bg-education-light w-full">
               <Link to="/login">Acessar Portal</Link>
             </Button>
           </div>
-        </div>
-      )}
-    </header>
-  );
+        </div>}
+    </header>;
 };
-
 export default Navbar;
