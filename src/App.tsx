@@ -9,6 +9,7 @@ import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 import Admin from "./pages/Admin";
 import AdminLogin from "./pages/AdminLogin";
+import AdminPasswordRecovery from "./pages/AdminPasswordRecovery";
 import AdminProtected from "./components/AdminProtected";
 
 const queryClient = new QueryClient();
@@ -23,6 +24,7 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/login" element={<Login />} />
           <Route path="/admin/login" element={<AdminLogin />} />
+          <Route path="/admin/recuperar-senha" element={<AdminPasswordRecovery />} />
           <Route path="/admin" element={
             <AdminProtected>
               <Admin />

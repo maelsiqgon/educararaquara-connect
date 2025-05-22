@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -91,9 +91,9 @@ const AdminLogin = () => {
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="password">Senha</Label>
-                  <a href="#" className="text-sm font-medium text-education-primary hover:underline">
+                  <Link to="/admin/recuperar-senha" className="text-sm font-medium text-education-primary hover:underline">
                     Esqueceu a senha?
-                  </a>
+                  </Link>
                 </div>
                 <Input
                   id="password"
