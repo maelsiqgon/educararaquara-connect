@@ -1,5 +1,4 @@
-
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,6 +8,8 @@ import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
+import { getCurrentUser, logout } from "@/components/AdminProtected";
+import { useNavigate } from "react-router-dom";
 
 // Mock data for sections management
 const initialSections = [
@@ -55,6 +56,8 @@ const Admin = () => {
   const [sections, setSections] = useState(initialSections);
   const [news, setNews] = useState(initialNews);
   const [editingSectionId, setEditingSectionId] = useState<number | null>(null);
+  const [currentUser, setCurrentUser] = useState(getCurrentUser());
+  const navigate = useNavigate();
   
   // Section management functions
   const toggleSectionActive = (id: number) => {
@@ -95,19 +98,47 @@ const Admin = () => {
     toast.success("Notícia removida com sucesso");
   };
 
+  const handleLogout = () => {
+    logout();
+    toast.success("Logout realizado com sucesso");
+    navigate("/admin/login");
+  };
+
   return (
     <div className="min-h-screen bg-education-lightgray">
       <header className="bg-education-primary text-white py-4 shadow-md">
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center">
             <h1 className="text-2xl font-bold">Painel Administrativo</h1>
-            <Button 
-              variant="outline" 
-              className="border-white text-white hover:bg-white/10"
-              asChild
-            >
-              <a href="/">Voltar ao Portal</a>
-            </Button>
+            <div className="flex gap-4 items-center">
+              {currentUser && (
+                <div className="text-sm text-white mr-4">
+                  <span className="opacity-80">Logado como: </span>
+                  <span className="font-medium">{currentUser.name}</span>
+                  <span className="ml-2 bg-white/20 px-2 py-1 rounded text-xs">
+                    {currentUser.role === "super_admin" 
+                      ? "Super Admin" 
+                      : currentUser.role === "content_editor"
+                        ? "Editor de Conteúdo"
+                        : "Visualizador"}
+                  </span>
+                </div>
+              )}
+              <Button 
+                variant="outline" 
+                className="border-white text-white hover:bg-white/10"
+                onClick={handleLogout}
+              >
+                Sair
+              </Button>
+              <Button 
+                variant="outline" 
+                className="border-white text-white hover:bg-white/10"
+                asChild
+              >
+                <a href="/">Voltar ao Portal</a>
+              </Button>
+            </div>
           </div>
         </div>
       </header>
@@ -121,6 +152,32 @@ const Admin = () => {
             </CardDescription>
           </CardHeader>
           <CardContent className="pt-6">
+            {currentUser && (
+              <div className="mb-4 p-4 bg-education-light/50 rounded-lg">
+                <h3 className="font-medium text-education-primary mb-2">Suas Permissões:</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                  {currentUser.permissions.map((permission) => (
+                    <div key={permission} className="flex items-center gap-2">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="text-green-600"
+                      >
+                        <path d="M20 6 9 17l-5-5" />
+                      </svg>
+                      <span className="capitalize">{permission.replace('_', ' ')}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
             <p className="text-education-gray">
               Neste painel, você pode gerenciar as seções, notícias e outros elementos da página inicial.
               Utilize as abas abaixo para navegar entre as diferentes opções de gerenciamento.

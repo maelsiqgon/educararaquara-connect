@@ -6,6 +6,26 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
+import { AdminUser } from "@/components/AdminProtected";
+
+// Mock de credenciais válidas para login administrativo
+const validCredentials = [
+  {
+    email: "admin@educ.araraquara.sp.gov.br",
+    password: "admin123",
+    role: "super_admin"
+  },
+  {
+    email: "editor@educ.araraquara.sp.gov.br",
+    password: "editor123",
+    role: "content_editor"
+  },
+  {
+    email: "viewer@educ.araraquara.sp.gov.br",
+    password: "viewer123",
+    role: "viewer"
+  }
+];
 
 const AdminLogin = () => {
   const [email, setEmail] = useState("");
@@ -19,11 +39,18 @@ const AdminLogin = () => {
     
     // Mock login process
     setTimeout(() => {
-      // For demo purposes - in a real app, validate credentials against a backend
-      if (email === "admin@educ.araraquara.sp.gov.br" && password === "admin123") {
-        // Set mock auth token
-        localStorage.setItem("admin_auth_token", "demo-token-123");
-        toast.success("Login bem-sucedido!");
+      // Verificar credenciais
+      const credential = validCredentials.find(
+        cred => cred.email === email && cred.password === password
+      );
+      
+      if (credential) {
+        // Salvar dados de autenticação no localStorage
+        localStorage.setItem("admin_auth_token", "mock-jwt-token-" + Date.now());
+        localStorage.setItem("admin_user_email", credential.email);
+        localStorage.setItem("admin_user_role", credential.role);
+        
+        toast.success("Login bem-sucedido como " + credential.role.replace('_', ' '));
         navigate("/admin");
       } else {
         toast.error("Credenciais inválidas. Tente novamente.");
@@ -99,9 +126,10 @@ const AdminLogin = () => {
         </Card>
         
         <div className="text-center text-xs text-gray-500">
-          <p>Nota: Para fins de demonstração, use:</p>
-          <p>Email: admin@educ.araraquara.sp.gov.br</p>
-          <p>Senha: admin123</p>
+          <p>Para fins de demonstração, use:</p>
+          <p>Super Admin: admin@educ.araraquara.sp.gov.br / admin123</p>
+          <p>Editor: editor@educ.araraquara.sp.gov.br / editor123</p>
+          <p>Visualizador: viewer@educ.araraquara.sp.gov.br / viewer123</p>
         </div>
       </div>
     </div>
