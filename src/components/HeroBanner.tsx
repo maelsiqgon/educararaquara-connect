@@ -28,6 +28,9 @@ const HeroBanner = () => {
               <Button asChild variant="outline" className="border-white text-white hover:bg-white/10 transition-all duration-300">
                 <Link to="/conheca">Conheça mais</Link>
               </Button>
+              <Button asChild variant="outline" className="border-white bg-white/10 text-white hover:bg-white/20 transition-all duration-300">
+                <Link to="/admin/login">Área Administrativa</Link>
+              </Button>
             </div>
             
             <div className="grid grid-cols-3 gap-4 pt-4 text-center">
