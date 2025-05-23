@@ -1,11 +1,7 @@
-
 import { Link } from "react-router-dom";
-
 const Footer = () => {
   const currentYear = new Date().getFullYear();
-  
-  return (
-    <footer className="bg-gradient-to-b from-education-dark to-education-primary text-white relative overflow-hidden">
+  return <footer className="bg-gradient-to-b from-education-dark to-education-primary text-white relative overflow-hidden">
       {/* Background pattern */}
       <div className="absolute inset-0 pattern-dot-bg opacity-5"></div>
       
@@ -13,11 +9,7 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           <div className="space-y-4">
             <div className="flex items-center gap-3">
-              <img 
-                src="https://www.araraquara.sp.gov.br/++theme++plonegovbr.portal_araraquara/img/brasao-branco.png" 
-                alt="Brasão de Araraquara" 
-                className="h-12"
-              />
+              <img alt="Brasão de Araraquara" className="h-12" src="/lovable-uploads/db2cf68a-4d32-4fce-9f2b-4c87c5b04448.png" />
               <div>
                 <h3 className="text-lg font-bold">Secretaria de Educação</h3>
                 <p className="text-xs text-gray-300">Prefeitura de Araraquara</p>
@@ -46,44 +38,58 @@ const Footer = () => {
           <div>
             <h3 className="font-bold mb-4 text-education-accent border-b border-education-accent/30 pb-2">Links Rápidos</h3>
             <ul className="space-y-2 text-sm font-body">
-              {[
-                {label: "Página Inicial", url: "/"},
-                {label: "Nossas Escolas", url: "/escolas"},
-                {label: "Projetos Educacionais", url: "/projetos"},
-                {label: "Calendário Escolar", url: "/calendario"},
-                {label: "Notícias e Eventos", url: "/noticias"}
-              ].map((link, index) => (
-                <li key={index}>
+              {[{
+              label: "Página Inicial",
+              url: "/"
+            }, {
+              label: "Nossas Escolas",
+              url: "/escolas"
+            }, {
+              label: "Projetos Educacionais",
+              url: "/projetos"
+            }, {
+              label: "Calendário Escolar",
+              url: "/calendario"
+            }, {
+              label: "Notícias e Eventos",
+              url: "/noticias"
+            }].map((link, index) => <li key={index}>
                   <Link to={link.url} className="hover:text-education-accent transition-colors flex items-center gap-1">
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-education-accent/70">
-                      <path d="m9 18 6-6-6-6"/>
+                      <path d="m9 18 6-6-6-6" />
                     </svg>
                     {link.label}
                   </Link>
-                </li>
-              ))}
+                </li>)}
             </ul>
           </div>
           
           <div>
             <h3 className="font-bold mb-4 text-education-accent border-b border-education-accent/30 pb-2">Acesso</h3>
             <ul className="space-y-2 text-sm font-body">
-              {[
-                {label: "Portal do Aluno", url: "/login"},
-                {label: "Portal do Professor", url: "/login"},
-                {label: "Portal do Responsável", url: "/login"},
-                {label: "Gestão Escolar", url: "/login"},
-                {label: "Área da Secretaria", url: "/login"}
-              ].map((link, index) => (
-                <li key={index}>
+              {[{
+              label: "Portal do Aluno",
+              url: "/login"
+            }, {
+              label: "Portal do Professor",
+              url: "/login"
+            }, {
+              label: "Portal do Responsável",
+              url: "/login"
+            }, {
+              label: "Gestão Escolar",
+              url: "/login"
+            }, {
+              label: "Área da Secretaria",
+              url: "/login"
+            }].map((link, index) => <li key={index}>
                   <Link to={link.url} className="hover:text-education-accent transition-colors flex items-center gap-1">
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-education-accent/70">
-                      <path d="m9 18 6-6-6-6"/>
+                      <path d="m9 18 6-6-6-6" />
                     </svg>
                     {link.label}
                   </Link>
-                </li>
-              ))}
+                </li>)}
             </ul>
           </div>
           
@@ -130,8 +136,6 @@ const Footer = () => {
           </div>
         </div>
       </div>
-    </footer>
-  );
+    </footer>;
 };
-
 export default Footer;
