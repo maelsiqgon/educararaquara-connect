@@ -1,8 +1,8 @@
-
 import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { School, Calendar, ListChecked, Trophy } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { ListCheck, BookOpen, Users, Shapes } from "lucide-react";
 
 const EducationLevelTabs = () => {
   return (

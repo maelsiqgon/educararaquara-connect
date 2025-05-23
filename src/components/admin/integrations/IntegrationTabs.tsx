@@ -3,7 +3,8 @@ import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import MicrosoftIntegration from "./MicrosoftIntegration";
 import SocialMediaIntegration from "./SocialMediaIntegration";
-import ChatInterface from "../chat/ChatInterface";
+import TeamsIntegration from "./TeamsIntegration";
+import ChatAI from "../chat/ChatAI";
 
 const IntegrationTabs = () => {
   return (
@@ -13,7 +14,10 @@ const IntegrationTabs = () => {
       <Tabs defaultValue="microsoft" className="space-y-6">
         <TabsList className="bg-white shadow-sm border-0 p-1 rounded-lg">
           <TabsTrigger value="microsoft" className="data-[state=active]:bg-education-light data-[state=active]:text-education-primary">
-            Microsoft 365 e Teams
+            Microsoft 365 e Azure AD
+          </TabsTrigger>
+          <TabsTrigger value="teams" className="data-[state=active]:bg-education-light data-[state=active]:text-education-primary">
+            Microsoft Teams
           </TabsTrigger>
           <TabsTrigger value="social" className="data-[state=active]:bg-education-light data-[state=active]:text-education-primary">
             Redes Sociais
@@ -27,12 +31,16 @@ const IntegrationTabs = () => {
           <MicrosoftIntegration />
         </TabsContent>
         
+        <TabsContent value="teams">
+          <TeamsIntegration />
+        </TabsContent>
+        
         <TabsContent value="social">
           <SocialMediaIntegration />
         </TabsContent>
         
         <TabsContent value="chat">
-          <ChatInterface />
+          <ChatAI />
         </TabsContent>
       </Tabs>
     </div>
