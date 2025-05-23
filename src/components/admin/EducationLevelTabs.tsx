@@ -2,7 +2,7 @@ import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ListCheck, BookOpen, Users, Shapes } from "lucide-react";
+import { ListCheck, BookOpen, Users, Shapes, Calendar as CalendarIcon, School as SchoolIcon, Trophy as TrophyIcon } from "lucide-react";
 
 const EducationLevelTabs = () => {
   return (
@@ -27,7 +27,7 @@ const EducationLevelTabs = () => {
             <Card className="shadow-sm border-0">
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg flex items-center">
-                  <Calendar className="h-5 w-5 mr-2 text-pink-500" />
+                  <CalendarIcon className="h-5 w-5 mr-2 text-pink-500" />
                   Diário de Atividades
                 </CardTitle>
                 <CardDescription>
@@ -75,7 +75,7 @@ const EducationLevelTabs = () => {
             <Card className="shadow-sm border-0">
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg flex items-center">
-                  <School className="h-5 w-5 mr-2 text-purple-500" />
+                  <SchoolIcon className="h-5 w-5 mr-2 text-purple-500" />
                   Álbum Digital
                 </CardTitle>
                 <CardDescription>
@@ -122,7 +122,7 @@ const EducationLevelTabs = () => {
             <Card className="shadow-sm border-0">
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg flex items-center">
-                  <ListChecked className="h-5 w-5 mr-2 text-cyan-500" />
+                  <ListCheck className="h-5 w-5 mr-2 text-cyan-500" />
                   Relatórios de Desenvolvimento
                 </CardTitle>
                 <CardDescription>
@@ -174,7 +174,7 @@ const EducationLevelTabs = () => {
             <Card className="shadow-sm border-0">
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg flex items-center">
-                  <School className="h-5 w-5 mr-2 text-blue-500" />
+                  <SchoolIcon className="h-5 w-5 mr-2 text-blue-500" />
                   Trilhas de Aprendizagem
                 </CardTitle>
                 <CardDescription>
@@ -222,7 +222,7 @@ const EducationLevelTabs = () => {
             <Card className="shadow-sm border-0">
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg flex items-center">
-                  <ListChecked className="h-5 w-5 mr-2 text-green-500" />
+                  <ListCheck className="h-5 w-5 mr-2 text-green-500" />
                   Feedback Contínuo
                 </CardTitle>
                 <CardDescription>
@@ -269,7 +269,7 @@ const EducationLevelTabs = () => {
             <Card className="shadow-sm border-0">
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg flex items-center">
-                  <Trophy className="h-5 w-5 mr-2 text-amber-500" />
+                  <TrophyIcon className="h-5 w-5 mr-2 text-amber-500" />
                   Quiz Interativos
                 </CardTitle>
                 <CardDescription>
@@ -320,7 +320,7 @@ const EducationLevelTabs = () => {
             <Card className="shadow-sm border-0">
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg flex items-center">
-                  <Calendar className="h-5 w-5 mr-2 text-indigo-500" />
+                  <CalendarIcon className="h-5 w-5 mr-2 text-indigo-500" />
                   Matrículas Online
                 </CardTitle>
                 <CardDescription>
@@ -368,7 +368,7 @@ const EducationLevelTabs = () => {
             <Card className="shadow-sm border-0">
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg flex items-center">
-                  <ListChecked className="h-5 w-5 mr-2 text-orange-500" />
+                  <ListCheck className="h-5 w-5 mr-2 text-orange-500" />
                   Frequência e Desempenho
                 </CardTitle>
                 <CardDescription>
@@ -415,7 +415,7 @@ const EducationLevelTabs = () => {
             <Card className="shadow-sm border-0">
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg flex items-center">
-                  <School className="h-5 w-5 mr-2 text-teal-500" />
+                  <SchoolIcon className="h-5 w-5 mr-2 text-teal-500" />
                   Relatórios para Gestão
                 </CardTitle>
                 <CardDescription>
