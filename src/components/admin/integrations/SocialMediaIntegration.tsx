@@ -8,8 +8,26 @@ import SocialMediaPublish from "./social-media/SocialMediaPublish";
 import SocialMediaSchedule from "./social-media/SocialMediaSchedule";
 import SocialMediaAnalytics from "./social-media/SocialMediaAnalytics";
 
+// Update the followers type to string to match the expected type
+type SocialNetwork = {
+  id: number;
+  platform: string;
+  name: string;
+  url: string;
+  followers: string; // Changed from number to string
+  connected: boolean;
+  lastPost: string;
+  scheduledPosts: number;
+};
+
 const SocialMediaIntegration = () => {
-  const [networks, setNetworks] = useState(mockSocialNetworks);
+  // Convert followers to string in the initial state
+  const [networks, setNetworks] = useState<SocialNetwork[]>(
+    mockSocialNetworks.map(network => ({
+      ...network,
+      followers: network.followers.toString() // Convert number to string
+    }))
+  );
   
   return (
     <Card className="shadow-sm border-0">

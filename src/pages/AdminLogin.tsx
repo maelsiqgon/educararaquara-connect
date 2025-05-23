@@ -1,12 +1,8 @@
 
 import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { AdminUser } from "@/components/AdminProtected";
+import AuthForm from "@/components/admin/auth/AuthForm";
 
 // Mock de credenciais válidas para login administrativo
 const validCredentials = [
@@ -67,63 +63,16 @@ const AdminLogin = () => {
           <p className="mt-2 text-education-gray">Área Administrativa</p>
         </div>
         
-        <Card className="border-0 shadow-lg">
-          <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl text-center">Login Administrativo</CardTitle>
-            <CardDescription className="text-center">
-              Entre com suas credenciais para acessar o painel
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="admin@educ.araraquara.sp.gov.br"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  className="bg-white focus-visible:ring-education-primary"
-                />
-              </div>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="password">Senha</Label>
-                  <Link to="/admin/recuperar-senha" className="text-sm font-medium text-education-primary hover:underline">
-                    Esqueceu a senha?
-                  </Link>
-                </div>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  className="bg-white focus-visible:ring-education-primary"
-                />
-              </div>
-              <Button
-                type="submit"
-                className="w-full bg-education-primary hover:bg-education-dark"
-                disabled={isLoading}
-              >
-                {isLoading ? "Autenticando..." : "Entrar"}
-              </Button>
-            </form>
-          </CardContent>
-          <CardFooter className="flex justify-center">
-            <Button 
-              variant="ghost" 
-              onClick={() => navigate("/")}
-              className="text-education-primary hover:text-education-dark hover:bg-education-light"
-            >
-              Voltar para o Portal
-            </Button>
-          </CardFooter>
-        </Card>
+        <AuthForm
+          title="Login Administrativo"
+          description="Entre com suas credenciais para acessar o painel"
+          email={email}
+          setEmail={setEmail}
+          password={password}
+          setPassword={setPassword}
+          isLoading={isLoading}
+          onSubmit={handleSubmit}
+        />
         
         <div className="text-center text-xs text-gray-500">
           <p>Para fins de demonstração, use:</p>
