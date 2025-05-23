@@ -9,7 +9,7 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           <div className="space-y-4">
             <div className="flex items-center gap-3">
-              <img alt="Brasão de Araraquara" className="h-12" src="/lovable-uploads/db2cf68a-4d32-4fce-9f2b-4c87c5b04448.png" />
+              <img alt="Brasão de Araraquara" src="/lovable-uploads/db2cf68a-4d32-4fce-9f2b-4c87c5b04448.png" className="h-12 object-contain" />
               <div>
                 <h3 className="text-lg font-bold">Secretaria de Educação</h3>
                 <p className="text-xs text-gray-300">Prefeitura de Araraquara</p>
