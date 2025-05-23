@@ -1,18 +1,7 @@
 
 import React, { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Bold,
-  Italic,
-  List,
-  ListOrdered,
-  AlignLeft,
-  AlignCenter,
-  AlignRight,
-  Link,
-  Image
-} from "lucide-react";
+import EditorToolbar from "./wysiwyg/EditorToolbar";
+import EditorContent from "./wysiwyg/EditorContent";
 
 interface WysiwygEditorProps {
   initialValue?: string;
@@ -93,115 +82,17 @@ const WysiwygEditor: React.FC<WysiwygEditorProps> = ({
 
   return (
     <div className={`border rounded-lg overflow-hidden ${className}`}>
-      <div className="bg-gray-100 border-b p-2 flex flex-wrap gap-1">
-        <Button 
-          type="button" 
-          variant="ghost" 
-          size="sm" 
-          onClick={() => insertTag('b')}
-          title="Negrito"
-        >
-          <Bold className="h-4 w-4" />
-        </Button>
-        <Button 
-          type="button" 
-          variant="ghost" 
-          size="sm" 
-          onClick={() => insertTag('i')}
-          title="Itálico"
-        >
-          <Italic className="h-4 w-4" />
-        </Button>
-        <Button 
-          type="button" 
-          variant="ghost" 
-          size="sm" 
-          onClick={() => insertTag('ul')}
-          title="Lista com marcadores"
-        >
-          <List className="h-4 w-4" />
-        </Button>
-        <Button 
-          type="button" 
-          variant="ghost" 
-          size="sm" 
-          onClick={() => insertTag('ol')}
-          title="Lista numerada"
-        >
-          <ListOrdered className="h-4 w-4" />
-        </Button>
-        <div className="h-6 w-[1px] bg-gray-300 mx-1"></div>
-        <Button 
-          type="button" 
-          variant="ghost" 
-          size="sm" 
-          onClick={() => {}}
-          title="Alinhar à esquerda"
-        >
-          <AlignLeft className="h-4 w-4" />
-        </Button>
-        <Button 
-          type="button" 
-          variant="ghost" 
-          size="sm" 
-          onClick={() => insertTag('center')}
-          title="Centralizar"
-        >
-          <AlignCenter className="h-4 w-4" />
-        </Button>
-        <Button 
-          type="button" 
-          variant="ghost" 
-          size="sm" 
-          onClick={() => insertTag('right')}
-          title="Alinhar à direita"
-        >
-          <AlignRight className="h-4 w-4" />
-        </Button>
-        <div className="h-6 w-[1px] bg-gray-300 mx-1"></div>
-        <Button 
-          type="button" 
-          variant="ghost" 
-          size="sm" 
-          onClick={() => insertTag('link')}
-          title="Inserir link"
-        >
-          <Link className="h-4 w-4" />
-        </Button>
-        <Button 
-          type="button" 
-          variant="ghost" 
-          size="sm" 
-          onClick={() => insertTag('image')}
-          title="Inserir imagem"
-        >
-          <Image className="h-4 w-4" />
-        </Button>
-        <div className="flex-grow"></div>
-        <Button 
-          type="button" 
-          variant="outline" 
-          size="sm"
-          onClick={() => setShowPreview(!showPreview)}
-        >
-          {showPreview ? 'Editar' : 'Visualizar'}
-        </Button>
-      </div>
+      <EditorToolbar 
+        onInsertTag={insertTag} 
+        showPreview={showPreview} 
+        setShowPreview={setShowPreview} 
+      />
       
-      {showPreview ? (
-        <div 
-          className="p-4 min-h-[200px] max-h-[400px] overflow-y-auto bg-white" 
-          dangerouslySetInnerHTML={{ __html: content }}
-        />
-      ) : (
-        <Textarea
-          id="wysiwyg-editor"
-          value={content}
-          onChange={handleContentChange}
-          placeholder="Digite seu conteúdo aqui..."
-          className="border-0 rounded-none min-h-[200px] focus-visible:ring-0"
-        />
-      )}
+      <EditorContent 
+        content={content}
+        showPreview={showPreview}
+        handleContentChange={handleContentChange}
+      />
     </div>
   );
 };
