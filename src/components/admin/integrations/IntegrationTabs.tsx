@@ -5,14 +5,18 @@ import MicrosoftIntegration from "./MicrosoftIntegration";
 import SocialMediaIntegration from "./SocialMediaIntegration";
 import TeamsIntegration from "./TeamsIntegration";
 import ChatAI from "../chat/ChatAI";
+import ChatbotIntegration from "./ChatbotIntegration";
 
 const IntegrationTabs = () => {
   return (
     <div className="mt-8">
       <h2 className="text-2xl font-bold text-education-primary mb-6">Integrações Técnicas</h2>
       
-      <Tabs defaultValue="microsoft" className="space-y-6">
+      <Tabs defaultValue="chatbot" className="space-y-6">
         <TabsList className="bg-white shadow-sm border-0 p-1 rounded-lg">
+          <TabsTrigger value="chatbot" className="data-[state=active]:bg-education-light data-[state=active]:text-education-primary">
+            Chatbot & n8n
+          </TabsTrigger>
           <TabsTrigger value="microsoft" className="data-[state=active]:bg-education-light data-[state=active]:text-education-primary">
             Microsoft 365 e Azure AD
           </TabsTrigger>
@@ -27,6 +31,10 @@ const IntegrationTabs = () => {
           </TabsTrigger>
         </TabsList>
 
+        <TabsContent value="chatbot">
+          <ChatbotIntegration />
+        </TabsContent>
+        
         <TabsContent value="microsoft">
           <MicrosoftIntegration />
         </TabsContent>

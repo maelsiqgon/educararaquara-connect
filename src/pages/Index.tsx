@@ -7,6 +7,8 @@ import NewsSection from "@/components/NewsSection";
 import ProfilesSection from "@/components/ProfilesSection";
 import AppSection from "@/components/AppSection";
 import ContactSection from "@/components/ContactSection";
+import SchoolsSection from "@/components/SchoolsSection";
+import Chatbot from "@/components/Chatbot";
 
 const Index = () => {
   return (
@@ -15,12 +17,14 @@ const Index = () => {
       <main className="flex-grow">
         <HeroBanner />
         <FeaturesSection />
+        <SchoolsSection />
         <ProfilesSection />
         <NewsSection />
         <AppSection />
         <ContactSection />
       </main>
       <Footer />
+      <Chatbot />
     </div>
   );
 };

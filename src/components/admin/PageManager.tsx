@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -30,9 +29,10 @@ interface Page {
 }
 
 const PageManager = () => {
-  const [pages, setPages] = useState<Page[]>(() => 
+  const [pages, setPages] = useState<Page[]>(
     mockPages.map(page => ({
       ...page,
+      status: page.status as 'published' | 'draft',
       category: 'Geral',
       author: 'Administrador',
       metaDescription: page.content.substring(0, 150) + '...',
@@ -100,7 +100,7 @@ const PageManager = () => {
     if (isCreating) {
       const newPage = {
         ...editingPage,
-        id: Math.max(...pages.map(p => p.id)) + 1,
+        id: Math.max(...pages.map(p => p.id), 0) + 1,
         slug,
         createdAt: now,
         updatedAt: now
@@ -131,7 +131,6 @@ const PageManager = () => {
   };
 
   const handlePreview = (page: Page) => {
-    // Em um sistema real, abriria uma nova aba com preview da página
     toast.info(`Visualizando página: ${page.title}`);
   };
 
