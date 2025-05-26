@@ -15,6 +15,7 @@ import IntegrationTabs from "@/components/admin/integrations/IntegrationTabs";
 import EducationLevelTabs from "@/components/admin/EducationLevelTabs";
 import ContentManager from "@/components/admin/ContentManager";
 import SchoolContentManager from "@/components/admin/SchoolContentManager";
+import PageManager from "@/components/admin/PageManager";
 
 const Admin = () => {
   return (
@@ -41,6 +42,9 @@ const Admin = () => {
             <TabsTrigger value="content" className="data-[state=active]:bg-education-light data-[state=active]:text-education-primary">
               Conteúdo
             </TabsTrigger>
+            <TabsTrigger value="pages" className="data-[state=active]:bg-education-light data-[state=active]:text-education-primary">
+              Páginas
+            </TabsTrigger>
             <TabsTrigger value="banner" className="data-[state=active]:bg-education-light data-[state=active]:text-education-primary">
               Banner Principal
             </TabsTrigger>
@@ -62,6 +66,10 @@ const Admin = () => {
 
           <TabsContent value="content" className="space-y-4">
             <ContentManager />
+          </TabsContent>
+
+          <TabsContent value="pages" className="space-y-4">
+            <PageManager />
           </TabsContent>
 
           <TabsContent value="banner" className="space-y-4">

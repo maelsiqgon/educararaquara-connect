@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useParams } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -10,7 +9,8 @@ import { toast } from "sonner";
 import AdminHeader from "@/components/admin/AdminHeader";
 import NewsManager from "@/components/admin/NewsManager";
 import MediaLibraryManager from "@/components/admin/MediaLibraryManager";
-import { Calendar, Image, FileText, Users } from "lucide-react";
+import SocialMediaIntegration from "@/components/admin/integrations/SocialMediaIntegration";
+import { Calendar, Image, FileText, Users, Share2 } from "lucide-react";
 
 const SchoolAdmin = () => {
   const { schoolId } = useParams();
@@ -107,6 +107,9 @@ const SchoolAdmin = () => {
             </TabsTrigger>
             <TabsTrigger value="media" className="data-[state=active]:bg-education-light data-[state=active]:text-education-primary">
               Mídia
+            </TabsTrigger>
+            <TabsTrigger value="social" className="data-[state=active]:bg-education-light data-[state=active]:text-education-primary">
+              Redes Sociais
             </TabsTrigger>
             <TabsTrigger value="calendar" className="data-[state=active]:bg-education-light data-[state=active]:text-education-primary">
               Calendário
@@ -242,6 +245,10 @@ const SchoolAdmin = () => {
 
           <TabsContent value="media" className="space-y-4">
             <MediaLibraryManager />
+          </TabsContent>
+
+          <TabsContent value="social" className="space-y-4">
+            <SocialMediaIntegration />
           </TabsContent>
 
           <TabsContent value="calendar" className="space-y-4">
