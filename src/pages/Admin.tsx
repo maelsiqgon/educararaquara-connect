@@ -16,6 +16,8 @@ import EducationLevelTabs from "@/components/admin/EducationLevelTabs";
 import ContentManager from "@/components/admin/ContentManager";
 import SchoolContentManager from "@/components/admin/SchoolContentManager";
 import PageManager from "@/components/admin/PageManager";
+import SchoolUserManager from "@/components/admin/SchoolUserManager";
+import SchoolCreator from "@/components/admin/SchoolCreator";
 
 const Admin = () => {
   return (
@@ -32,9 +34,15 @@ const Admin = () => {
         </div>
 
         <Tabs defaultValue="schools" className="space-y-6">
-          <TabsList className="bg-white shadow-sm border-0 p-1 rounded-lg">
+          <TabsList className="bg-white shadow-sm border-0 p-1 rounded-lg flex-wrap h-auto">
             <TabsTrigger value="schools" className="data-[state=active]:bg-education-light data-[state=active]:text-education-primary">
               Escolas
+            </TabsTrigger>
+            <TabsTrigger value="create-school" className="data-[state=active]:bg-education-light data-[state=active]:text-education-primary">
+              Nova Escola
+            </TabsTrigger>
+            <TabsTrigger value="users" className="data-[state=active]:bg-education-light data-[state=active]:text-education-primary">
+              Usuários
             </TabsTrigger>
             <TabsTrigger value="news" className="data-[state=active]:bg-education-light data-[state=active]:text-education-primary">
               Notícias
@@ -58,6 +66,14 @@ const Admin = () => {
 
           <TabsContent value="schools" className="space-y-4">
             <SchoolContentManager />
+          </TabsContent>
+
+          <TabsContent value="create-school" className="space-y-4">
+            <SchoolCreator />
+          </TabsContent>
+
+          <TabsContent value="users" className="space-y-4">
+            <SchoolUserManager />
           </TabsContent>
 
           <TabsContent value="news" className="space-y-4">
@@ -182,6 +198,41 @@ const Admin = () => {
                 de conteúdo salvo e sincronização automática quando retornar online.
               </p>
             </div>
+          </div>
+        </div>
+
+        {/* Seção de configurações para servidor */}
+        <div className="mt-8">
+          <h2 className="text-2xl font-bold text-education-primary mb-6">Configurações do Servidor</h2>
+          
+          <div className="bg-white p-6 rounded-lg shadow-sm">
+            <h3 className="font-bold text-lg text-education-primary mb-3">Instruções para Deploy no Ubuntu Server 24.04</h3>
+            <div className="bg-gray-50 p-4 rounded-lg text-sm font-mono">
+              <p className="mb-2"># 1. Instalar Node.js e npm</p>
+              <p className="mb-2">curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -</p>
+              <p className="mb-2">sudo apt-get install -y nodejs</p>
+              <p className="mb-4"></p>
+              <p className="mb-2"># 2. Clonar o repositório</p>
+              <p className="mb-2">git clone [URL_DO_REPOSITORIO]</p>
+              <p className="mb-2">cd [NOME_DO_PROJETO]</p>
+              <p className="mb-4"></p>
+              <p className="mb-2"># 3. Instalar dependências</p>
+              <p className="mb-2">npm install</p>
+              <p className="mb-4"></p>
+              <p className="mb-2"># 4. Build do projeto</p>
+              <p className="mb-2">npm run build</p>
+              <p className="mb-4"></p>
+              <p className="mb-2"># 5. Instalar PM2 para produção</p>
+              <p className="mb-2">sudo npm install -g pm2</p>
+              <p className="mb-4"></p>
+              <p className="mb-2"># 6. Executar em produção</p>
+              <p className="mb-2">pm2 start npm --name "educ-portal" -- run preview</p>
+              <p className="mb-2">pm2 save</p>
+              <p className="mb-2">pm2 startup</p>
+            </div>
+            <p className="text-sm text-gray-600 mt-4">
+              O sistema estará disponível na porta 4173. Configure um proxy reverso (nginx) se necessário.
+            </p>
           </div>
         </div>
       </main>
