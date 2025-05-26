@@ -2,36 +2,12 @@
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-
-// Mock news data
-const newsItems = [
-  {
-    id: 1,
-    title: "Matrícula online para o ano letivo 2026 já está disponível",
-    description: "Pais e responsáveis já podem realizar a matrícula dos estudantes para o próximo ano letivo através do portal EducAraraquara.",
-    date: "18/05/2025",
-    category: "Matrículas",
-    image: "https://www.araraquara.sp.gov.br/imagens/escola.JPG/@@images/image",
-  },
-  {
-    id: 2,
-    title: "Escolas municipais recebem novos laboratórios de informática",
-    description: "A Secretaria de Educação entregou 15 novos laboratórios de informática em escolas da rede municipal, beneficiando mais de 8 mil alunos.",
-    date: "12/05/2025",
-    category: "Infraestrutura",
-    image: "https://www.araraquara.sp.gov.br/imagens/aula-de-informatica-lab-2.jpeg/@@images/image",
-  },
-  {
-    id: 3,
-    title: "Mostra Cultural reunirá projetos de escolas municipais",
-    description: "Evento acontecerá no Centro Cultural e contará com apresentações de dança, música, teatro e exposições de trabalhos dos alunos.",
-    date: "05/05/2025",
-    category: "Eventos",
-    image: "https://www.araraquara.sp.gov.br/imagens/cultura-escola.jpeg/@@images/image",
-  },
-];
+import { useState } from "react";
+import { initialNews } from "@/components/admin/mockData";
 
 const NewsSection = () => {
+  const [newsItems, setNewsItems] = useState(initialNews.slice(0, 3));
+
   return (
     <section className="py-20 bg-education-lightgray relative overflow-hidden">
       {/* Background pattern */}
@@ -50,7 +26,7 @@ const NewsSection = () => {
             <Card key={item.id} className="overflow-hidden card-hover border-0 shadow-soft rounded-lg opacity-0 stagger-item animate-fade-in">
               <div className="h-56 overflow-hidden relative gradient-overlay">
                 <img
-                  src={item.image}
+                  src={item.image || "https://via.placeholder.com/400x300?text=Imagem+da+Noticia"}
                   alt={item.title}
                   className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
                 />

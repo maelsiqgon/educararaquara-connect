@@ -13,7 +13,7 @@ import DashboardStats from "@/components/admin/DashboardStats";
 import UserProfilesTabs from "@/components/admin/UserProfilesTabs";
 import IntegrationTabs from "@/components/admin/integrations/IntegrationTabs";
 import EducationLevelTabs from "@/components/admin/EducationLevelTabs";
-import { mockImages } from "@/components/admin/mockData";
+import ContentManager from "@/components/admin/ContentManager";
 
 const Admin = () => {
   return (
@@ -37,6 +37,9 @@ const Admin = () => {
             <TabsTrigger value="news" className="data-[state=active]:bg-education-light data-[state=active]:text-education-primary">
               Notícias
             </TabsTrigger>
+            <TabsTrigger value="content" className="data-[state=active]:bg-education-light data-[state=active]:text-education-primary">
+              Conteúdo
+            </TabsTrigger>
             <TabsTrigger value="banner" className="data-[state=active]:bg-education-light data-[state=active]:text-education-primary">
               Banner Principal
             </TabsTrigger>
@@ -54,6 +57,10 @@ const Admin = () => {
 
           <TabsContent value="news" className="space-y-4">
             <NewsManager />
+          </TabsContent>
+
+          <TabsContent value="content" className="space-y-4">
+            <ContentManager />
           </TabsContent>
 
           <TabsContent value="banner" className="space-y-4">

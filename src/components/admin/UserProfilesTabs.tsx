@@ -5,9 +5,63 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { userProfiles } from './mockData';
+import SecretaryProfile from './profiles/SecretaryProfile';
+import SchoolManagementProfile from './profiles/SchoolManagementProfile';
+import TeacherProfile from './profiles/TeacherProfile';
+import StudentProfile from './profiles/StudentProfile';
+import ParentProfile from './profiles/ParentProfile';
 
 const UserProfilesTabs = () => {
   const [activeProfile, setActiveProfile] = useState("secretary");
+  const [viewingProfile, setViewingProfile] = useState<string | null>(null);
+  
+  if (viewingProfile) {
+    let ProfileComponent;
+    switch (viewingProfile) {
+      case 'secretary':
+        ProfileComponent = SecretaryProfile;
+        break;
+      case 'management':
+        ProfileComponent = SchoolManagementProfile;
+        break;
+      case 'teachers':
+        ProfileComponent = TeacherProfile;
+        break;
+      case 'students':
+        ProfileComponent = StudentProfile;
+        break;
+      case 'parents':
+        ProfileComponent = ParentProfile;
+        break;
+      default:
+        ProfileComponent = SecretaryProfile;
+    }
+
+    return (
+      <div className="mt-8">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-bold text-education-primary">
+            {viewingProfile === 'secretary' && 'Secretaria Municipal'}
+            {viewingProfile === 'management' && 'Gestão Escolar'}
+            {viewingProfile === 'teachers' && 'Professores'}
+            {viewingProfile === 'students' && 'Alunos'}
+            {viewingProfile === 'parents' && 'Responsáveis'}
+          </h2>
+          <Button 
+            variant="outline" 
+            onClick={() => setViewingProfile(null)}
+            className="flex items-center gap-2"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="m15 18-6-6 6-6"/>
+            </svg>
+            Voltar
+          </Button>
+        </div>
+        <ProfileComponent />
+      </div>
+    );
+  }
   
   return (
     <div className="mt-8">
@@ -160,7 +214,7 @@ const UserProfilesTabs = () => {
                   </Button>
                   <Button 
                     className="bg-education-primary hover:bg-education-dark"
-                    onClick={() => toast.success(`Visualizando acesso de ${profile.name.toLowerCase()}`)}
+                    onClick={() => setViewingProfile(tabValue)}
                   >
                     Visualizar
                   </Button>
