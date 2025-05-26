@@ -14,6 +14,7 @@ import UserProfilesTabs from "@/components/admin/UserProfilesTabs";
 import IntegrationTabs from "@/components/admin/integrations/IntegrationTabs";
 import EducationLevelTabs from "@/components/admin/EducationLevelTabs";
 import ContentManager from "@/components/admin/ContentManager";
+import SchoolContentManager from "@/components/admin/SchoolContentManager";
 
 const Admin = () => {
   return (
@@ -29,10 +30,10 @@ const Admin = () => {
           <DashboardStats />
         </div>
 
-        <Tabs defaultValue="sections" className="space-y-6">
+        <Tabs defaultValue="schools" className="space-y-6">
           <TabsList className="bg-white shadow-sm border-0 p-1 rounded-lg">
-            <TabsTrigger value="sections" className="data-[state=active]:bg-education-light data-[state=active]:text-education-primary">
-              Seções
+            <TabsTrigger value="schools" className="data-[state=active]:bg-education-light data-[state=active]:text-education-primary">
+              Escolas
             </TabsTrigger>
             <TabsTrigger value="news" className="data-[state=active]:bg-education-light data-[state=active]:text-education-primary">
               Notícias
@@ -51,8 +52,8 @@ const Admin = () => {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="sections" className="space-y-4">
-            <SectionsManager />
+          <TabsContent value="schools" className="space-y-4">
+            <SchoolContentManager />
           </TabsContent>
 
           <TabsContent value="news" className="space-y-4">

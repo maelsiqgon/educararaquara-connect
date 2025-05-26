@@ -9,6 +9,7 @@ import Index from "./pages/Index";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 import Admin from "./pages/Admin";
+import SchoolAdmin from "./pages/SchoolAdmin";
 import AdminLogin from "./pages/AdminLogin";
 import AdminPasswordRecovery from "./pages/AdminPasswordRecovery";
 import AdminProtected from "./components/AdminProtected";
@@ -40,6 +41,11 @@ const App = () => (
             <Route path="/admin" element={
               <AdminProtected>
                 <Admin />
+              </AdminProtected>
+            } />
+            <Route path="/admin/escola/:schoolId" element={
+              <AdminProtected>
+                <SchoolAdmin />
               </AdminProtected>
             } />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
