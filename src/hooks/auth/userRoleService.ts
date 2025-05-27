@@ -35,11 +35,14 @@ export const fetchUserRoles = async (userId: string): Promise<UserRole[]> => {
     console.log('RPC failed, trying edge function:', rpcError);
     
     // Final fallback to edge function
+    const { data: authData } = await supabase.auth.getSession();
+    const token = authData?.session?.access_token;
+    
     const response = await fetch('https://epxmtbwmmptaricbiyjw.supabase.co/functions/v1/get-user-roles', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${supabase.auth.session()?.access_token || ''}`
+        'Authorization': `Bearer ${token || ''}`
       },
       body: JSON.stringify({ user_uuid: userId })
     });

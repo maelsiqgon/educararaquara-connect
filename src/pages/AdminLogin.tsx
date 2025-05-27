@@ -11,30 +11,44 @@ const AdminLogin = () => {
   const [password, setPassword] = useState("admin123456");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { signIn, user, loading, isSuperAdmin, refreshUserRoles } = useAuth();
+  const { signIn, user, loading, isSuperAdmin, refreshUserRoles, userRoles } = useAuth();
 
   // Check admin access and redirect
   useEffect(() => {
     if (!loading && user) {
       console.log('User already logged in, checking super admin status...', {
         userEmail: user.email,
+        userRoles,
         isSuperAdmin: isSuperAdmin()
       });
       
-      // Wait for roles to load and then check
-      setTimeout(async () => {
-        await refreshUserRoles();
-        
-        setTimeout(() => {
-          if (isSuperAdmin()) {
-            console.log('User is super admin, redirecting to admin');
-            navigate("/admin");
-          } else {
-            console.log('User is not super admin, staying on login page');
-            toast.error("Você não tem permissão para acessar a área administrativa");
-          }
-        }, 500);
-      }, 1000);
+      // Refresh roles and check after a delay
+      const checkAdminAccess = async () => {
+        try {
+          await refreshUserRoles();
+          
+          setTimeout(() => {
+            const isSuper = isSuperAdmin();
+            console.log('Admin access check result:', {
+              isSuper,
+              userRoles,
+              userEmail: user.email
+            });
+            
+            if (isSuper) {
+              console.log('User is super admin, redirecting to admin');
+              navigate("/admin", { replace: true });
+            } else {
+              console.log('User is not super admin, staying on login page');
+              toast.error("Você não tem permissão para acessar a área administrativa");
+            }
+          }, 1000);
+        } catch (error) {
+          console.error('Error checking admin access:', error);
+        }
+      };
+      
+      checkAdminAccess();
     }
   }, [user, loading, navigate, isSuperAdmin, refreshUserRoles]);
 
@@ -55,15 +69,26 @@ const AdminLogin = () => {
         
         // Wait for roles to be fetched and then redirect
         setTimeout(async () => {
-          await refreshUserRoles();
-          
-          setTimeout(() => {
-            if (isSuperAdmin()) {
-              navigate("/admin");
-            } else {
-              toast.error("Você não tem permissão para acessar a área administrativa");
-            }
-          }, 500);
+          try {
+            await refreshUserRoles();
+            
+            setTimeout(() => {
+              const isSuper = isSuperAdmin();
+              console.log('Post-login admin check:', {
+                isSuper,
+                userRoles,
+                userEmail: user?.email
+              });
+              
+              if (isSuper) {
+                navigate("/admin", { replace: true });
+              } else {
+                toast.error("Você não tem permissão para acessar a área administrativa");
+              }
+            }, 1000);
+          } catch (error) {
+            console.error('Error in post-login check:', error);
+          }
         }, 2000);
       }
     } catch (error) {
@@ -77,7 +102,10 @@ const AdminLogin = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-education-lightgray">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-education-primary"></div>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-education-primary mx-auto"></div>
+          <p className="mt-4 text-education-gray">Carregando...</p>
+        </div>
       </div>
     );
   }
