@@ -1,67 +1,105 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { toast } from "sonner";
-import { mockSchools } from './mockData';
-import { School, Settings, Eye, Edit } from "lucide-react";
+import { useSchools } from '@/hooks/useSchools';
+import { School, Settings, Eye, Edit, Plus, Loader2, Users, GraduationCap, Building } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const SchoolContentManager = () => {
-  const [schools] = useState(mockSchools);
+  const { schools, loading } = useSchools();
 
-  const handleCreateSchool = () => {
-    toast.success("Nova escola criada com sucesso!");
-  };
+  if (loading) {
+    return (
+      <Card className="border-0 shadow-soft">
+        <CardContent className="pt-6 flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin" />
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="border-0 shadow-soft">
       <CardHeader className="bg-education-light rounded-t-lg">
-        <CardTitle className="text-education-primary">Gestão de Escolas</CardTitle>
-        <CardDescription>
-          Gerencie as escolas da rede municipal e seus painéis administrativos
-        </CardDescription>
+        <div className="flex justify-between items-center">
+          <div>
+            <CardTitle className="text-education-primary">Gestão de Escolas</CardTitle>
+            <CardDescription>
+              Gerencie as escolas da rede municipal e seus painéis administrativos
+            </CardDescription>
+          </div>
+          <Button asChild className="bg-education-primary hover:bg-education-dark">
+            <Link to="/admin/escolas/criar">
+              <Plus className="h-4 w-4 mr-2" />
+              Nova Escola
+            </Link>
+          </Button>
+        </div>
       </CardHeader>
       <CardContent className="pt-6">
-        <div className="space-y-6">
-          <div className="flex justify-between items-center">
-            <h3 className="text-lg font-medium">Escolas Cadastradas</h3>
-            <Button className="bg-education-primary hover:bg-education-dark">
-              <School className="h-4 w-4 mr-2" />
-              Nova Escola
+        {schools.length === 0 ? (
+          <div className="text-center py-12">
+            <School className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-gray-600 mb-2">
+              Nenhuma escola cadastrada
+            </h3>
+            <p className="text-gray-500 mb-4">
+              Comece criando a primeira escola da rede.
+            </p>
+            <Button asChild className="bg-education-primary hover:bg-education-dark">
+              <Link to="/admin/escolas/criar">
+                <Plus className="h-4 w-4 mr-2" />
+                Criar Primeira Escola
+              </Link>
             </Button>
           </div>
-
+        ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {schools.map((school) => (
               <Card key={school.id} className="border hover:shadow-md transition-shadow">
                 <CardHeader className="pb-2">
                   <div className="flex justify-between items-start">
-                    <div>
-                      <CardTitle className="text-lg text-education-primary">{school.name}</CardTitle>
-                      <CardDescription>{school.type}</CardDescription>
+                    <div className="flex-1">
+                      <CardTitle className="text-lg text-education-primary line-clamp-2">
+                        {school.name}
+                      </CardTitle>
+                      <CardDescription className="flex items-center mt-1">
+                        <Building className="h-4 w-4 mr-1" />
+                        {school.type}
+                      </CardDescription>
                     </div>
-                    <Badge className="bg-green-100 text-green-800">
-                      Ativa
+                    <Badge className={school.active ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}>
+                      {school.active ? 'Ativa' : 'Inativa'}
                     </Badge>
                   </div>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2 mb-4">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Diretor(a):</span>
-                      <span className="font-medium">{school.director}</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Alunos:</span>
-                      <span className="font-medium">{school.students}</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Turmas:</span>
-                      <span className="font-medium">{school.classes}</span>
+                    {school.director && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">Diretor(a):</span>
+                        <span className="font-medium text-right flex-1 ml-2 truncate">{school.director}</span>
+                      </div>
+                    )}
+                    
+                    <div className="grid grid-cols-3 gap-2 text-center text-sm">
+                      <div className="flex flex-col items-center">
+                        <Users className="h-4 w-4 text-education-primary mb-1" />
+                        <span className="font-semibold text-education-primary">{school.students}</span>
+                        <span className="text-xs text-gray-500">Alunos</span>
+                      </div>
+                      <div className="flex flex-col items-center">
+                        <GraduationCap className="h-4 w-4 text-education-primary mb-1" />
+                        <span className="font-semibold text-education-primary">{school.teachers}</span>
+                        <span className="text-xs text-gray-500">Professores</span>
+                      </div>
+                      <div className="flex flex-col items-center">
+                        <Building className="h-4 w-4 text-education-primary mb-1" />
+                        <span className="font-semibold text-education-primary">{school.classes}</span>
+                        <span className="text-xs text-gray-500">Turmas</span>
+                      </div>
                     </div>
                   </div>
                   
@@ -73,13 +111,17 @@ const SchoolContentManager = () => {
                       </Link>
                     </Button>
                     <div className="flex space-x-2">
-                      <Button variant="outline" size="sm" className="flex-1">
-                        <Eye className="h-4 w-4 mr-1" />
-                        Ver
+                      <Button asChild variant="outline" size="sm" className="flex-1">
+                        <Link to={`/escolas/${school.id}`}>
+                          <Eye className="h-4 w-4 mr-1" />
+                          Ver
+                        </Link>
                       </Button>
-                      <Button variant="outline" size="sm" className="flex-1">
-                        <Edit className="h-4 w-4 mr-1" />
-                        Editar
+                      <Button asChild variant="outline" size="sm" className="flex-1">
+                        <Link to={`/admin/escolas/editar/${school.id}`}>
+                          <Edit className="h-4 w-4 mr-1" />
+                          Editar
+                        </Link>
                       </Button>
                     </div>
                   </div>
@@ -87,76 +129,7 @@ const SchoolContentManager = () => {
               </Card>
             ))}
           </div>
-
-          <Card className="border">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg">Cadastrar Nova Escola</CardTitle>
-              <CardDescription>
-                Adicione uma nova escola à rede municipal
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="new-school-name">Nome da Escola</Label>
-                    <Input 
-                      id="new-school-name" 
-                      placeholder="Ex: EMEF Exemplo"
-                      className="border-gray-300 focus-visible:ring-education-primary"
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="school-type">Tipo de Ensino</Label>
-                    <select 
-                      id="school-type" 
-                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-education-primary focus:border-education-primary"
-                    >
-                      <option value="">Selecione o tipo</option>
-                      <option value="EMEI">Educação Infantil (EMEI)</option>
-                      <option value="EMEF">Ensino Fundamental (EMEF)</option>
-                      <option value="CEMEI">Centro Municipal (CEMEI)</option>
-                    </select>
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="director-name">Diretor(a)</Label>
-                    <Input 
-                      id="director-name" 
-                      placeholder="Nome do diretor"
-                      className="border-gray-300 focus-visible:ring-education-primary"
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="school-phone">Telefone</Label>
-                    <Input 
-                      id="school-phone" 
-                      placeholder="(16) 3333-0000"
-                      className="border-gray-300 focus-visible:ring-education-primary"
-                    />
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="school-address">Endereço</Label>
-                  <Input 
-                    id="school-address" 
-                    placeholder="Endereço completo"
-                    className="border-gray-300 focus-visible:ring-education-primary"
-                  />
-                </div>
-                
-                <Button onClick={handleCreateSchool} className="bg-education-primary hover:bg-education-dark">
-                  Cadastrar Escola
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
-        </div>
+        )}
       </CardContent>
     </Card>
   );
