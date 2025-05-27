@@ -15,49 +15,68 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const refreshUserRoles = async () => {
     if (user) {
-      console.log('Refreshing user roles for:', user.id);
-      const roles = await fetchUserRoles(user.id);
-      console.log('Roles refreshed:', roles);
-      setUserRoles(roles);
+      console.log('🔄 Refreshing user roles for:', user.email, user.id);
+      try {
+        const roles = await fetchUserRoles(user.id);
+        console.log('✅ Roles refreshed successfully:', roles);
+        setUserRoles(roles);
+        return roles;
+      } catch (error) {
+        console.error('❌ Error refreshing roles:', error);
+        return [];
+      }
     }
+    return [];
   };
 
   useEffect(() => {
+    console.log('🚀 Setting up auth state listener');
+    
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth state changed:', event, session?.user?.email);
+        console.log('🔐 Auth state changed:', event, {
+          userEmail: session?.user?.email,
+          userId: session?.user?.id
+        });
+        
         setSession(session);
         setUser(session?.user ?? null);
         
-        // Fetch user roles when user changes
-        if (session?.user) {
-          // Small delay to ensure database is ready
+        // Fetch user roles when user logs in
+        if (session?.user && event === 'SIGNED_IN') {
+          console.log('👤 User signed in, fetching roles...');
           setTimeout(async () => {
-            console.log('Fetching roles after auth change for:', session.user.id);
             const roles = await fetchUserRoles(session.user.id);
-            console.log('Roles fetched after auth change:', roles);
+            console.log('📋 Roles fetched on sign in:', roles);
             setUserRoles(roles);
           }, 500);
-        } else {
+        } else if (!session?.user) {
+          console.log('👤 User signed out, clearing roles');
           setUserRoles([]);
         }
+        
         setLoading(false);
       }
     );
 
     // Check for existing session
     supabase.auth.getSession().then(async ({ data: { session } }) => {
-      console.log('Initial session check:', session?.user?.email);
+      console.log('🔍 Initial session check:', {
+        hasSession: !!session,
+        userEmail: session?.user?.email,
+        userId: session?.user?.id
+      });
+      
       setSession(session);
       setUser(session?.user ?? null);
       
       // Fetch user roles if user exists
       if (session?.user) {
+        console.log('👤 Existing session found, fetching roles...');
         setTimeout(async () => {
-          console.log('Fetching roles for existing session:', session.user.id);
           const roles = await fetchUserRoles(session.user.id);
-          console.log('Roles fetched for existing session:', roles);
+          console.log('📋 Roles fetched for existing session:', roles);
           setUserRoles(roles);
         }, 500);
       }
@@ -65,7 +84,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      console.log('🧹 Cleaning up auth subscription');
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signUp = async (email: string, password: string, name?: string) => {
@@ -94,14 +116,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signIn = async (email: string, password: string) => {
     try {
-      console.log('Attempting login with:', email);
+      console.log('🔑 Attempting login with:', email);
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
       });
       
       if (!error && data.user) {
-        console.log('Login successful:', data.user.email);
+        console.log('✅ Login successful for:', data.user.email);
         toast.success('Login realizado com sucesso!');
         
         // Update last access time and log activity
@@ -121,13 +143,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           }
         }, 0);
       } else if (error) {
-        console.error('Login error:', error);
+        console.error('❌ Login error:', error);
         toast.error('Erro ao fazer login: ' + error.message);
       }
       
       return { error };
     } catch (error: any) {
-      console.error('SignIn error:', error);
+      console.error('❌ SignIn error:', error);
       toast.error('Erro ao fazer login: ' + error.message);
       return { error };
     }
@@ -200,13 +222,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const isSuperAdmin = () => {
     if (!user) {
-      console.log('No user, not super admin');
+      console.log('❌ No user, not super admin');
       return false;
     }
     
     const isSuper = checkSuperAdmin(userRoles);
-    console.log('Checking super admin status:', { 
+    console.log('🔍 Checking super admin status:', { 
       isSuper, 
+      userRolesLength: userRoles.length,
       userRoles, 
       userId: user.id,
       userEmail: user.email 
@@ -235,3 +258,5 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     </AuthContext.Provider>
   );
 };
+
+export { useAuth } from './authContext';

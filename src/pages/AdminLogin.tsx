@@ -16,35 +16,43 @@ const AdminLogin = () => {
   // Check admin access and redirect
   useEffect(() => {
     if (!loading && user) {
-      console.log('User already logged in, checking super admin status...', {
+      console.log('👤 User already logged in, checking super admin status...', {
         userEmail: user.email,
+        userId: user.id,
         userRoles,
         isSuperAdmin: isSuperAdmin()
       });
       
-      // Refresh roles and check after a delay
+      // Check immediately if user has super admin role
+      const isSuper = isSuperAdmin();
+      if (isSuper) {
+        console.log('✅ User is already super admin, redirecting to admin panel');
+        navigate("/admin", { replace: true });
+        return;
+      }
+      
+      // If not super admin, refresh roles and check again
       const checkAdminAccess = async () => {
         try {
-          await refreshUserRoles();
+          console.log('🔄 Refreshing roles to double-check admin access...');
+          const refreshedRoles = await refreshUserRoles();
           
-          setTimeout(() => {
-            const isSuper = isSuperAdmin();
-            console.log('Admin access check result:', {
-              isSuper,
-              userRoles,
-              userEmail: user.email
-            });
-            
-            if (isSuper) {
-              console.log('User is super admin, redirecting to admin');
-              navigate("/admin", { replace: true });
-            } else {
-              console.log('User is not super admin, staying on login page');
-              toast.error("Você não tem permissão para acessar a área administrativa");
-            }
-          }, 1000);
+          const isSuperAfterRefresh = refreshedRoles.some(role => role.role === 'super_admin');
+          console.log('🔍 Admin access check after refresh:', {
+            isSuperAfterRefresh,
+            refreshedRoles,
+            userEmail: user.email
+          });
+          
+          if (isSuperAfterRefresh) {
+            console.log('✅ User is super admin after refresh, redirecting to admin panel');
+            navigate("/admin", { replace: true });
+          } else {
+            console.log('❌ User is not super admin, staying on login page');
+            toast.error("Você não tem permissão para acessar a área administrativa");
+          }
         } catch (error) {
-          console.error('Error checking admin access:', error);
+          console.error('❌ Error checking admin access:', error);
         }
       };
       
@@ -57,42 +65,44 @@ const AdminLogin = () => {
     setIsLoading(true);
     
     try {
-      console.log('Admin login attempt:', email);
+      console.log('🔑 Admin login attempt:', email);
       const { error } = await signIn(email, password);
       
       if (error) {
-        console.error('Login error:', error);
+        console.error('❌ Login error:', error);
         toast.error("Credenciais inválidas. Verifique email e senha.");
       } else {
-        console.log('Login successful, waiting for role verification...');
+        console.log('✅ Login successful, waiting for role verification...');
         toast.success("Login realizado com sucesso!");
         
-        // Wait for roles to be fetched and then redirect
+        // Wait a bit for the auth state to propagate, then check roles
         setTimeout(async () => {
           try {
-            await refreshUserRoles();
+            console.log('🔄 Post-login role check...');
+            const roles = await refreshUserRoles();
             
-            setTimeout(() => {
-              const isSuper = isSuperAdmin();
-              console.log('Post-login admin check:', {
-                isSuper,
-                userRoles,
-                userEmail: user?.email
-              });
-              
-              if (isSuper) {
-                navigate("/admin", { replace: true });
-              } else {
-                toast.error("Você não tem permissão para acessar a área administrativa");
-              }
-            }, 1000);
+            const isSuper = roles.some(role => role.role === 'super_admin');
+            console.log('🔍 Post-login admin check:', {
+              isSuper,
+              roles,
+              userEmail: email
+            });
+            
+            if (isSuper) {
+              console.log('✅ Redirecting to admin panel');
+              navigate("/admin", { replace: true });
+            } else {
+              console.log('❌ No admin access found');
+              toast.error("Você não tem permissão para acessar a área administrativa");
+            }
           } catch (error) {
-            console.error('Error in post-login check:', error);
+            console.error('❌ Error in post-login check:', error);
+            toast.error("Erro ao verificar permissões. Tente novamente.");
           }
         }, 2000);
       }
     } catch (error) {
-      console.error('Login error:', error);
+      console.error('❌ Login error:', error);
       toast.error("Erro ao fazer login. Tente novamente.");
     }
     

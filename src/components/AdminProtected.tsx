@@ -19,14 +19,16 @@ const AdminProtected: React.FC<AdminProtectedProps> = ({
   
   useEffect(() => {
     const checkAuthorization = async () => {
-      console.log('AdminProtected check started:', { 
-        userEmail: user?.email, 
+      console.log('🛡️ AdminProtected authorization check started:', { 
+        userEmail: user?.email,
+        userId: user?.id, 
         loading, 
         userRolesLength: userRoles.length,
-        isSuperAdmin: isSuperAdmin() 
+        userRoles: userRoles
       });
       
       if (loading) {
+        console.log('⏳ Still loading auth state...');
         return;
       }
       
@@ -34,48 +36,51 @@ const AdminProtected: React.FC<AdminProtectedProps> = ({
       
       // Check authentication
       if (!user) {
-        console.log('No user, redirecting to login');
+        console.log('❌ No user found, redirecting to login');
         setIsAuthorized(false);
         setIsChecking(false);
         return;
       }
       
-      // Ensure we have fresh roles
-      console.log('Refreshing user roles before authorization check...');
-      try {
-        await refreshUserRoles();
-      } catch (error) {
-        console.error('Error refreshing user roles:', error);
-      }
+      console.log('👤 User found, checking roles...');
       
-      // Wait a moment for roles to be updated
-      setTimeout(() => {
-        const isSuper = isSuperAdmin();
-        console.log('Final authorization check:', {
+      // Force refresh roles to ensure we have the latest data
+      try {
+        console.log('🔄 Force refreshing user roles...');
+        const refreshedRoles = await refreshUserRoles();
+        console.log('✅ Roles refreshed:', refreshedRoles);
+        
+        // Check super admin status with refreshed roles
+        const isSuper = refreshedRoles.some(role => role.role === 'super_admin');
+        console.log('🔍 Super admin check with refreshed roles:', {
           isSuper,
-          userRoles,
+          refreshedRoles,
           userEmail: user.email,
           requiredPermission
         });
         
         if (isSuper) {
-          console.log('User is super admin, granting access');
+          console.log('✅ User is super admin, granting access');
           setIsAuthorized(true);
         } else {
-          console.log('User is not super admin, denying access');
+          console.log('❌ User is not super admin, denying access');
           toast.error("Você não tem permissão para acessar esta área administrativa");
           setIsAuthorized(false);
         }
-        
-        setIsChecking(false);
-      }, 1500); // Give more time for roles to be fetched and processed
+      } catch (error) {
+        console.error('❌ Error during authorization check:', error);
+        setIsAuthorized(false);
+      }
+      
+      setIsChecking(false);
     };
     
     checkAuthorization();
-  }, [user, loading, requiredPermission, userRoles.length]);
+  }, [user, loading, requiredPermission]);
   
   // Loading state
   if (loading || isChecking || isAuthorized === null) {
+    console.log('⏳ Showing loading state');
     return (
       <div className="min-h-screen flex items-center justify-center bg-education-lightgray">
         <div className="text-center">
@@ -87,9 +92,11 @@ const AdminProtected: React.FC<AdminProtectedProps> = ({
   }
   
   if (!isAuthorized) {
+    console.log('❌ Not authorized, redirecting to login');
     return <Navigate to="/admin/login" replace />;
   }
   
+  console.log('✅ Access granted, rendering children');
   return <>{children}</>;
 };
 
