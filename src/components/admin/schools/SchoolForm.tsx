@@ -12,7 +12,7 @@ import FileUploadComponent from '@/components/admin/FileUploadComponent';
 import { useSchools, School, SchoolContact } from '@/hooks/useSchools';
 import { useSchoolContacts } from '@/hooks/useSchoolContacts';
 import { toast } from 'sonner';
-import { Plus, Trash2, Phone, Mail, MessageCircle, MapPin } from 'lucide-react';
+import { Save, Plus, Trash2 } from 'lucide-react';
 
 interface SchoolFormProps {
   school?: School;
@@ -22,29 +22,29 @@ interface SchoolFormProps {
 
 const SchoolForm: React.FC<SchoolFormProps> = ({ school, onSuccess, onCancel }) => {
   const { createSchool, updateSchool } = useSchools();
-  const { createContact, updateContact, deleteContact, getSchoolContacts } = useSchoolContacts();
+  const { createContact, updateContact, deleteContact } = useSchoolContacts();
   
   const [formData, setFormData] = useState({
     name: '',
-    type: 'EMEF' as const,
-    director: '',
+    type: 'EMEF' as 'EMEI' | 'EMEF' | 'CEMEI' | 'Creche',
     address: '',
+    director: '',
     description: '',
+    image_url: '',
     students: 0,
     teachers: 0,
     classes: 0,
-    image_url: '',
     active: true
   });
 
   const [contacts, setContacts] = useState<SchoolContact[]>([]);
   const [newContact, setNewContact] = useState({
-    type: 'phone' as const,
+    type: 'phone' as 'phone' | 'email' | 'whatsapp' | 'website',
     value: '',
     label: '',
     primary_contact: false
   });
-  
+
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -52,19 +52,16 @@ const SchoolForm: React.FC<SchoolFormProps> = ({ school, onSuccess, onCancel }) 
       setFormData({
         name: school.name,
         type: school.type,
-        director: school.director || '',
         address: school.address || '',
+        director: school.director || '',
         description: school.description || '',
+        image_url: school.image_url || '',
         students: school.students,
         teachers: school.teachers,
         classes: school.classes,
-        image_url: school.image_url || '',
         active: school.active
       });
-      
-      if (school.contacts) {
-        setContacts(school.contacts);
-      }
+      setContacts(school.contacts || []);
     }
   }, [school]);
 
@@ -83,76 +80,82 @@ const SchoolForm: React.FC<SchoolFormProps> = ({ school, onSuccess, onCancel }) 
   };
 
   const addContact = async () => {
-    if (!newContact.value.trim()) {
-      toast.error('Preencha o valor do contato');
-      return;
-    }
+    if (!newContact.value.trim()) return;
 
-    if (school?.id) {
-      const result = await createContact(school.id, newContact);
-      if (result) {
-        setContacts(prev => [...prev, result]);
-        setNewContact({
-          type: 'phone',
-          value: '',
-          label: '',
-          primary_contact: false
-        });
+    try {
+      if (school?.id) {
+        const createdContact = await createContact(school.id, newContact);
+        if (createdContact) {
+          setContacts(prev => [...prev, createdContact]);
+        }
+      } else {
+        // Para escolas novas, adicionar temporariamente
+        const tempContact: SchoolContact = {
+          id: Date.now().toString(),
+          school_id: '',
+          ...newContact,
+          created_at: new Date().toISOString()
+        };
+        setContacts(prev => [...prev, tempContact]);
       }
-    } else {
-      // Para escolas novas, adiciona temporariamente
-      const tempContact: SchoolContact = {
-        id: Date.now().toString(),
-        school_id: '',
-        ...newContact
-      };
-      setContacts(prev => [...prev, tempContact]);
+      
       setNewContact({
         type: 'phone',
         value: '',
         label: '',
         primary_contact: false
       });
+    } catch (error) {
+      console.error('Error adding contact:', error);
     }
   };
 
   const removeContact = async (contactId: string) => {
-    if (school?.id && !contactId.startsWith('temp_')) {
-      const success = await deleteContact(contactId);
-      if (success) {
-        setContacts(prev => prev.filter(c => c.id !== contactId));
+    try {
+      if (school?.id && !contactId.startsWith('temp_')) {
+        await deleteContact(contactId);
       }
-    } else {
       setContacts(prev => prev.filter(c => c.id !== contactId));
+    } catch (error) {
+      console.error('Error removing contact:', error);
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSave = async () => {
+    if (!formData.name.trim()) {
+      toast.error('Nome da escola é obrigatório');
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
+      let savedSchool;
+      
       if (school?.id) {
-        // Atualizar escola existente
         await updateSchool(school.id, formData);
+        savedSchool = { ...school, ...formData };
       } else {
-        // Criar nova escola
-        const newSchool = await createSchool(formData);
-        
-        // Adicionar contatos se houver
-        if (newSchool && contacts.length > 0) {
-          for (const contact of contacts) {
-            await createContact(newSchool.id, {
-              type: contact.type,
-              value: contact.value,
-              label: contact.label,
-              primary_contact: contact.primary_contact
-            });
-          }
+        savedSchool = await createSchool(formData);
+      }
+
+      // Salvar contatos para escolas novas
+      if (savedSchool && !school?.id && contacts.length > 0) {
+        for (const contact of contacts) {
+          await createContact(savedSchool.id, {
+            type: contact.type,
+            value: contact.value,
+            label: contact.label,
+            primary_contact: contact.primary_contact
+          });
         }
       }
       
-      toast.success(school ? 'Escola atualizada com sucesso!' : 'Escola criada com sucesso!');
+      toast.success(
+        school?.id 
+          ? 'Escola atualizada com sucesso!' 
+          : 'Escola criada com sucesso!'
+      );
       onSuccess?.();
     } catch (error) {
       toast.error('Erro ao salvar escola');
@@ -161,22 +164,24 @@ const SchoolForm: React.FC<SchoolFormProps> = ({ school, onSuccess, onCancel }) 
     }
   };
 
-  const getContactIcon = (type: string) => {
-    switch (type) {
-      case 'phone':
-      case 'cellphone':
-        return <Phone className="h-4 w-4" />;
-      case 'whatsapp':
-        return <MessageCircle className="h-4 w-4" />;
-      case 'email':
-        return <Mail className="h-4 w-4" />;
-      default:
-        return <Phone className="h-4 w-4" />;
-    }
+  const getContactTypeLabel = (type: string) => {
+    const labels = {
+      phone: 'Telefone',
+      email: 'E-mail',
+      whatsapp: 'WhatsApp',
+      website: 'Website'
+    };
+    return labels[type as keyof typeof labels] || type;
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold">
+          {school?.id ? 'Editar' : 'Criar'} Escola
+        </h2>
+      </div>
+
       <Card>
         <CardHeader>
           <CardTitle>Informações Básicas</CardTitle>
@@ -189,21 +194,21 @@ const SchoolForm: React.FC<SchoolFormProps> = ({ school, onSuccess, onCancel }) 
                 id="name"
                 value={formData.name}
                 onChange={(e) => handleInputChange('name', e.target.value)}
-                placeholder="Ex: EMEF Prof. João Silva"
+                placeholder="Nome da escola"
                 required
               />
             </div>
-            
+
             <div>
-              <Label htmlFor="type">Tipo de Ensino *</Label>
+              <Label htmlFor="type">Tipo de Ensino</Label>
               <Select value={formData.type} onValueChange={(value) => handleInputChange('type', value)}>
                 <SelectTrigger>
-                  <SelectValue />
+                  <SelectValue placeholder="Selecione o tipo" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="EMEI">Educação Infantil (EMEI)</SelectItem>
-                  <SelectItem value="EMEF">Ensino Fundamental (EMEF)</SelectItem>
-                  <SelectItem value="CEMEI">Centro Municipal (CEMEI)</SelectItem>
+                  <SelectItem value="EMEI">EMEI - Educação Infantil</SelectItem>
+                  <SelectItem value="EMEF">EMEF - Ensino Fundamental</SelectItem>
+                  <SelectItem value="CEMEI">CEMEI - Centro Municipal</SelectItem>
                   <SelectItem value="Creche">Creche</SelectItem>
                 </SelectContent>
               </Select>
@@ -216,17 +221,18 @@ const SchoolForm: React.FC<SchoolFormProps> = ({ school, onSuccess, onCancel }) 
               id="director"
               value={formData.director}
               onChange={(e) => handleInputChange('director', e.target.value)}
-              placeholder="Nome do diretor"
+              placeholder="Nome do diretor(a)"
             />
           </div>
 
           <div>
             <Label htmlFor="address">Endereço</Label>
-            <Input
+            <Textarea
               id="address"
               value={formData.address}
               onChange={(e) => handleInputChange('address', e.target.value)}
-              placeholder="Endereço completo"
+              placeholder="Endereço completo da escola"
+              rows={2}
             />
           </div>
 
@@ -236,8 +242,8 @@ const SchoolForm: React.FC<SchoolFormProps> = ({ school, onSuccess, onCancel }) 
               id="description"
               value={formData.description}
               onChange={(e) => handleInputChange('description', e.target.value)}
-              placeholder="Descrição da escola"
-              rows={3}
+              placeholder="Descrição da escola, história, missão, etc."
+              rows={4}
             />
           </div>
 
@@ -252,7 +258,7 @@ const SchoolForm: React.FC<SchoolFormProps> = ({ school, onSuccess, onCancel }) 
                 min="0"
               />
             </div>
-            
+
             <div>
               <Label htmlFor="teachers">Número de Professores</Label>
               <Input
@@ -263,7 +269,7 @@ const SchoolForm: React.FC<SchoolFormProps> = ({ school, onSuccess, onCancel }) 
                 min="0"
               />
             </div>
-            
+
             <div>
               <Label htmlFor="classes">Número de Turmas</Label>
               <Input
@@ -300,77 +306,64 @@ const SchoolForm: React.FC<SchoolFormProps> = ({ school, onSuccess, onCancel }) 
           <CardTitle>Contatos</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Lista de contatos existentes */}
-          {contacts.length > 0 && (
-            <div className="space-y-2">
-              {contacts.map((contact) => (
-                <div key={contact.id} className="flex items-center justify-between p-3 border rounded-md">
-                  <div className="flex items-center space-x-3">
-                    {getContactIcon(contact.type)}
-                    <div>
-                      <div className="flex items-center space-x-2">
-                        <span className="font-medium">{contact.value}</span>
-                        {contact.primary_contact && (
-                          <Badge variant="secondary" className="text-xs">Principal</Badge>
-                        )}
-                      </div>
-                      {contact.label && (
-                        <span className="text-sm text-gray-500">{contact.label}</span>
-                      )}
-                    </div>
-                  </div>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => removeContact(contact.id)}
-                    className="text-red-500 hover:text-red-700"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              ))}
-            </div>
-          )}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
+            <Select value={newContact.type} onValueChange={(value) => setNewContact(prev => ({ ...prev, type: value as any }))}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="phone">Telefone</SelectItem>
+                <SelectItem value="email">E-mail</SelectItem>
+                <SelectItem value="whatsapp">WhatsApp</SelectItem>
+                <SelectItem value="website">Website</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Input
+              placeholder="Valor do contato"
+              value={newContact.value}
+              onChange={(e) => setNewContact(prev => ({ ...prev, value: e.target.value }))}
+            />
+
+            <Input
+              placeholder="Rótulo (opcional)"
+              value={newContact.label}
+              onChange={(e) => setNewContact(prev => ({ ...prev, label: e.target.value }))}
+            />
+
+            <Button onClick={addContact} disabled={!newContact.value.trim()}>
+              <Plus className="h-4 w-4 mr-2" />
+              Adicionar
+            </Button>
+          </div>
 
           <Separator />
 
-          {/* Adicionar novo contato */}
-          <div className="space-y-3">
-            <h4 className="font-medium">Adicionar Contato</h4>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-              <Select
-                value={newContact.type}
-                onValueChange={(value: any) => setNewContact(prev => ({ ...prev, type: value }))}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="phone">Telefone</SelectItem>
-                  <SelectItem value="cellphone">Celular</SelectItem>
-                  <SelectItem value="whatsapp">WhatsApp</SelectItem>
-                  <SelectItem value="email">Email</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Input
-                placeholder="Valor do contato"
-                value={newContact.value}
-                onChange={(e) => setNewContact(prev => ({ ...prev, value: e.target.value }))}
-              />
-
-              <Input
-                placeholder="Descrição (opcional)"
-                value={newContact.label}
-                onChange={(e) => setNewContact(prev => ({ ...prev, label: e.target.value }))}
-              />
-
-              <Button type="button" onClick={addContact} className="w-full">
-                <Plus className="h-4 w-4 mr-2" />
-                Adicionar
-              </Button>
-            </div>
+          <div className="space-y-2">
+            {contacts.map((contact) => (
+              <div key={contact.id} className="flex items-center justify-between p-3 border rounded-md">
+                <div className="flex items-center space-x-4">
+                  <Badge variant="outline">
+                    {getContactTypeLabel(contact.type)}
+                  </Badge>
+                  <span className="font-medium">{contact.value}</span>
+                  {contact.label && (
+                    <span className="text-sm text-gray-500">({contact.label})</span>
+                  )}
+                  {contact.primary_contact && (
+                    <Badge variant="default">Principal</Badge>
+                  )}
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => removeContact(contact.id)}
+                  className="text-red-500 hover:text-red-700"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            ))}
           </div>
         </CardContent>
       </Card>
@@ -381,11 +374,17 @@ const SchoolForm: React.FC<SchoolFormProps> = ({ school, onSuccess, onCancel }) 
             Cancelar
           </Button>
         )}
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Salvando...' : school ? 'Atualizar' : 'Criar'} Escola
+        
+        <Button
+          type="button"
+          onClick={handleSave}
+          disabled={isSubmitting}
+        >
+          <Save className="h-4 w-4 mr-2" />
+          {school?.id ? 'Atualizar' : 'Criar'} Escola
         </Button>
       </div>
-    </form>
+    </div>
   );
 };
 

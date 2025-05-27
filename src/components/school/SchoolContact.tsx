@@ -1,96 +1,89 @@
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Users, Phone, Mail, MapPin, Calendar } from 'lucide-react';
-import { School } from '@/hooks/useSchools';
+import { Card, CardContent } from '@/components/ui/card';
+import { Phone, Mail, MessageCircle, Globe } from 'lucide-react';
+import { SchoolContact as SchoolContactType } from '@/hooks/useSchools';
 
 interface SchoolContactProps {
-  school: School;
+  contacts?: SchoolContactType[];
 }
 
-const SchoolContact: React.FC<SchoolContactProps> = ({ school }) => {
+const SchoolContact: React.FC<SchoolContactProps> = ({ contacts = [] }) => {
+  const getContactIcon = (type: string) => {
+    switch (type) {
+      case 'phone':
+        return Phone;
+      case 'email':
+        return Mail;
+      case 'whatsapp':
+        return MessageCircle;
+      case 'website':
+        return Globe;
+      default:
+        return Phone;
+    }
+  };
+
+  const getContactColor = (type: string) => {
+    switch (type) {
+      case 'phone':
+        return 'text-blue-600 bg-blue-100';
+      case 'email':
+        return 'text-red-600 bg-red-100';
+      case 'whatsapp':
+        return 'text-green-600 bg-green-100';
+      case 'website':
+        return 'text-purple-600 bg-purple-100';
+      default:
+        return 'text-gray-600 bg-gray-100';
+    }
+  };
+
+  const getContactTypeLabel = (type: string) => {
+    const labels = {
+      phone: 'Telefone',
+      email: 'E-mail',
+      whatsapp: 'WhatsApp',
+      website: 'Website'
+    };
+    return labels[type as keyof typeof labels] || type;
+  };
+
+  if (contacts.length === 0) {
+    return (
+      <Card>
+        <CardContent className="p-6">
+          <h3 className="text-xl font-bold text-education-primary mb-4">Contatos</h3>
+          <p className="text-gray-500">Nenhum contato disponível.</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Informações de Contato</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {school.director && (
-            <div className="flex items-center">
-              <Users className="h-5 w-5 mr-3 text-gray-500" />
-              <div>
-                <div className="font-medium">Diretor(a)</div>
-                <div className="text-sm text-gray-600">{school.director}</div>
-              </div>
-            </div>
-          )}
-
-          {school.address && (
-            <div className="flex items-start">
-              <MapPin className="h-5 w-5 mr-3 text-gray-500 mt-0.5" />
-              <div>
-                <div className="font-medium">Endereço</div>
-                <div className="text-sm text-gray-600">{school.address}</div>
-              </div>
-            </div>
-          )}
-
-          {school.contacts && school.contacts.length > 0 && (
-            <div className="space-y-3">
-              <div className="font-medium">Contatos</div>
-              {school.contacts.map((contact) => (
-                <div key={contact.id} className="flex items-center">
-                  {contact.type === 'email' ? (
-                    <Mail className="h-4 w-4 mr-3 text-gray-500" />
-                  ) : (
-                    <Phone className="h-4 w-4 mr-3 text-gray-500" />
-                  )}
-                  <div>
-                    {contact.label && (
-                      <div className="text-xs text-gray-500 uppercase tracking-wide">
-                        {contact.label}
-                      </div>
-                    )}
-                    <div className="text-sm">{contact.value}</div>
-                  </div>
+    <Card>
+      <CardContent className="p-6">
+        <h3 className="text-xl font-bold text-education-primary mb-4">Contatos</h3>
+        <div className="space-y-4">
+          {contacts.map((contact) => {
+            const Icon = getContactIcon(contact.type);
+            return (
+              <div key={contact.id} className="flex items-center space-x-3">
+                <div className={`p-2 rounded-full ${getContactColor(contact.type)}`}>
+                  <Icon className="h-4 w-4" />
                 </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Informações Gerais</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-600">Tipo de Ensino</span>
-            <Badge variant="outline">{school.type}</Badge>
-          </div>
-          
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-600">Status</span>
-            <Badge variant={school.active ? "default" : "destructive"}>
-              {school.active ? "Ativa" : "Inativa"}
-            </Badge>
-          </div>
-
-          <div className="flex items-center">
-            <Calendar className="h-4 w-4 mr-2 text-gray-500" />
-            <div>
-              <div className="text-xs text-gray-500">Cadastrada em</div>
-              <div className="text-sm">
-                {new Date(school.created_at).toLocaleDateString('pt-BR')}
+                <div>
+                  <p className="font-medium">
+                    {contact.label || getContactTypeLabel(contact.type)}
+                  </p>
+                  <p className="text-gray-600">{contact.value}</p>
+                </div>
               </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+            );
+          })}
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 

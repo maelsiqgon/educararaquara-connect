@@ -3,30 +3,31 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
+export interface SchoolContact {
+  id: string;
+  school_id: string;
+  type: 'phone' | 'email' | 'whatsapp' | 'website';
+  value: string;
+  label?: string;
+  primary_contact: boolean;
+  created_at: string;
+}
+
 export interface School {
   id: string;
   name: string;
   type: 'EMEI' | 'EMEF' | 'CEMEI' | 'Creche';
-  director: string | null;
-  address: string | null;
-  description: string | null;
+  address?: string;
+  director?: string;
+  description?: string;
+  image_url?: string;
   students: number;
   teachers: number;
   classes: number;
-  image_url: string | null;
   active: boolean;
   created_at: string;
   updated_at: string;
   contacts?: SchoolContact[];
-}
-
-export interface SchoolContact {
-  id: string;
-  school_id: string;
-  type: 'phone' | 'cellphone' | 'whatsapp' | 'email';
-  value: string;
-  label: string | null;
-  primary_contact: boolean;
 }
 
 export const useSchools = () => {
@@ -109,7 +110,7 @@ export const useSchools = () => {
     }
   };
 
-  const getSchoolById = async (id: string) => {
+  const getSchoolById = async (id: string): Promise<School | null> => {
     try {
       const { data, error } = await supabase
         .from('schools')
@@ -123,8 +124,27 @@ export const useSchools = () => {
       if (error) throw error;
       return data;
     } catch (err: any) {
-      toast.error('Erro ao carregar escola: ' + err.message);
-      throw err;
+      toast.error('Escola não encontrada');
+      return null;
+    }
+  };
+
+  const getSchoolBySlug = async (slug: string): Promise<School | null> => {
+    try {
+      const { data, error } = await supabase
+        .from('schools')
+        .select(`
+          *,
+          contacts:school_contacts(*)
+        `)
+        .eq('name', slug.replace(/-/g, ' '))
+        .single();
+
+      if (error) throw error;
+      return data;
+    } catch (err: any) {
+      toast.error('Escola não encontrada');
+      return null;
     }
   };
 
@@ -140,6 +160,7 @@ export const useSchools = () => {
     createSchool,
     updateSchool,
     deleteSchool,
-    getSchoolById
+    getSchoolById,
+    getSchoolBySlug
   };
 };

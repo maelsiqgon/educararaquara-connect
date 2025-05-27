@@ -9,10 +9,10 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import FileUploadComponent from '@/components/admin/FileUploadComponent';
-import { useUsers, User } from '@/hooks/useUsers';
+import { useUsers, User, UserRole } from '@/hooks/useUsers';
 import { useSchools } from '@/hooks/useSchools';
 import { toast } from 'sonner';
-import { Plus, Trash2, UserCheck, UserX } from 'lucide-react';
+import { Save, Plus, Trash2 } from 'lucide-react';
 
 interface UserFormProps {
   user?: User;
@@ -31,15 +31,14 @@ const UserForm: React.FC<UserFormProps> = ({ user, onSuccess, onCancel }) => {
     phone: '',
     address: '',
     registration: '',
-    avatar_url: '',
     active: true
   });
 
   const [newRole, setNewRole] = useState({
     school_id: '',
-    role: 'teacher' as const
+    role: 'teacher' as UserRole['role']
   });
-  
+
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -51,7 +50,6 @@ const UserForm: React.FC<UserFormProps> = ({ user, onSuccess, onCancel }) => {
         phone: user.phone || '',
         address: user.address || '',
         registration: user.registration || '',
-        avatar_url: user.avatar_url || '',
         active: user.active
       });
     }
@@ -64,47 +62,48 @@ const UserForm: React.FC<UserFormProps> = ({ user, onSuccess, onCancel }) => {
     }));
   };
 
-  const handleAvatarUpload = (result: { url: string; path: string }) => {
-    setFormData(prev => ({
-      ...prev,
-      avatar_url: result.url
-    }));
-  };
-
   const addRole = async () => {
-    if (!newRole.school_id || !user?.id) {
-      toast.error('Selecione uma escola e role');
-      return;
-    }
+    if (!newRole.school_id || !user?.id) return;
 
-    const success = await assignUserToSchool(user.id, newRole.school_id, newRole.role);
-    if (success) {
+    try {
+      await assignUserToSchool(user.id, newRole.school_id, newRole.role);
       setNewRole({
         school_id: '',
         role: 'teacher'
       });
+    } catch (error) {
+      console.error('Error adding role:', error);
     }
   };
 
-  const removeRole = async (schoolId: string) => {
-    if (!user?.id) return;
-    await removeUserFromSchool(user.id, schoolId);
+  const removeRole = async (userId: string, schoolId: string) => {
+    try {
+      await removeUserFromSchool(userId, schoolId);
+    } catch (error) {
+      console.error('Error removing role:', error);
+    }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSave = async () => {
+    if (!formData.name.trim() || !formData.email.trim()) {
+      toast.error('Nome e e-mail são obrigatórios');
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
       if (user?.id) {
-        // Atualizar usuário existente
         await updateUser(user.id, formData);
       } else {
-        // Criar novo usuário
         await createUser(formData);
       }
       
-      toast.success(user ? 'Usuário atualizado com sucesso!' : 'Usuário criado com sucesso!');
+      toast.success(
+        user?.id 
+          ? 'Usuário atualizado com sucesso!' 
+          : 'Usuário criado com sucesso!'
+      );
       onSuccess?.();
     } catch (error) {
       toast.error('Erro ao salvar usuário');
@@ -127,13 +126,14 @@ const UserForm: React.FC<UserFormProps> = ({ user, onSuccess, onCancel }) => {
     return labels[role as keyof typeof labels] || role;
   };
 
-  const getSchoolName = (schoolId: string) => {
-    const school = schools.find(s => s.id === schoolId);
-    return school?.name || 'Escola não encontrada';
-  };
-
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold">
+          {user?.id ? 'Editar' : 'Criar'} Usuário
+        </h2>
+      </div>
+
       <Card>
         <CardHeader>
           <CardTitle>Informações Pessoais</CardTitle>
@@ -150,9 +150,9 @@ const UserForm: React.FC<UserFormProps> = ({ user, onSuccess, onCancel }) => {
                 required
               />
             </div>
-            
+
             <div>
-              <Label htmlFor="email">Email *</Label>
+              <Label htmlFor="email">E-mail *</Label>
               <Input
                 id="email"
                 type="email"
@@ -174,7 +174,7 @@ const UserForm: React.FC<UserFormProps> = ({ user, onSuccess, onCancel }) => {
                 placeholder="000.000.000-00"
               />
             </div>
-            
+
             <div>
               <Label htmlFor="phone">Telefone</Label>
               <Input
@@ -217,113 +217,72 @@ const UserForm: React.FC<UserFormProps> = ({ user, onSuccess, onCancel }) => {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Foto do Usuário</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <FileUploadComponent
-            bucket="user-avatars"
-            folder={user?.id || 'temp'}
-            onUploadSuccess={handleAvatarUpload}
-            accept="image/*"
-            label="Avatar"
-            description="Adicione uma foto do usuário"
-            initialPreview={formData.avatar_url}
-          />
-        </CardContent>
-      </Card>
-
-      {user && (
+      {user?.id && (
         <Card>
           <CardHeader>
-            <CardTitle>Funções e Escolas</CardTitle>
+            <CardTitle>Funções e Permissões</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {/* Lista de funções existentes */}
-            {user.roles && user.roles.length > 0 && (
-              <div className="space-y-2">
-                <h4 className="font-medium">Funções Atuais</h4>
-                {user.roles.map((role) => (
-                  <div key={role.id} className="flex items-center justify-between p-3 border rounded-md">
-                    <div className="flex items-center space-x-3">
-                      <UserCheck className="h-4 w-4 text-green-500" />
-                      <div>
-                        <div className="flex items-center space-x-2">
-                          <Badge variant="outline">{getRoleLabel(role.role)}</Badge>
-                          {role.school && (
-                            <span className="text-sm text-gray-600">
-                              na {role.school.name}
-                            </span>
-                          )}
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          Ativo: {role.active ? 'Sim' : 'Não'}
-                        </div>
-                      </div>
-                    </div>
-                    {role.school_id && (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeRole(role.school_id!)}
-                        className="text-red-500 hover:text-red-700"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+              <Select value={newRole.school_id} onValueChange={(value) => setNewRole(prev => ({ ...prev, school_id: value }))}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecionar escola" />
+                </SelectTrigger>
+                <SelectContent>
+                  {schools.map(school => (
+                    <SelectItem key={school.id} value={school.id}>
+                      {school.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={newRole.role} onValueChange={(value) => setNewRole(prev => ({ ...prev, role: value as UserRole['role'] }))}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="super_admin">Super Administrador</SelectItem>
+                  <SelectItem value="admin">Administrador</SelectItem>
+                  <SelectItem value="director">Diretor</SelectItem>
+                  <SelectItem value="coordinator">Coordenador</SelectItem>
+                  <SelectItem value="teacher">Professor</SelectItem>
+                  <SelectItem value="staff">Funcionário</SelectItem>
+                  <SelectItem value="parent">Responsável</SelectItem>
+                  <SelectItem value="student">Aluno</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Button onClick={addRole} disabled={!newRole.school_id}>
+                <Plus className="h-4 w-4 mr-2" />
+                Adicionar Função
+              </Button>
+            </div>
 
             <Separator />
 
-            {/* Adicionar nova função */}
-            <div className="space-y-3">
-              <h4 className="font-medium">Adicionar Função</h4>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <Select
-                  value={newRole.school_id}
-                  onValueChange={(value) => setNewRole(prev => ({ ...prev, school_id: value }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione uma escola" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {schools.map(school => (
-                      <SelectItem key={school.id} value={school.id}>
-                        {school.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-
-                <Select
-                  value={newRole.role}
-                  onValueChange={(value: any) => setNewRole(prev => ({ ...prev, role: value }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="super_admin">Super Administrador</SelectItem>
-                    <SelectItem value="admin">Administrador</SelectItem>
-                    <SelectItem value="director">Diretor</SelectItem>
-                    <SelectItem value="coordinator">Coordenador</SelectItem>
-                    <SelectItem value="teacher">Professor</SelectItem>
-                    <SelectItem value="staff">Funcionário</SelectItem>
-                    <SelectItem value="parent">Responsável</SelectItem>
-                    <SelectItem value="student">Aluno</SelectItem>
-                  </SelectContent>
-                </Select>
-
-                <Button type="button" onClick={addRole} className="w-full">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Adicionar
-                </Button>
-              </div>
+            <div className="space-y-2">
+              {user?.roles?.map((role) => (
+                <div key={role.id} className="flex items-center justify-between p-3 border rounded-md">
+                  <div className="flex items-center space-x-4">
+                    <Badge variant="outline">
+                      {getRoleLabel(role.role)}
+                    </Badge>
+                    <span className="font-medium">{role.school?.name}</span>
+                    {!role.active && (
+                      <Badge variant="destructive">Inativo</Badge>
+                    )}
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => removeRole(user.id, role.school_id)}
+                    className="text-red-500 hover:text-red-700"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
             </div>
           </CardContent>
         </Card>
@@ -335,11 +294,17 @@ const UserForm: React.FC<UserFormProps> = ({ user, onSuccess, onCancel }) => {
             Cancelar
           </Button>
         )}
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Salvando...' : user ? 'Atualizar' : 'Criar'} Usuário
+        
+        <Button
+          type="button"
+          onClick={handleSave}
+          disabled={isSubmitting}
+        >
+          <Save className="h-4 w-4 mr-2" />
+          {user?.id ? 'Atualizar' : 'Criar'} Usuário
         </Button>
       </div>
-    </form>
+    </div>
   );
 };
 

@@ -178,6 +178,34 @@ export const useNews = () => {
     }
   };
 
+  const getNewsById = async (id: string): Promise<News | null> => {
+    try {
+      const { data, error } = await supabase
+        .from('news')
+        .select(`
+          *,
+          category:news_categories(id, name, color, active, created_at),
+          author:profiles(id, name, email),
+          school:schools(id, name)
+        `)
+        .eq('id', id)
+        .single();
+
+      if (error) throw error;
+      
+      return {
+        ...data,
+        category: data.category ? {
+          ...data.category,
+          description: ''
+        } : undefined
+      };
+    } catch (err: any) {
+      toast.error('Notícia não encontrada');
+      return null;
+    }
+  };
+
   const incrementViews = async (id: string) => {
     try {
       const { error } = await supabase
@@ -259,6 +287,7 @@ export const useNews = () => {
     updateNews,
     deleteNews,
     getNewsBySlug,
+    getNewsById,
     incrementViews,
     fetchCategories,
     createCategory,

@@ -1,33 +1,46 @@
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { School } from '@/hooks/useSchools';
+import { Card, CardContent } from '@/components/ui/card';
+import { MapPin, User } from 'lucide-react';
 
 interface SchoolInfoProps {
-  school: School;
+  address?: string;
+  director?: string;
+  description?: string;
 }
 
-const SchoolInfo: React.FC<SchoolInfoProps> = ({ school }) => {
+const SchoolInfo: React.FC<SchoolInfoProps> = ({ address, director, description }) => {
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Sobre a Escola</CardTitle>
-      </CardHeader>
-      <CardContent>
+      <CardContent className="p-6">
+        <h3 className="text-xl font-bold text-education-primary mb-4">Informações</h3>
         <div className="space-y-4">
-          <p className="text-gray-700 leading-relaxed">{school.description}</p>
+          {director && (
+            <div className="flex items-start space-x-3">
+              <User className="h-5 w-5 text-education-primary mt-0.5" />
+              <div>
+                <p className="font-medium">Diretor(a)</p>
+                <p className="text-gray-600">{director}</p>
+              </div>
+            </div>
+          )}
           
-          <div className="flex flex-wrap gap-2">
-            <Badge variant="secondary" className="text-education-primary">
-              {school.type}
-            </Badge>
-            {!school.active && (
-              <Badge variant="destructive">
-                Inativa
-              </Badge>
-            )}
-          </div>
+          {address && (
+            <div className="flex items-start space-x-3">
+              <MapPin className="h-5 w-5 text-education-primary mt-0.5" />
+              <div>
+                <p className="font-medium">Endereço</p>
+                <p className="text-gray-600">{address}</p>
+              </div>
+            </div>
+          )}
+          
+          {description && (
+            <div>
+              <p className="font-medium mb-2">Sobre a Escola</p>
+              <p className="text-gray-600 leading-relaxed">{description}</p>
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>

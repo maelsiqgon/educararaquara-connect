@@ -8,21 +8,21 @@ export interface MediaFile {
   filename: string;
   original_name: string;
   file_path: string;
-  file_size: number | null;
-  mime_type: string | null;
-  alt_text: string | null;
-  description: string | null;
-  tags: string[] | null;
-  folder: string;
-  uploaded_by: string | null;
-  school_id: string | null;
+  file_size?: number;
+  mime_type?: string;
+  alt_text?: string;
+  description?: string;
+  tags?: string[];
+  folder?: string;
+  uploaded_by?: string;
+  school_id?: string;
   created_at: string;
 }
 
 export const useMediaLibrary = () => {
   const [media, setMedia] = useState<MediaFile[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string>('');
 
   const fetchMedia = async (folder?: string) => {
     try {
@@ -42,32 +42,57 @@ export const useMediaLibrary = () => {
       setMedia(data || []);
     } catch (err: any) {
       setError(err.message);
-      toast.error('Erro ao carregar arquivos');
+      toast.error('Erro ao carregar mídia: ' + err.message);
     } finally {
       setLoading(false);
     }
   };
 
-  const uploadFile = async (file: File, folder = 'uploads', metadata?: Partial<MediaFile>) => {
+  const uploadFile = async (
+    file: File,
+    folder: string = 'uploads',
+    metadata?: Partial<MediaFile>
+  ): Promise<MediaFile | null> => {
     try {
+      // Validar tipo de arquivo
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'application/pdf'];
+      if (!allowedTypes.includes(file.type)) {
+        toast.error('Tipo de arquivo não permitido');
+        return null;
+      }
+
+      // Validar tamanho (máximo 10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        toast.error('Arquivo deve ter menos de 10MB');
+        return null;
+      }
+
+      // Gerar nome único
       const fileExt = file.name.split('.').pop();
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
       const filePath = `${folder}/${fileName}`;
 
-      // Upload to Supabase Storage
-      const { error: uploadError } = await supabase.storage
-        .from('uploads')
-        .upload(filePath, file);
+      // Upload para Supabase Storage
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('documents')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error('Upload error:', uploadError);
+        toast.error('Erro ao fazer upload do arquivo');
+        return null;
+      }
 
-      // Get public URL
+      // Obter URL pública
       const { data: { publicUrl } } = supabase.storage
-        .from('uploads')
+        .from('documents')
         .getPublicUrl(filePath);
 
-      // Save to media library
-      const { data, error } = await supabase
+      // Salvar metadados na base de dados
+      const { data: mediaData, error: dbError } = await supabase
         .from('media_library')
         .insert([{
           filename: fileName,
@@ -76,60 +101,84 @@ export const useMediaLibrary = () => {
           file_size: file.size,
           mime_type: file.type,
           folder,
-          ...metadata
+          alt_text: metadata?.alt_text || '',
+          description: metadata?.description || '',
+          tags: metadata?.tags || [],
+          school_id: metadata?.school_id
         }])
         .select()
         .single();
 
-      if (error) throw error;
+      if (dbError) {
+        console.error('Database error:', dbError);
+        toast.error('Erro ao salvar metadados do arquivo');
+        return null;
+      }
 
       await fetchMedia();
       toast.success('Arquivo enviado com sucesso!');
-      return data;
-    } catch (err: any) {
-      toast.error('Erro ao enviar arquivo: ' + err.message);
-      throw err;
+      return mediaData;
+
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast.error('Erro ao fazer upload do arquivo');
+      return null;
     }
   };
 
-  const deleteFile = async (id: string, filePath: string) => {
+  const deleteFile = async (id: string, filePath: string): Promise<boolean> => {
     try {
-      // Delete from storage
-      const path = filePath.split('/').slice(-2).join('/'); // Get relative path
-      await supabase.storage
-        .from('uploads')
-        .remove([path]);
+      // Remover do storage
+      const { error: storageError } = await supabase.storage
+        .from('documents')
+        .remove([filePath.split('/').slice(-2).join('/')]);
 
-      // Delete from database
-      const { error } = await supabase
+      if (storageError) {
+        console.error('Storage delete error:', storageError);
+      }
+
+      // Remover da base de dados
+      const { error: dbError } = await supabase
         .from('media_library')
         .delete()
         .eq('id', id);
 
-      if (error) throw error;
+      if (dbError) {
+        console.error('Database delete error:', dbError);
+        toast.error('Erro ao deletar arquivo');
+        return false;
+      }
 
       await fetchMedia();
-      toast.success('Arquivo removido com sucesso!');
-    } catch (err: any) {
-      toast.error('Erro ao remover arquivo: ' + err.message);
-      throw err;
+      toast.success('Arquivo deletado com sucesso!');
+      return true;
+    } catch (error) {
+      console.error('Delete error:', error);
+      toast.error('Erro ao deletar arquivo');
+      return false;
     }
   };
 
-  const updateFileMetadata = async (id: string, metadata: Partial<MediaFile>) => {
+  const updateFileMetadata = async (id: string, metadata: Partial<MediaFile>): Promise<boolean> => {
     try {
       const { error } = await supabase
         .from('media_library')
         .update(metadata)
         .eq('id', id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Update error:', error);
+        toast.error('Erro ao atualizar metadados');
+        return false;
+      }
 
       await fetchMedia();
       toast.success('Metadados atualizados com sucesso!');
-    } catch (err: any) {
-      toast.error('Erro ao atualizar metadados: ' + err.message);
-      throw err;
+      return true;
+    } catch (error) {
+      console.error('Update error:', error);
+      toast.error('Erro ao atualizar metadados');
+      return false;
     }
   };
 

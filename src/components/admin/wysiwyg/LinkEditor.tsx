@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -9,8 +9,8 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 
 interface LinkEditorProps {
   onInsert: (url: string, text: string, newTab: boolean) => void;
@@ -21,69 +21,63 @@ interface LinkEditorProps {
 const LinkEditor: React.FC<LinkEditorProps> = ({
   onInsert,
   onClose,
-  initialText = "",
+  initialText = ""
 }) => {
-  const [url, setUrl] = useState("https://");
+  const [url, setUrl] = useState("");
   const [text, setText] = useState(initialText);
-  const [openInNewTab, setOpenInNewTab] = useState(true);
+  const [newTab, setNewTab] = useState(true);
 
-  useEffect(() => {
-    setText(initialText || "");
-  }, [initialText]);
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onInsert(url, text, openInNewTab);
+  const handleInsert = () => {
+    if (!url || !text) return;
+    onInsert(url, text, newTab);
   };
 
   return (
     <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[400px]">
         <DialogHeader>
           <DialogTitle>Inserir Link</DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
+        <div className="space-y-4">
+          <div>
             <Label htmlFor="link-url">URL</Label>
             <Input
               id="link-url"
+              placeholder="https://exemplo.com"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
-              placeholder="https://exemplo.com"
-              required
             />
           </div>
 
-          <div className="space-y-2">
+          <div>
             <Label htmlFor="link-text">Texto do Link</Label>
             <Input
               id="link-text"
+              placeholder="Texto que aparecerá no link"
               value={text}
               onChange={(e) => setText(e.target.value)}
-              placeholder="Clique aqui"
-              required
             />
           </div>
 
           <div className="flex items-center space-x-2">
-            <Checkbox
+            <Switch
               id="new-tab"
-              checked={openInNewTab}
-              onCheckedChange={(checked) => setOpenInNewTab(checked as boolean)}
+              checked={newTab}
+              onCheckedChange={setNewTab}
             />
-            <Label htmlFor="new-tab" className="cursor-pointer">
-              Abrir em uma nova aba
-            </Label>
+            <Label htmlFor="new-tab">Abrir em nova aba</Label>
           </div>
-
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose}>
-              Cancelar
-            </Button>
-            <Button type="submit">Inserir Link</Button>
-          </DialogFooter>
-        </form>
+        </div>
+        
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>
+            Cancelar
+          </Button>
+          <Button onClick={handleInsert} disabled={!url || !text}>
+            Inserir Link
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

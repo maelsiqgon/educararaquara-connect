@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,6 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import FileUploadComponent from '@/components/admin/FileUploadComponent';
+import WysiwygEditor from '@/components/admin/wysiwyg/WysiwygEditor';
 import { useNews } from '@/hooks/useNews';
 import { useNewsCategories } from '@/hooks/useNewsCategories';
 import { useSchools } from '@/hooks/useSchools';
@@ -23,7 +23,7 @@ interface NewsFormProps {
 }
 
 const NewsForm: React.FC<NewsFormProps> = ({ newsId, onSuccess, onCancel }) => {
-  const { news, createNews, updateNews, getNewsById } = useNews();
+  const { createNews, updateNews, getNewsById } = useNews();
   const { categories } = useNewsCategories();
   const { schools } = useSchools();
   
@@ -33,7 +33,7 @@ const NewsForm: React.FC<NewsFormProps> = ({ newsId, onSuccess, onCancel }) => {
     excerpt: '',
     content: '',
     image_url: '',
-    status: 'draft' as const,
+    status: 'draft' as 'draft' | 'scheduled' | 'published' | 'archived',
     featured: false,
     category_id: '',
     school_id: '',
@@ -49,26 +49,29 @@ const NewsForm: React.FC<NewsFormProps> = ({ newsId, onSuccess, onCancel }) => {
 
   useEffect(() => {
     if (newsId) {
-      const existingNews = news.find(n => n.id === newsId);
-      if (existingNews) {
-        setFormData({
-          title: existingNews.title,
-          slug: existingNews.slug,
-          excerpt: existingNews.excerpt || '',
-          content: existingNews.content,
-          image_url: existingNews.image_url || '',
-          status: existingNews.status,
-          featured: existingNews.featured,
-          category_id: existingNews.category_id || '',
-          school_id: existingNews.school_id || '',
-          meta_title: existingNews.meta_title || '',
-          meta_description: existingNews.meta_description || '',
-          tags: existingNews.tags || [],
-          scheduled_at: existingNews.scheduled_at || ''
-        });
-      }
+      const loadNews = async () => {
+        const existingNews = await getNewsById(newsId);
+        if (existingNews) {
+          setFormData({
+            title: existingNews.title,
+            slug: existingNews.slug,
+            excerpt: existingNews.excerpt || '',
+            content: existingNews.content,
+            image_url: existingNews.image_url || '',
+            status: existingNews.status,
+            featured: existingNews.featured,
+            category_id: existingNews.category_id || '',
+            school_id: existingNews.school_id || '',
+            meta_title: existingNews.meta_title || '',
+            meta_description: existingNews.meta_description || '',
+            tags: existingNews.tags || [],
+            scheduled_at: existingNews.scheduled_at || ''
+          });
+        }
+      };
+      loadNews();
     }
-  }, [newsId, news]);
+  }, [newsId, getNewsById]);
 
   const handleInputChange = (field: string, value: any) => {
     setFormData(prev => ({
@@ -199,11 +202,7 @@ const NewsForm: React.FC<NewsFormProps> = ({ newsId, onSuccess, onCancel }) => {
             {formData.excerpt && (
               <p className="text-lg text-gray-600 mb-4">{formData.excerpt}</p>
             )}
-            <div className="prose max-w-none">
-              {formData.content.split('\n').map((paragraph, index) => (
-                <p key={index} className="mb-4">{paragraph}</p>
-              ))}
-            </div>
+            <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: formData.content }} />
             {formData.tags.length > 0 && (
               <div className="mt-6 flex flex-wrap gap-2">
                 {formData.tags.map(tag => (
@@ -274,13 +273,10 @@ const NewsForm: React.FC<NewsFormProps> = ({ newsId, onSuccess, onCancel }) => {
 
           <div>
             <Label htmlFor="content">Conteúdo *</Label>
-            <Textarea
-              id="content"
-              value={formData.content}
-              onChange={(e) => handleInputChange('content', e.target.value)}
+            <WysiwygEditor
+              initialContent={formData.content}
+              onChange={(content) => handleInputChange('content', content)}
               placeholder="Conteúdo completo da notícia"
-              rows={10}
-              required
             />
           </div>
         </CardContent>

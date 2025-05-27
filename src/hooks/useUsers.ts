@@ -2,7 +2,35 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { User, UserRole } from '@/types/user';
+
+export interface UserRole {
+  id: string;
+  user_id: string;
+  school_id: string;
+  role: 'super_admin' | 'admin' | 'director' | 'coordinator' | 'teacher' | 'staff' | 'parent' | 'student';
+  active: boolean;
+  created_at: string;
+  school?: {
+    id: string;
+    name: string;
+  };
+}
+
+export interface User {
+  id: string;
+  email: string;
+  name: string;
+  cpf?: string;
+  phone?: string;
+  address?: string;
+  registration?: string;
+  active: boolean;
+  avatar_url?: string;
+  created_at: string;
+  updated_at: string;
+  last_access?: string;
+  roles?: UserRole[];
+}
 
 export const useUsers = () => {
   const [users, setUsers] = useState<User[]>([]);
@@ -167,6 +195,33 @@ export const useUsers = () => {
     }
   };
 
+  const getUserById = async (id: string): Promise<User | null> => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select(`
+          *,
+          roles:user_school_roles(
+            id,
+            school_id,
+            role,
+            active,
+            user_id,
+            created_at,
+            school:schools(id, name)
+          )
+        `)
+        .eq('id', id)
+        .single();
+
+      if (error) throw error;
+      return data;
+    } catch (err: any) {
+      toast.error('Usuário não encontrado');
+      return null;
+    }
+  };
+
   useEffect(() => {
     fetchUsers();
   }, []);
@@ -181,6 +236,7 @@ export const useUsers = () => {
     deleteUser,
     assignUserToSchool,
     removeUserFromSchool,
-    toggleUserStatus
+    toggleUserStatus,
+    getUserById
   };
 };
