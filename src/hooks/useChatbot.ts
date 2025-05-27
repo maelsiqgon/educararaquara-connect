@@ -1,7 +1,13 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+
+export interface Message {
+  id: string;
+  text: string;
+  isUser: boolean;
+  timestamp: Date;
+}
 
 export interface ChatbotKnowledge {
   id: string;
@@ -63,9 +69,26 @@ export interface TicketMessage {
 export const useChatbot = () => {
   const [knowledgeBase, setKnowledgeBase] = useState<ChatbotKnowledge[]>([]);
   const [tickets, setTickets] = useState<SupportTicket[]>([]);
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      id: '1',
+      text: 'Olá! Como posso ajudar você hoje?',
+      isUser: false,
+      timestamp: new Date()
+    }
+  ]);
+  const [isTyping, setIsTyping] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [whatsappSettings, setWhatsappSettings] = useState<any>(null);
+  const [quickReplies] = useState<string[]>([
+    'Como faço matrícula?',
+    'Horário de funcionamento',
+    'Documentos necessários',
+    'Contato da escola',
+    'Falar com atendente'
+  ]);
+  const [showQuickReplies, setShowQuickReplies] = useState(true);
 
   const fetchKnowledgeBase = async () => {
     try {
@@ -109,6 +132,56 @@ export const useChatbot = () => {
     }
   };
 
+  const sendMessage = async (text: string) => {
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      text,
+      isUser: true,
+      timestamp: new Date()
+    };
+
+    setMessages(prev => [...prev, userMessage]);
+    setIsTyping(true);
+    setShowQuickReplies(false);
+
+    try {
+      // Simular resposta do chatbot
+      setTimeout(() => {
+        const botResponse: Message = {
+          id: (Date.now() + 1).toString(),
+          text: 'Obrigado pela sua mensagem. Como posso ajudar mais?',
+          isUser: false,
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, botResponse]);
+        setIsTyping(false);
+        setShowQuickReplies(true);
+      }, 1500);
+    } catch (error) {
+      setIsTyping(false);
+      toast.error('Erro ao enviar mensagem');
+    }
+  };
+
+  const createTicket = async (ticketData: any) => {
+    try {
+      const { data, error } = await supabase
+        .from('support_tickets')
+        .insert([ticketData])
+        .select()
+        .single();
+
+      if (error) throw error;
+      
+      await fetchTickets();
+      toast.success('Ticket criado com sucesso!');
+      return data;
+    } catch (err: any) {
+      toast.error('Erro ao criar ticket: ' + err.message);
+      throw err;
+    }
+  };
+
   const fetchWhatsappSettings = async () => {
     try {
       const { data, error } = await supabase
@@ -117,7 +190,7 @@ export const useChatbot = () => {
         .limit(1)
         .single();
 
-      if (error && error.code !== 'PGRST116') { // Ignore "No rows returned" error
+      if (error && error.code !== 'PGRST116') {
         throw error;
       }
       setWhatsappSettings(data || null);
@@ -128,7 +201,6 @@ export const useChatbot = () => {
 
   const queryChat = async (question: string) => {
     try {
-      // First try the local knowledge base
       const { data, error } = await supabase
         .from('chatbot_knowledge')
         .select('*')
@@ -139,7 +211,6 @@ export const useChatbot = () => {
       if (error) throw error;
       
       if (data && data.length > 0) {
-        // Increment usage count for the best match
         await supabase
           .from('chatbot_knowledge')
           .update({ usage_count: data[0].usage_count + 1 })
@@ -151,7 +222,6 @@ export const useChatbot = () => {
         };
       }
       
-      // If not found in local knowledge base, return default response
       return {
         answer: 'Desculpe, não encontrei uma resposta para sua pergunta. Posso ajudar com algo mais?',
         found: false
@@ -214,25 +284,6 @@ export const useChatbot = () => {
       toast.success('Entrada removida com sucesso!');
     } catch (err: any) {
       toast.error('Erro ao remover entrada: ' + err.message);
-      throw err;
-    }
-  };
-
-  const createTicket = async (ticketData: Omit<SupportTicket, 'id' | 'created_at' | 'updated_at' | 'creator' | 'assignee' | 'school' | 'messages'>) => {
-    try {
-      const { data, error } = await supabase
-        .from('support_tickets')
-        .insert([ticketData])
-        .select()
-        .single();
-
-      if (error) throw error;
-      
-      await fetchTickets();
-      toast.success('Ticket criado com sucesso!');
-      return data;
-    } catch (err: any) {
-      toast.error('Erro ao criar ticket: ' + err.message);
       throw err;
     }
   };
@@ -409,20 +460,25 @@ export const useChatbot = () => {
     knowledgeBase,
     tickets,
     whatsappSettings,
+    messages,
+    isTyping,
     loading,
     error,
+    quickReplies,
+    showQuickReplies,
+    sendMessage,
+    createTicket,
     queryChat,
     fetchKnowledgeBase,
-    createKnowledgeEntry,
-    updateKnowledgeEntry,
-    deleteKnowledgeEntry,
     fetchTickets,
-    createTicket,
     updateTicket,
     resolveTicket,
     closeTicket,
     getTicketById,
     addTicketMessage,
-    updateWhatsappSettings
+    updateWhatsappSettings,
+    createKnowledgeEntry,
+    updateKnowledgeEntry,
+    deleteKnowledgeEntry
   };
 };

@@ -1,8 +1,8 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { MessageCircle, X, Minimize2 } from "lucide-react";
+import { MessageCircle } from "lucide-react";
 import ChatHeader from './chatbot/ChatHeader';
 import MessagesList from './chatbot/MessagesList';
 import ChatInput from './chatbot/ChatInput';
@@ -68,9 +68,14 @@ const Chatbot = () => {
               <TicketForm 
                 onSubmit={handleCreateTicket}
                 onCancel={() => setShowTicketForm(false)}
+                isSubmitting={false}
               />
             ) : (
-              <MessagesList messages={messages} isTyping={isTyping} />
+              <MessagesList 
+                messages={messages} 
+                isTyping={isTyping}
+                onOpenTicketForm={() => setShowTicketForm(true)}
+              />
             )}
           </div>
           

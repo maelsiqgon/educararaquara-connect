@@ -1,36 +1,53 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { Bot, X } from "lucide-react";
+import { X, Minimize2, LifeBuoy } from "lucide-react";
 
 interface ChatHeaderProps {
-  isSchoolChat: boolean;
   onClose: () => void;
+  onMinimize: () => void;
+  onOpenTicket: () => void;
+  isMinimized: boolean;
 }
 
-const ChatHeader: React.FC<ChatHeaderProps> = ({ isSchoolChat, onClose }) => {
+const ChatHeader: React.FC<ChatHeaderProps> = ({ 
+  onClose, 
+  onMinimize, 
+  onOpenTicket, 
+  isMinimized 
+}) => {
   return (
-    <div className="bg-education-primary text-white p-4 rounded-t-lg">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
-            <Bot className="h-5 w-5" />
-          </div>
-          <div>
-            <h3 className="text-sm font-semibold">
-              {isSchoolChat ? 'Assistente da Escola' : 'Assistente da Secretaria'}
-            </h3>
-            <div className="flex items-center gap-1 text-xs text-education-light">
-              <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-              Online
-            </div>
-          </div>
-        </div>
+    <div className="flex items-center justify-between p-4 bg-education-primary text-white border-b">
+      <div className="flex items-center">
+        <h3 className="font-medium">Assistente Virtual</h3>
+      </div>
+      
+      <div className="flex items-center space-x-2">
+        {!isMinimized && (
+          <Button
+            onClick={onOpenTicket}
+            size="sm"
+            variant="ghost"
+            className="text-white hover:bg-white/20"
+          >
+            <LifeBuoy className="h-4 w-4" />
+          </Button>
+        )}
+        
         <Button
-          variant="ghost"
+          onClick={onMinimize}
           size="sm"
+          variant="ghost"
+          className="text-white hover:bg-white/20"
+        >
+          <Minimize2 className="h-4 w-4" />
+        </Button>
+        
+        <Button
           onClick={onClose}
-          className="text-white hover:bg-white/20 h-8 w-8 p-0"
+          size="sm"
+          variant="ghost"
+          className="text-white hover:bg-white/20"
         >
           <X className="h-4 w-4" />
         </Button>

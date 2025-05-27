@@ -1,28 +1,26 @@
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { School } from '@/hooks/useSchools';
 
 interface SchoolImageProps {
-  school: School;
+  image_url?: string;
+  name: string;
 }
 
-const SchoolImage: React.FC<SchoolImageProps> = ({ school }) => {
-  if (!school.image_url) return null;
-
+const SchoolImage: React.FC<SchoolImageProps> = ({ image_url, name }) => {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Imagem da Escola</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <img
-          src={school.image_url}
-          alt={school.name}
-          className="w-full h-64 object-cover rounded-lg"
+    <div className="w-full h-64 bg-gray-200 rounded-lg overflow-hidden">
+      {image_url ? (
+        <img 
+          src={image_url} 
+          alt={name}
+          className="w-full h-full object-cover"
         />
-      </CardContent>
-    </Card>
+      ) : (
+        <div className="w-full h-full flex items-center justify-center text-gray-500">
+          <span>Imagem não disponível</span>
+        </div>
+      )}
+    </div>
   );
 };
 

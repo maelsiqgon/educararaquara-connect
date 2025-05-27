@@ -91,8 +91,8 @@ const EscolaDetalhes = () => {
               </CardHeader>
               <CardContent className="space-y-6">
                 <SchoolImage 
-                  imageUrl={school.image_url} 
-                  schoolName={school.name} 
+                  image_url={school.image_url} 
+                  name={school.name} 
                 />
                 
                 <SchoolInfo school={school} />
