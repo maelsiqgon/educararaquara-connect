@@ -925,7 +925,23 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_user_roles: {
+        Args: { user_uuid: string }
+        Returns: {
+          id: string
+          user_id: string
+          school_id: string
+          role: string
+          active: boolean
+          created_at: string
+          school_name: string
+          school_id_text: string
+        }[]
+      }
+      is_super_admin: {
+        Args: { user_uuid: string }
+        Returns: boolean
+      }
     }
     Enums: {
       contact_type: "phone" | "cellphone" | "whatsapp" | "email"

@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import AuthForm from "@/components/admin/auth/AuthForm";
 import CreateAdminButton from "@/components/admin/CreateAdminButton";
+import { checkIsSuperAdminRPC } from "@/hooks/auth/userRoleService";
 
 const AdminLogin = () => {
   const [email, setEmail] = useState("admin@araraquara.sp.gov.br");
@@ -23,18 +24,20 @@ const AdminLogin = () => {
         isSuperAdmin: isSuperAdmin()
       });
       
-      // Check immediately if user has super admin role
-      const isSuper = isSuperAdmin();
-      if (isSuper) {
-        console.log('✅ User is already super admin, redirecting to admin panel');
-        navigate("/admin", { replace: true });
-        return;
-      }
-      
-      // If not super admin, refresh roles and check again
       const checkAdminAccess = async () => {
         try {
-          console.log('🔄 Refreshing roles to double-check admin access...');
+          // First try RPC function
+          console.log('🔍 Checking admin access via RPC...');
+          const isSuperViaRPC = await checkIsSuperAdminRPC(user.id);
+          
+          if (isSuperViaRPC) {
+            console.log('✅ User is super admin via RPC, redirecting to admin panel');
+            navigate("/admin", { replace: true });
+            return;
+          }
+          
+          // Fallback: refresh roles and check again
+          console.log('🔄 RPC failed, refreshing roles to double-check admin access...');
           const refreshedRoles = await refreshUserRoles();
           
           const isSuperAfterRefresh = refreshedRoles.some(role => role.role === 'super_admin');

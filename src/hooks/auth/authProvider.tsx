@@ -1,10 +1,11 @@
+
 import React, { useState, useEffect } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { AuthContext } from './authContext';
 import { UserRole } from './types';
-import { fetchUserRoles, isSuperAdmin as checkSuperAdmin, hasRole as checkHasRole } from './userRoleService';
+import { fetchUserRoles, isSuperAdmin as checkSuperAdmin, hasRole as checkHasRole, checkIsSuperAdminRPC } from './userRoleService';
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);

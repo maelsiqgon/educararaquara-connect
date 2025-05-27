@@ -3,10 +3,13 @@ import { User, Session } from '@supabase/supabase-js';
 
 export interface UserRole {
   id: string;
+  user_id: string;
   school_id: string | null;
   role: string;
   active: boolean;
   created_at: string;
+  school_name?: string;
+  school_id_text?: string;
   school?: {
     id: string;
     name: string;

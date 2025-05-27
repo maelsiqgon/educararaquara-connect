@@ -78,7 +78,11 @@ const CreateAdminButton = () => {
       if (response.ok) {
         const data = await response.json();
         console.log('✅ Admin user created successfully:', data);
-        toast.success(`Usuário admin criado! Email: ${data.email} | Senha: ${data.password}`);
+        if (data.email && data.password) {
+          toast.success(`Usuário admin criado! Email: ${data.email} | Senha: ${data.password}`);
+        } else {
+          toast.success('Usuário admin criado com sucesso!');
+        }
       } else {
         const errorText = await response.text();
         console.error('❌ Edge function error response:', errorText);

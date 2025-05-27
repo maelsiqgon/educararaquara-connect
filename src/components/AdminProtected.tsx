@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { checkIsSuperAdminRPC } from "@/hooks/auth/userRoleService";
 
 interface AdminProtectedProps {
   children: React.ReactNode;
@@ -42,11 +43,22 @@ const AdminProtected: React.FC<AdminProtectedProps> = ({
         return;
       }
       
-      console.log('👤 User found, checking roles...');
+      console.log('👤 User found, checking admin access...');
       
-      // Force refresh roles to ensure we have the latest data
       try {
-        console.log('🔄 Force refreshing user roles...');
+        // First check using RPC function for more reliable results
+        console.log('🔍 Checking super admin via RPC...');
+        const isSuperViaRPC = await checkIsSuperAdminRPC(user.id);
+        
+        if (isSuperViaRPC) {
+          console.log('✅ User is super admin via RPC, granting access');
+          setIsAuthorized(true);
+          setIsChecking(false);
+          return;
+        }
+        
+        // Fallback: refresh roles and check again
+        console.log('🔄 RPC check failed, refreshing roles...');
         const refreshedRoles = await refreshUserRoles();
         console.log('✅ Roles refreshed:', refreshedRoles);
         
