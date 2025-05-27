@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import EditorToolbar from "./wysiwyg/EditorToolbar";
 import EditorContent from "./wysiwyg/EditorContent";
 
@@ -7,15 +7,18 @@ interface WysiwygEditorProps {
   initialValue?: string;
   onChange?: (value: string) => void;
   className?: string;
+  placeholder?: string;
 }
 
 const WysiwygEditor: React.FC<WysiwygEditorProps> = ({ 
   initialValue = "", 
   onChange,
-  className
+  className,
+  placeholder = "Digite seu conteúdo aqui..."
 }) => {
   const [content, setContent] = useState(initialValue);
   const [showPreview, setShowPreview] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setContent(e.target.value);
@@ -25,7 +28,7 @@ const WysiwygEditor: React.FC<WysiwygEditorProps> = ({
   };
 
   const insertTag = (tag: string) => {
-    const textarea = document.getElementById('wysiwyg-editor') as HTMLTextAreaElement;
+    const textarea = textareaRef.current;
     if (!textarea) return;
 
     const start = textarea.selectionStart;
@@ -92,6 +95,8 @@ const WysiwygEditor: React.FC<WysiwygEditorProps> = ({
         content={content}
         showPreview={showPreview}
         handleContentChange={handleContentChange}
+        textareaRef={textareaRef}
+        placeholder={placeholder}
       />
     </div>
   );

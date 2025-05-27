@@ -38,11 +38,23 @@ export const useUsers = () => {
     }
   };
 
-  const createUser = async (userData: Omit<User, 'id' | 'created_at' | 'updated_at' | 'roles'>) => {
+  const createUser = async (userData: {
+    email: string;
+    name: string;
+    cpf?: string;
+    phone?: string;
+    address?: string;
+    registration?: string;
+    active?: boolean;
+  }) => {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .insert([userData])
+        .insert([{
+          id: crypto.randomUUID(),
+          ...userData,
+          active: userData.active ?? true
+        }])
         .select()
         .single();
 
@@ -57,7 +69,15 @@ export const useUsers = () => {
     }
   };
 
-  const updateUser = async (id: string, userData: Partial<Omit<User, 'id' | 'created_at' | 'updated_at' | 'roles'>>) => {
+  const updateUser = async (id: string, userData: Partial<{
+    email: string;
+    name: string;
+    cpf?: string;
+    phone?: string;
+    address?: string;
+    registration?: string;
+    active?: boolean;
+  }>) => {
     try {
       const { error } = await supabase
         .from('profiles')

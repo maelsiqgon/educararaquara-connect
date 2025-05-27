@@ -57,14 +57,24 @@ export const useNews = () => {
         .from('news')
         .select(`
           *,
-          category:news_categories(id, name, color),
+          category:news_categories(id, name, color, active, created_at),
           author:profiles(id, name, email),
           school:schools(id, name)
         `)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setNews(data || []);
+      
+      // Transform data to match our interface
+      const transformedNews = (data || []).map(item => ({
+        ...item,
+        category: item.category ? {
+          ...item.category,
+          description: ''
+        } : undefined
+      }));
+      
+      setNews(transformedNews);
     } catch (err: any) {
       setError(err.message);
       toast.error('Erro ao carregar notícias');
@@ -147,7 +157,7 @@ export const useNews = () => {
         .from('news')
         .select(`
           *,
-          category:news_categories(id, name, color),
+          category:news_categories(id, name, color, active, created_at),
           author:profiles(id, name, email),
           school:schools(id, name)
         `)
@@ -155,7 +165,14 @@ export const useNews = () => {
         .single();
 
       if (error) throw error;
-      return data;
+      
+      return {
+        ...data,
+        category: data.category ? {
+          ...data.category,
+          description: ''
+        } : undefined
+      };
     } catch (err: any) {
       toast.error('Notícia não encontrada');
       throw err;

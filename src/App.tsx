@@ -14,6 +14,7 @@ import Projetos from "./pages/Projetos";
 import Contato from "./pages/Contato";
 import Auth from "./pages/Auth";
 import Admin from "./pages/Admin";
+import AdminLogin from "./pages/AdminLogin";
 import SchoolAdmin from "./pages/SchoolAdmin";
 import NotFound from "./pages/NotFound";
 
@@ -35,6 +36,7 @@ const App = () => (
             <Route path="/projetos" element={<Projetos />} />
             <Route path="/contato" element={<Contato />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/admin/login" element={<AdminLogin />} />
             <Route 
               path="/admin" 
               element={
