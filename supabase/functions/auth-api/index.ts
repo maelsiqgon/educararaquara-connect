@@ -23,6 +23,8 @@ serve(async (req) => {
     const pathSegments = url.pathname.split('/').filter(Boolean);
     const action = pathSegments[pathSegments.length - 1];
 
+    console.log('Auth API called with action:', action);
+
     if (action === 'login') {
       const { email, password } = await req.json();
       
@@ -31,25 +33,47 @@ serve(async (req) => {
         password,
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Login error:', error);
+        throw error;
+      }
 
       // Update last access time
-      await supabaseClient.from('profiles')
-        .update({ last_access: new Date().toISOString() })
-        .eq('id', data.user.id);
-      
-      // Log activity
-      await supabaseClient.from('activity_logs').insert([{
-        user_id: data.user.id,
-        action: 'login',
-        user_agent: req.headers.get('User-Agent'),
-        ip_address: req.headers.get('X-Forwarded-For') || req.headers.get('CF-Connecting-IP'),
-      }]);
+      if (data.user) {
+        await supabaseClient.from('profiles')
+          .update({ last_access: new Date().toISOString() })
+          .eq('id', data.user.id);
+        
+        // Log activity
+        await supabaseClient.from('activity_logs').insert([{
+          user_id: data.user.id,
+          action: 'login',
+          user_agent: req.headers.get('User-Agent'),
+          ip_address: req.headers.get('X-Forwarded-For') || req.headers.get('CF-Connecting-IP'),
+        }]);
+      }
 
       return new Response(JSON.stringify(data), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
-    } else if (action === 'logout') {
+    } 
+    
+    else if (action === 'logout') {
+      const authHeader = req.headers.get('Authorization');
+      if (authHeader) {
+        const token = authHeader.replace('Bearer ', '');
+        const { data: { user } } = await supabaseClient.auth.getUser(token);
+        
+        if (user) {
+          await supabaseClient.from('activity_logs').insert([{
+            user_id: user.id,
+            action: 'logout',
+            user_agent: req.headers.get('User-Agent'),
+            ip_address: req.headers.get('X-Forwarded-For') || req.headers.get('CF-Connecting-IP'),
+          }]);
+        }
+      }
+
       const { error } = await supabaseClient.auth.signOut();
       
       if (error) throw error;
@@ -57,7 +81,9 @@ serve(async (req) => {
       return new Response(JSON.stringify({ success: true }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
-    } else if (action === 'reset-password') {
+    } 
+    
+    else if (action === 'reset-password') {
       const { email } = await req.json();
       
       const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
@@ -69,10 +95,27 @@ serve(async (req) => {
       return new Response(JSON.stringify({ success: true }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
-    } else if (action === 'update-password') {
+    } 
+    
+    else if (action === 'update-password') {
       const { newPassword } = await req.json();
+      const authHeader = req.headers.get('Authorization');
       
-      const { error } = await supabaseClient.auth.updateUser({
+      if (!authHeader) {
+        throw new Error('Authorization header required');
+      }
+
+      const token = authHeader.replace('Bearer ', '');
+      const supabaseWithAuth = createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+        { 
+          auth: { persistSession: false },
+          global: { headers: { Authorization: authHeader } }
+        }
+      );
+      
+      const { error } = await supabaseWithAuth.auth.updateUser({
         password: newPassword,
       });
       
@@ -85,6 +128,7 @@ serve(async (req) => {
 
     return new Response('Not found', { status: 404, headers: corsHeaders });
   } catch (error) {
+    console.error('Auth API error:', error);
     return new Response(JSON.stringify({ error: error.message }), {
       status: 400,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

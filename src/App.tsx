@@ -1,64 +1,114 @@
+import React from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { Toaster } from 'sonner';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
-import { Toaster } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AuthProvider } from "@/hooks/useAuth";
-import ProtectedRoute from "@/components/ProtectedRoute";
-import Index from "./pages/Index";
-import Escolas from "./pages/Escolas";
-import EscolaDetalhes from "./pages/EscolaDetalhes";
-import Noticias from "./pages/Noticias";
-import Institucional from "./pages/Institucional";
-import Projetos from "./pages/Projetos";
-import Contato from "./pages/Contato";
-import Auth from "./pages/Auth";
-import Admin from "./pages/Admin";
-import AdminLogin from "./pages/AdminLogin";
-import SchoolAdmin from "./pages/SchoolAdmin";
-import NotFound from "./pages/NotFound";
+import Login from '@/pages/Login';
+import Home from '@/pages/Home';
+import Schools from '@/pages/Schools';
+import SchoolDetail from '@/pages/SchoolDetail';
+import Contact from '@/pages/Contact';
+import AdminLogin from '@/pages/AdminLogin';
+import AdminHome from '@/pages/admin/AdminHome';
+import AdminSchools from '@/pages/admin/AdminSchools';
+import AdminSchoolEdit from '@/pages/admin/AdminSchoolEdit';
+import AdminSchoolCreate from '@/pages/admin/AdminSchoolCreate';
+import AdminUsers from '@/pages/admin/AdminUsers';
+import AdminUserEdit from '@/pages/admin/AdminUserEdit';
+import AdminUserCreate from '@/pages/admin/AdminUserCreate';
+import AdminMedia from '@/pages/admin/AdminMedia';
+import AdminProtected from '@/components/AdminProtected';
+import ProtectedRoute from '@/components/ProtectedRoute';
+import { AuthProvider } from '@/hooks/useAuth';
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
+function App() {
+  return (
     <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
+      <QueryClientProvider client={queryClient}>
         <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/escolas" element={<Escolas />} />
-            <Route path="/escola/:id" element={<EscolaDetalhes />} />
-            <Route path="/noticias" element={<Noticias />} />
-            <Route path="/noticias/:id" element={<Noticias />} />
-            <Route path="/institucional" element={<Institucional />} />
-            <Route path="/projetos" element={<Projetos />} />
-            <Route path="/contato" element={<Contato />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/admin/login" element={<AdminLogin />} />
-            <Route 
-              path="/admin" 
-              element={
-                <ProtectedRoute>
-                  <Admin />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/admin/escola/:id" 
-              element={
-                <ProtectedRoute>
-                  <SchoolAdmin />
-                </ProtectedRoute>
-              } 
-            />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <div className="min-h-screen bg-white">
+            <Toaster />
+            <Routes>
+              <Route path="/auth" element={<Login />} />
+              <Route path="/" element={<Home />} />
+              <Route path="/escolas" element={<Schools />} />
+              <Route path="/escolas/:id" element={<SchoolDetail />} />
+              <Route path="/contato" element={<Contact />} />
+
+              {/* Admin Routes */}
+              <Route path="/admin/login" element={<AdminLogin />} />
+              <Route
+                path="/admin"
+                element={
+                  <AdminProtected>
+                    <AdminHome />
+                  </AdminProtected>
+                }
+              />
+              <Route
+                path="/admin/escolas"
+                element={
+                  <AdminProtected>
+                    <AdminSchools />
+                  </AdminProtected>
+                }
+              />
+              <Route
+                path="/admin/escolas/editar/:id"
+                element={
+                  <AdminProtected>
+                    <AdminSchoolEdit />
+                  </AdminProtected>
+                }
+              />
+              <Route
+                path="/admin/escolas/criar"
+                element={
+                  <AdminProtected>
+                    <AdminSchoolCreate />
+                  </AdminProtected>
+                }
+              />
+              <Route
+                path="/admin/usuarios"
+                element={
+                  <AdminProtected>
+                    <AdminUsers />
+                  </AdminProtected>
+                }
+              />
+              <Route
+                path="/admin/usuarios/editar/:id"
+                element={
+                  <AdminProtected>
+                    <AdminUserEdit />
+                  </AdminProtected>
+                }
+              />
+              <Route
+                path="/admin/usuarios/criar"
+                element={
+                  <AdminProtected>
+                    <AdminUserCreate />
+                  </AdminProtected>
+                }
+              />
+              <Route
+                path="/admin/media"
+                element={
+                  <AdminProtected>
+                    <AdminMedia />
+                  </AdminProtected>
+                }
+              />
+            </Routes>
+          </div>
         </BrowserRouter>
-      </TooltipProvider>
+      </QueryClientProvider>
     </AuthProvider>
-  </QueryClientProvider>
-);
+  );
+}
 
 export default App;

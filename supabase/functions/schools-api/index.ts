@@ -13,15 +13,21 @@ serve(async (req) => {
   }
 
   try {
+    const authHeader = req.headers.get('Authorization');
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      { global: { headers: { Authorization: req.headers.get('Authorization')! } } }
+      { 
+        auth: { persistSession: false },
+        global: { headers: authHeader ? { Authorization: authHeader } : {} }
+      }
     );
 
     const url = new URL(req.url);
     const pathSegments = url.pathname.split('/').filter(Boolean);
     const schoolId = pathSegments[pathSegments.length - 1];
+
+    console.log('Schools API called:', req.method, schoolId);
 
     switch (req.method) {
       case 'GET':
@@ -63,11 +69,37 @@ serve(async (req) => {
         const schoolData = await req.json();
         const { data: newSchool, error: createError } = await supabaseClient
           .from('schools')
-          .insert([schoolData])
+          .insert([{
+            name: schoolData.name,
+            type: schoolData.type,
+            director: schoolData.director,
+            address: schoolData.address,
+            description: schoolData.description,
+            students: schoolData.students || 0,
+            teachers: schoolData.teachers || 0,
+            classes: schoolData.classes || 0,
+            image_url: schoolData.image_url,
+            active: true
+          }])
           .select()
           .single();
 
         if (createError) throw createError;
+
+        // Add contacts if provided
+        if (schoolData.contacts && schoolData.contacts.length > 0) {
+          const contactsToInsert = schoolData.contacts.map((contact: any) => ({
+            school_id: newSchool.id,
+            type: contact.type,
+            value: contact.value,
+            label: contact.label,
+            primary_contact: contact.primary_contact || false
+          }));
+
+          await supabaseClient
+            .from('school_contacts')
+            .insert(contactsToInsert);
+        }
 
         return new Response(JSON.stringify(newSchool), {
           status: 201,
@@ -78,7 +110,18 @@ serve(async (req) => {
         const updateData = await req.json();
         const { data: updatedSchool, error: updateError } = await supabaseClient
           .from('schools')
-          .update(updateData)
+          .update({
+            name: updateData.name,
+            type: updateData.type,
+            director: updateData.director,
+            address: updateData.address,
+            description: updateData.description,
+            students: updateData.students,
+            teachers: updateData.teachers,
+            classes: updateData.classes,
+            image_url: updateData.image_url,
+            updated_at: new Date().toISOString()
+          })
           .eq('id', schoolId)
           .select()
           .single();
@@ -105,6 +148,7 @@ serve(async (req) => {
         return new Response('Method not allowed', { status: 405, headers: corsHeaders });
     }
   } catch (error) {
+    console.error('Schools API error:', error);
     return new Response(JSON.stringify({ error: error.message }), {
       status: 400,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

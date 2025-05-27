@@ -13,10 +13,14 @@ serve(async (req) => {
   }
 
   try {
+    const authHeader = req.headers.get('Authorization');
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      { global: { headers: { Authorization: req.headers.get('Authorization')! } } }
+      { 
+        auth: { persistSession: false },
+        global: { headers: authHeader ? { Authorization: authHeader } : {} }
+      }
     );
 
     const url = new URL(req.url);
@@ -27,6 +31,8 @@ serve(async (req) => {
     const isSchoolUsers = pathSegments.length >= 3 && pathSegments[pathSegments.length - 3] === 'schools';
     const schoolId = isSchoolUsers ? pathSegments[pathSegments.length - 2] : null;
 
+    console.log('Users API called:', req.method, userId, { isSchoolUsers, schoolId });
+
     switch (req.method) {
       case 'GET':
         if (userId && !isSchoolUsers && userId !== 'users-api') {
@@ -35,7 +41,14 @@ serve(async (req) => {
             .from('profiles')
             .select(`
               *,
-              roles:user_school_roles(id, school_id, role, active)
+              roles:user_school_roles(
+                id,
+                school_id,
+                role,
+                active,
+                created_at,
+                school:schools(id, name)
+              )
             `)
             .eq('id', userId)
             .single();
@@ -66,8 +79,16 @@ serve(async (req) => {
             .from('profiles')
             .select(`
               *,
-              roles:user_school_roles(id, school_id, role, active)
-            `);
+              roles:user_school_roles(
+                id,
+                school_id,
+                role,
+                active,
+                created_at,
+                school:schools(id, name)
+              )
+            `)
+            .order('name');
 
           if (error) throw error;
 
@@ -85,7 +106,8 @@ serve(async (req) => {
             .insert([{
               user_id: userData.user_id,
               school_id: schoolId,
-              role: userData.role
+              role: userData.role,
+              active: true
             }])
             .select()
             .single();
@@ -103,7 +125,7 @@ serve(async (req) => {
           // First create auth user
           const { data: authData, error: authError } = await supabaseClient.auth.admin.createUser({
             email: userData.email,
-            password: userData.password,
+            password: userData.password || 'temppass123',
             email_confirm: true,
             user_metadata: { name: userData.name }
           });
@@ -132,7 +154,8 @@ serve(async (req) => {
             const roleInserts = userData.roles.map((role: any) => ({
               user_id: authData.user.id,
               school_id: role.school_id,
-              role: role.role
+              role: role.role,
+              active: true
             }));
 
             await supabaseClient
@@ -195,6 +218,7 @@ serve(async (req) => {
         return new Response('Method not allowed', { status: 405, headers: corsHeaders });
     }
   } catch (error) {
+    console.error('Users API error:', error);
     return new Response(JSON.stringify({ error: error.message }), {
       status: 400,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

@@ -37,20 +37,25 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
+        console.log('Auth state changed:', event, session?.user?.email);
         setSession(session);
         setUser(session?.user ?? null);
         
         // Fetch user roles when user changes
         if (session?.user) {
-          fetchUserRoles(session.user.id);
+          setTimeout(() => {
+            fetchUserRoles(session.user.id);
+          }, 0);
         } else {
           setUserRoles([]);
         }
+        setLoading(false);
       }
     );
 
     // Check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('Initial session check:', session?.user?.email);
       setSession(session);
       setUser(session?.user ?? null);
       
@@ -74,6 +79,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         .eq('active', true);
       
       if (error) throw error;
+      console.log('User roles fetched:', data);
       setUserRoles(data || []);
     } catch (error) {
       console.error('Error fetching user roles:', error);
@@ -98,7 +104,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
       
       return { error };
-    } catch (error) {
+    } catch (error: any) {
+      console.error('SignUp error:', error);
       toast.error('Erro ao criar conta: ' + error.message);
       return { error };
     }
@@ -106,29 +113,40 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signIn = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      console.log('Attempting login with:', email);
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
       });
       
-      if (!error) {
+      if (!error && data.user) {
+        console.log('Login successful:', data.user.email);
         toast.success('Login realizado com sucesso!');
         
-        // Log activity
-        await supabase.from('activity_logs').insert([{
-          user_id: user?.id,
-          action: 'login',
-          user_agent: navigator.userAgent,
-        }]);
-        
-        // Update last access time
-        await supabase.from('profiles')
-          .update({ last_access: new Date().toISOString() })
-          .eq('id', user?.id);
+        // Update last access time and log activity via API
+        setTimeout(async () => {
+          try {
+            await supabase.from('profiles')
+              .update({ last_access: new Date().toISOString() })
+              .eq('id', data.user.id);
+              
+            await supabase.from('activity_logs').insert([{
+              user_id: data.user.id,
+              action: 'login',
+              user_agent: navigator.userAgent,
+            }]);
+          } catch (err) {
+            console.warn('Failed to update last access or log activity:', err);
+          }
+        }, 0);
+      } else if (error) {
+        console.error('Login error:', error);
+        toast.error('Erro ao fazer login: ' + error.message);
       }
       
       return { error };
-    } catch (error) {
+    } catch (error: any) {
+      console.error('SignIn error:', error);
       toast.error('Erro ao fazer login: ' + error.message);
       return { error };
     }
@@ -138,16 +156,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       // Log activity before signing out
       if (user) {
-        await supabase.from('activity_logs').insert([{
-          user_id: user.id,
-          action: 'logout',
-          user_agent: navigator.userAgent,
-        }]);
+        setTimeout(async () => {
+          try {
+            await supabase.from('activity_logs').insert([{
+              user_id: user.id,
+              action: 'logout',
+              user_agent: navigator.userAgent,
+            }]);
+          } catch (err) {
+            console.warn('Failed to log logout activity:', err);
+          }
+        }, 0);
       }
       
       await supabase.auth.signOut();
       toast.success('Logout realizado com sucesso!');
-    } catch (error) {
+    } catch (error: any) {
+      console.error('SignOut error:', error);
       toast.error('Erro ao fazer logout: ' + error.message);
     }
   };
@@ -163,7 +188,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
       
       return { error };
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Reset password error:', error);
       toast.error('Erro ao enviar email de redefinição: ' + error.message);
       return { error };
     }
@@ -180,7 +206,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
       
       return { error };
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Update password error:', error);
       toast.error('Erro ao atualizar senha: ' + error.message);
       return { error };
     }
@@ -198,7 +225,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const isSuperAdmin = () => {
     if (!user) return false;
     
-    return userRoles.some(role => role.role === 'super_admin');
+    const isSuper = userRoles.some(role => role.role === 'super_admin');
+    console.log('Checking super admin status:', isSuper, userRoles);
+    return isSuper;
   };
 
   const value = {
