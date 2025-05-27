@@ -5,6 +5,13 @@ import { toast } from 'sonner';
 import { UserPlus, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
+interface AdminResponse {
+  message?: string;
+  user?: any;
+  email?: string;
+  password?: string;
+}
+
 const CreateAdminButton = () => {
   const [isCreating, setIsCreating] = useState(false);
 
@@ -76,11 +83,11 @@ const CreateAdminButton = () => {
       console.log('📡 Edge function response status:', response.status);
       
       if (response.ok) {
-        const data = await response.json();
+        const data: AdminResponse = await response.json();
         console.log('✅ Admin user created successfully:', data);
         
         // Verificar se a resposta contém os dados esperados
-        if (data && typeof data === 'object' && 'email' in data && 'password' in data) {
+        if (data && data.email && data.password) {
           toast.success(`Usuário admin criado! Email: ${data.email} | Senha: ${data.password}`);
         } else {
           toast.success('Usuário admin criado com sucesso!');
