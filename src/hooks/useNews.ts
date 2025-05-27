@@ -65,7 +65,6 @@ export const useNews = () => {
 
       if (error) throw error;
       
-      // Transform data to match our interface
       const transformedNews = (data || []).map(item => ({
         ...item,
         category: item.category ? {
@@ -181,7 +180,11 @@ export const useNews = () => {
 
   const incrementViews = async (id: string) => {
     try {
-      const { error } = await supabase.rpc('increment_news_views', { news_id: id });
+      const { error } = await supabase
+        .from('news')
+        .update({ views: news.find(n => n.id === id)?.views || 0 + 1 })
+        .eq('id', id);
+
       if (error) throw error;
     } catch (err: any) {
       console.error('Error incrementing views:', err);
