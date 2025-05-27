@@ -946,7 +946,7 @@ export type Database = {
     Enums: {
       contact_type: "phone" | "cellphone" | "whatsapp" | "email"
       council_type: "FUNDEB" | "CAE" | "CME" | "CACS"
-      event_type: "meeting" | "conference" | "visit" | "other"
+      event_type: "meeting" | "conference" | "visit" | "event"
       news_status: "draft" | "scheduled" | "published" | "archived"
       school_type: "EMEI" | "EMEF" | "CEMEI" | "Creche"
       ticket_status: "open" | "in_progress" | "resolved" | "closed"
@@ -1068,7 +1068,7 @@ export const Constants = {
     Enums: {
       contact_type: ["phone", "cellphone", "whatsapp", "email"],
       council_type: ["FUNDEB", "CAE", "CME", "CACS"],
-      event_type: ["meeting", "conference", "visit", "other"],
+      event_type: ["meeting", "conference", "visit", "event"],
       news_status: ["draft", "scheduled", "published", "archived"],
       school_type: ["EMEI", "EMEF", "CEMEI", "Creche"],
       ticket_status: ["open", "in_progress", "resolved", "closed"],
