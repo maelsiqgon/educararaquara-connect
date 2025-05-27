@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { mockSchools } from "@/components/admin/mockData";
 import { Search, MapPin, Phone, Users, GraduationCap, ExternalLink } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const SchoolsSection = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -67,7 +68,7 @@ const SchoolsSection = () => {
         </div>
 
         {/* Grid de Escolas */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {filteredSchools.map((school) => (
             <Card key={school.id} className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-0 shadow-md">
               <CardHeader className="pb-3">
@@ -84,8 +85,11 @@ const SchoolsSection = () => {
                     size="sm"
                     variant="ghost"
                     className="opacity-0 group-hover:opacity-100 transition-opacity text-education-primary hover:text-education-dark"
+                    asChild
                   >
-                    <ExternalLink className="h-4 w-4" />
+                    <Link to={`/escola/${school.id}`}>
+                      <ExternalLink className="h-4 w-4" />
+                    </Link>
                   </Button>
                 </div>
               </CardHeader>
@@ -130,8 +134,11 @@ const SchoolsSection = () => {
                     <Button 
                       size="sm" 
                       className="flex-1 bg-education-primary hover:bg-education-dark"
+                      asChild
                     >
-                      Ver Mais
+                      <Link to={`/escola/${school.id}`}>
+                        Ver Mais
+                      </Link>
                     </Button>
                     <Button 
                       size="sm" 
@@ -170,13 +177,13 @@ const SchoolsSection = () => {
             </div>
             <div>
               <div className="text-3xl font-bold mb-2">
-                {mockSchools.reduce((acc, school) => acc + parseInt(school.students), 0).toLocaleString()}
+                {mockSchools.reduce((acc, school) => acc + parseInt(school.students.toString()), 0).toLocaleString()}
               </div>
               <div className="text-education-light">Alunos Matriculados</div>
             </div>
             <div>
               <div className="text-3xl font-bold mb-2">
-                {mockSchools.reduce((acc, school) => acc + parseInt(school.classes), 0)}
+                {mockSchools.reduce((acc, school) => acc + parseInt(school.classes.toString()), 0)}
               </div>
               <div className="text-education-light">Turmas Ativas</div>
             </div>
