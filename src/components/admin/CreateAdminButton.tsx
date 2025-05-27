@@ -12,6 +12,20 @@ interface AdminResponse {
   password?: string;
 }
 
+interface SupabaseUser {
+  id: string;
+  email?: string;
+  // outras propriedades do usuário do Supabase
+}
+
+interface UsersResponse {
+  users: SupabaseUser[];
+  aud: string;
+  nextPage?: string | null;
+  lastPage?: number | null;
+  total?: number;
+}
+
 const CreateAdminButton = () => {
   const [isCreating, setIsCreating] = useState(false);
 
@@ -27,7 +41,7 @@ const CreateAdminButton = () => {
       let adminUserId = null;
       
       if (!usersError && existingUsers?.users && Array.isArray(existingUsers.users)) {
-        const adminUser = existingUsers.users.find(u => u.email === 'admin@araraquara.sp.gov.br');
+        const adminUser = existingUsers.users.find((u: SupabaseUser) => u.email === 'admin@araraquara.sp.gov.br');
         if (adminUser) {
           adminExists = true;
           adminUserId = adminUser.id;
