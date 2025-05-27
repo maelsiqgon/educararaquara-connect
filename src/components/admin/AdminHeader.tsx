@@ -1,15 +1,15 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { getCurrentUser, logout } from "@/components/AdminProtected";
+import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 
 const AdminHeader = () => {
-  const currentUser = getCurrentUser();
+  const { user, signOut } = useAuth();
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await signOut();
     navigate("/admin/login");
   };
 
@@ -19,17 +19,10 @@ const AdminHeader = () => {
         <div className="flex justify-between items-center">
           <h1 className="text-2xl font-bold">Painel Administrativo</h1>
           <div className="flex gap-4 items-center">
-            {currentUser && (
+            {user && (
               <div className="text-sm text-white mr-4">
                 <span className="opacity-80">Logado como: </span>
-                <span className="font-medium">{currentUser.name}</span>
-                <span className="ml-2 bg-white/20 px-2 py-1 rounded text-xs">
-                  {currentUser.role === "super_admin" 
-                    ? "Super Admin" 
-                    : currentUser.role === "content_editor"
-                      ? "Editor de Conteúdo"
-                      : "Visualizador"}
-                </span>
+                <span className="font-medium">{user.email}</span>
               </div>
             )}
             <Button 

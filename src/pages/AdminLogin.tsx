@@ -6,8 +6,8 @@ import { useAuth } from "@/hooks/useAuth";
 import AuthForm from "@/components/admin/auth/AuthForm";
 
 const AdminLogin = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("admin@araraquara.sp.gov.br");
+  const [password, setPassword] = useState("admin123456");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { signIn, user, loading } = useAuth();
@@ -29,9 +29,11 @@ const AdminLogin = () => {
       const { error } = await signIn(email, password);
       
       if (error) {
-        toast.error("Credenciais inválidas. Tente novamente.");
+        console.error('Login error:', error);
+        toast.error("Credenciais inválidas. Verifique email e senha.");
       } else {
         console.log('Login successful, redirecting to admin');
+        toast.success("Login realizado com sucesso!");
         navigate("/admin");
       }
     } catch (error) {
@@ -73,7 +75,7 @@ const AdminLogin = () => {
           <p>Para testar, use o usuário administrador padrão:</p>
           <p><strong>Email:</strong> admin@araraquara.sp.gov.br</p>
           <p><strong>Senha:</strong> admin123456</p>
-          <p className="mt-2 text-red-600">
+          <p className="mt-2 text-amber-600">
             <strong>Importante:</strong> O usuário precisa ser criado no Supabase Auth!
           </p>
         </div>
