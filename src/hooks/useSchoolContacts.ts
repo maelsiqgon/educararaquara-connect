@@ -2,70 +2,93 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { SchoolContact } from '@/hooks/useSchools';
+
+export type ContactType = 'phone' | 'email' | 'whatsapp' | 'website';
+
+export interface SchoolContact {
+  id: string;
+  school_id: string;
+  type: ContactType;
+  value: string;
+  label?: string;
+  primary_contact: boolean;
+  created_at: string;
+}
 
 export const useSchoolContacts = () => {
   const [loading, setLoading] = useState(false);
 
-  const createContact = async (schoolId: string, contact: Omit<SchoolContact, 'id' | 'school_id'>): Promise<SchoolContact | null> => {
+  const createContacts = async (
+    schoolId: string, 
+    contacts: Omit<SchoolContact, 'id' | 'school_id' | 'created_at'>[]
+  ): Promise<SchoolContact[]> => {
     try {
       setLoading(true);
+      
+      const contactsWithSchoolId = contacts.map(contact => ({
+        ...contact,
+        school_id: schoolId,
+        created_at: new Date().toISOString()
+      }));
+
       const { data, error } = await supabase
         .from('school_contacts')
-        .insert([{
-          school_id: schoolId,
-          ...contact
-        }])
+        .insert(contactsWithSchoolId)
+        .select();
+
+      if (error) throw error;
+      
+      toast.success('Contatos criados com sucesso!');
+      return data as SchoolContact[];
+    } catch (err: any) {
+      toast.error('Erro ao criar contatos: ' + err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateContact = async (
+    id: string, 
+    updates: Partial<Omit<SchoolContact, 'id' | 'school_id' | 'created_at'>>
+  ): Promise<SchoolContact> => {
+    try {
+      setLoading(true);
+      
+      const { data, error } = await supabase
+        .from('school_contacts')
+        .update(updates)
+        .eq('id', id)
         .select()
         .single();
 
       if (error) throw error;
       
-      toast.success('Contato adicionado com sucesso!');
-      return data;
-    } catch (err: any) {
-      toast.error('Erro ao adicionar contato: ' + err.message);
-      return null;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const updateContact = async (contactId: string, updates: Partial<Omit<SchoolContact, 'id' | 'school_id'>>): Promise<boolean> => {
-    try {
-      setLoading(true);
-      const { error } = await supabase
-        .from('school_contacts')
-        .update(updates)
-        .eq('id', contactId);
-
-      if (error) throw error;
-      
       toast.success('Contato atualizado com sucesso!');
-      return true;
+      return data as SchoolContact;
     } catch (err: any) {
       toast.error('Erro ao atualizar contato: ' + err.message);
-      return false;
+      throw err;
     } finally {
       setLoading(false);
     }
   };
 
-  const deleteContact = async (contactId: string): Promise<boolean> => {
+  const deleteContact = async (id: string): Promise<void> => {
     try {
       setLoading(true);
+      
       const { error } = await supabase
         .from('school_contacts')
         .delete()
-        .eq('id', contactId);
+        .eq('id', id);
 
       if (error) throw error;
       
       toast.success('Contato removido com sucesso!');
-      return true;
     } catch (err: any) {
       toast.error('Erro ao remover contato: ' + err.message);
-      return false;
+      throw err;
     } finally {
       setLoading(false);
     }
@@ -74,16 +97,17 @@ export const useSchoolContacts = () => {
   const getSchoolContacts = async (schoolId: string): Promise<SchoolContact[]> => {
     try {
       setLoading(true);
+      
       const { data, error } = await supabase
         .from('school_contacts')
         .select('*')
-        .eq('school_id', schoolId)
-        .order('primary_contact', { ascending: false });
+        .eq('school_id', schoolId);
 
       if (error) throw error;
-      return data || [];
+      
+      return data as SchoolContact[];
     } catch (err: any) {
-      toast.error('Erro ao carregar contatos: ' + err.message);
+      toast.error('Erro ao buscar contatos: ' + err.message);
       return [];
     } finally {
       setLoading(false);
@@ -91,10 +115,10 @@ export const useSchoolContacts = () => {
   };
 
   return {
-    createContact,
+    loading,
+    createContacts,
     updateContact,
     deleteContact,
-    getSchoolContacts,
-    loading
+    getSchoolContacts
   };
 };

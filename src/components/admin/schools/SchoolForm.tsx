@@ -1,28 +1,34 @@
 
 import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import FileUploadComponent from '@/components/admin/FileUploadComponent';
-import { useSchools, School, SchoolContact } from '@/hooks/useSchools';
-import { useSchoolContacts } from '@/hooks/useSchoolContacts';
-import { toast } from 'sonner';
-import { Save, Plus, Trash2 } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { toast } from "sonner";
+import { Plus, Trash2, Upload } from "lucide-react";
+import { School, useSchools } from '@/hooks/useSchools';
+import { useSchoolContacts, ContactType } from '@/hooks/useSchoolContacts';
+import { useMediaLibrary } from '@/hooks/useMediaLibrary';
 
 interface SchoolFormProps {
   school?: School;
-  onSuccess?: () => void;
+  onSave?: (school: School) => void;
   onCancel?: () => void;
 }
 
-const SchoolForm: React.FC<SchoolFormProps> = ({ school, onSuccess, onCancel }) => {
+interface ContactForm {
+  type: ContactType;
+  value: string;
+  label: string;
+  primary_contact: boolean;
+}
+
+const SchoolForm: React.FC<SchoolFormProps> = ({ school, onSave, onCancel }) => {
   const { createSchool, updateSchool } = useSchools();
-  const { createContact, updateContact, deleteContact } = useSchoolContacts();
+  const { createContacts } = useSchoolContacts();
+  const { uploadFile } = useMediaLibrary();
   
   const [formData, setFormData] = useState({
     name: '',
@@ -33,19 +39,15 @@ const SchoolForm: React.FC<SchoolFormProps> = ({ school, onSuccess, onCancel }) 
     image_url: '',
     students: 0,
     teachers: 0,
-    classes: 0,
-    active: true
+    classes: 0
   });
 
-  const [contacts, setContacts] = useState<SchoolContact[]>([]);
-  const [newContact, setNewContact] = useState({
-    type: 'phone' as 'phone' | 'email' | 'whatsapp' | 'website',
-    value: '',
-    label: '',
-    primary_contact: false
-  });
+  const [contacts, setContacts] = useState<ContactForm[]>([
+    { type: 'phone', value: '', label: 'Telefone Principal', primary_contact: true }
+  ]);
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (school) {
@@ -58,333 +60,321 @@ const SchoolForm: React.FC<SchoolFormProps> = ({ school, onSuccess, onCancel }) 
         image_url: school.image_url || '',
         students: school.students,
         teachers: school.teachers,
-        classes: school.classes,
-        active: school.active
+        classes: school.classes
       });
-      setContacts(school.contacts || []);
+
+      if (school.contacts && school.contacts.length > 0) {
+        setContacts(school.contacts.map(contact => ({
+          type: contact.type,
+          value: contact.value,
+          label: contact.label || '',
+          primary_contact: contact.primary_contact
+        })));
+      }
     }
   }, [school]);
 
   const handleInputChange = (field: string, value: any) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
+    setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleImageUpload = (result: { url: string; path: string }) => {
-    setFormData(prev => ({
-      ...prev,
-      image_url: result.url
-    }));
+  const addContact = () => {
+    setContacts(prev => [...prev, {
+      type: 'email',
+      value: '',
+      label: '',
+      primary_contact: false
+    }]);
   };
 
-  const addContact = async () => {
-    if (!newContact.value.trim()) return;
+  const updateContact = (index: number, field: keyof ContactForm, value: any) => {
+    setContacts(prev => prev.map((contact, i) => 
+      i === index ? { ...contact, [field]: value } : contact
+    ));
+  };
+
+  const removeContact = (index: number) => {
+    setContacts(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
     try {
-      if (school?.id) {
-        const createdContact = await createContact(school.id, newContact);
-        if (createdContact) {
-          setContacts(prev => [...prev, createdContact]);
-        }
-      } else {
-        // Para escolas novas, adicionar temporariamente
-        const tempContact: SchoolContact = {
-          id: Date.now().toString(),
-          school_id: '',
-          ...newContact,
-          created_at: new Date().toISOString()
-        };
-        setContacts(prev => [...prev, tempContact]);
-      }
-      
-      setNewContact({
-        type: 'phone',
-        value: '',
-        label: '',
-        primary_contact: false
+      setUploading(true);
+      const uploadedFile = await uploadFile(file, 'school-images', {
+        alt_text: `Imagem da escola ${formData.name}`,
+        description: `Foto da ${formData.name}`
       });
-    } catch (error) {
-      console.error('Error adding contact:', error);
-    }
-  };
 
-  const removeContact = async (contactId: string) => {
-    try {
-      if (school?.id && !contactId.startsWith('temp_')) {
-        await deleteContact(contactId);
+      if (uploadedFile) {
+        handleInputChange('image_url', uploadedFile.file_path);
+        toast.success('Imagem enviada com sucesso!');
       }
-      setContacts(prev => prev.filter(c => c.id !== contactId));
     } catch (error) {
-      console.error('Error removing contact:', error);
+      toast.error('Erro ao enviar imagem');
+    } finally {
+      setUploading(false);
     }
   };
 
-  const handleSave = async () => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
     if (!formData.name.trim()) {
       toast.error('Nome da escola é obrigatório');
       return;
     }
 
-    setIsSubmitting(true);
-
     try {
-      let savedSchool;
+      setSaving(true);
       
-      if (school?.id) {
+      let savedSchool: School;
+      
+      if (school) {
         await updateSchool(school.id, formData);
         savedSchool = { ...school, ...formData };
       } else {
         savedSchool = await createSchool(formData);
       }
 
-      // Salvar contatos para escolas novas
-      if (savedSchool && !school?.id && contacts.length > 0) {
-        for (const contact of contacts) {
-          await createContact(savedSchool.id, {
-            type: contact.type,
-            value: contact.value,
-            label: contact.label,
-            primary_contact: contact.primary_contact
-          });
+      // Create contacts if not editing or if contacts changed
+      if (contacts.length > 0 && savedSchool) {
+        const validContacts = contacts.filter(contact => 
+          contact.value.trim() && contact.type
+        );
+
+        if (validContacts.length > 0) {
+          await createContacts(savedSchool.id, validContacts);
         }
       }
-      
-      toast.success(
-        school?.id 
-          ? 'Escola atualizada com sucesso!' 
-          : 'Escola criada com sucesso!'
-      );
-      onSuccess?.();
+
+      toast.success(school ? 'Escola atualizada com sucesso!' : 'Escola criada com sucesso!');
+      onSave?.(savedSchool);
     } catch (error) {
-      toast.error('Erro ao salvar escola');
+      console.error('Error saving school:', error);
     } finally {
-      setIsSubmitting(false);
+      setSaving(false);
     }
   };
 
-  const getContactTypeLabel = (type: string) => {
-    const labels = {
-      phone: 'Telefone',
-      email: 'E-mail',
-      whatsapp: 'WhatsApp',
-      website: 'Website'
-    };
-    return labels[type as keyof typeof labels] || type;
-  };
-
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">
-          {school?.id ? 'Editar' : 'Criar'} Escola
-        </h2>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Informações Básicas</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
+    <Card className="border-0 shadow-soft">
+      <CardHeader className="bg-education-light rounded-t-lg">
+        <CardTitle className="text-education-primary">
+          {school ? 'Editar Escola' : 'Nova Escola'}
+        </CardTitle>
+        <CardDescription>
+          {school ? 'Modifique as informações da escola' : 'Adicione uma nova escola à rede municipal'}
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="pt-6">
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="name">Nome da Escola *</Label>
+            <div className="space-y-2">
+              <Label htmlFor="school-name">Nome da Escola *</Label>
               <Input
-                id="name"
+                id="school-name"
                 value={formData.name}
                 onChange={(e) => handleInputChange('name', e.target.value)}
-                placeholder="Nome da escola"
+                className="border-gray-300 focus-visible:ring-education-primary"
                 required
               />
             </div>
-
-            <div>
-              <Label htmlFor="type">Tipo de Ensino</Label>
-              <Select value={formData.type} onValueChange={(value) => handleInputChange('type', value)}>
+            
+            <div className="space-y-2">
+              <Label htmlFor="school-type">Tipo de Escola</Label>
+              <Select 
+                value={formData.type} 
+                onValueChange={(value) => handleInputChange('type', value)}
+              >
                 <SelectTrigger>
-                  <SelectValue placeholder="Selecione o tipo" />
+                  <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="EMEI">EMEI - Educação Infantil</SelectItem>
-                  <SelectItem value="EMEF">EMEF - Ensino Fundamental</SelectItem>
-                  <SelectItem value="CEMEI">CEMEI - Centro Municipal</SelectItem>
-                  <SelectItem value="Creche">Creche</SelectItem>
+                  <SelectItem value="EMEI">EMEI - Escola Municipal de Educação Infantil</SelectItem>
+                  <SelectItem value="EMEF">EMEF - Escola Municipal de Ensino Fundamental</SelectItem>
+                  <SelectItem value="CEMEI">CEMEI - Centro Municipal de Educação Infantil</SelectItem>
+                  <SelectItem value="Creche">Creche Municipal</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
 
-          <div>
-            <Label htmlFor="director">Diretor(a)</Label>
+          <div className="space-y-2">
+            <Label htmlFor="school-address">Endereço</Label>
             <Input
-              id="director"
-              value={formData.director}
-              onChange={(e) => handleInputChange('director', e.target.value)}
-              placeholder="Nome do diretor(a)"
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="address">Endereço</Label>
-            <Textarea
-              id="address"
+              id="school-address"
               value={formData.address}
               onChange={(e) => handleInputChange('address', e.target.value)}
-              placeholder="Endereço completo da escola"
-              rows={2}
+              className="border-gray-300 focus-visible:ring-education-primary"
             />
           </div>
 
-          <div>
-            <Label htmlFor="description">Descrição</Label>
+          <div className="space-y-2">
+            <Label htmlFor="school-director">Diretor(a)</Label>
+            <Input
+              id="school-director"
+              value={formData.director}
+              onChange={(e) => handleInputChange('director', e.target.value)}
+              className="border-gray-300 focus-visible:ring-education-primary"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="school-description">Descrição</Label>
             <Textarea
-              id="description"
+              id="school-description"
               value={formData.description}
               onChange={(e) => handleInputChange('description', e.target.value)}
-              placeholder="Descrição da escola, história, missão, etc."
-              rows={4}
+              className="border-gray-300 focus-visible:ring-education-primary h-[100px]"
             />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <Label htmlFor="students">Número de Alunos</Label>
+            <div className="space-y-2">
+              <Label htmlFor="school-students">Número de Alunos</Label>
               <Input
-                id="students"
+                id="school-students"
                 type="number"
                 value={formData.students}
                 onChange={(e) => handleInputChange('students', parseInt(e.target.value) || 0)}
-                min="0"
+                className="border-gray-300 focus-visible:ring-education-primary"
               />
             </div>
-
-            <div>
-              <Label htmlFor="teachers">Número de Professores</Label>
+            
+            <div className="space-y-2">
+              <Label htmlFor="school-teachers">Número de Professores</Label>
               <Input
-                id="teachers"
+                id="school-teachers"
                 type="number"
                 value={formData.teachers}
                 onChange={(e) => handleInputChange('teachers', parseInt(e.target.value) || 0)}
-                min="0"
+                className="border-gray-300 focus-visible:ring-education-primary"
               />
             </div>
-
-            <div>
-              <Label htmlFor="classes">Número de Turmas</Label>
+            
+            <div className="space-y-2">
+              <Label htmlFor="school-classes">Número de Turmas</Label>
               <Input
-                id="classes"
+                id="school-classes"
                 type="number"
                 value={formData.classes}
                 onChange={(e) => handleInputChange('classes', parseInt(e.target.value) || 0)}
-                min="0"
+                className="border-gray-300 focus-visible:ring-education-primary"
               />
             </div>
           </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Imagem da Escola</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <FileUploadComponent
-            bucket="school-images"
-            folder="schools"
-            onUploadSuccess={handleImageUpload}
-            accept="image/*"
-            label="Imagem da Escola"
-            description="Adicione uma foto da escola"
-            initialPreview={formData.image_url}
-          />
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Contatos</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
-            <Select value={newContact.type} onValueChange={(value) => setNewContact(prev => ({ ...prev, type: value as any }))}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="phone">Telefone</SelectItem>
-                <SelectItem value="email">E-mail</SelectItem>
-                <SelectItem value="whatsapp">WhatsApp</SelectItem>
-                <SelectItem value="website">Website</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Input
-              placeholder="Valor do contato"
-              value={newContact.value}
-              onChange={(e) => setNewContact(prev => ({ ...prev, value: e.target.value }))}
-            />
-
-            <Input
-              placeholder="Rótulo (opcional)"
-              value={newContact.label}
-              onChange={(e) => setNewContact(prev => ({ ...prev, label: e.target.value }))}
-            />
-
-            <Button onClick={addContact} disabled={!newContact.value.trim()}>
-              <Plus className="h-4 w-4 mr-2" />
-              Adicionar
-            </Button>
-          </div>
-
-          <Separator />
 
           <div className="space-y-2">
-            {contacts.map((contact) => (
-              <div key={contact.id} className="flex items-center justify-between p-3 border rounded-md">
-                <div className="flex items-center space-x-4">
-                  <Badge variant="outline">
-                    {getContactTypeLabel(contact.type)}
-                  </Badge>
-                  <span className="font-medium">{contact.value}</span>
-                  {contact.label && (
-                    <span className="text-sm text-gray-500">({contact.label})</span>
-                  )}
-                  {contact.primary_contact && (
-                    <Badge variant="default">Principal</Badge>
-                  )}
+            <Label>Imagem da Escola</Label>
+            <div className="flex items-center gap-4">
+              <Input
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                className="border-gray-300 focus-visible:ring-education-primary"
+              />
+              <Button type="button" disabled={uploading} variant="outline">
+                <Upload className="h-4 w-4 mr-2" />
+                {uploading ? 'Enviando...' : 'Enviar'}
+              </Button>
+            </div>
+            {formData.image_url && (
+              <div className="mt-2">
+                <img 
+                  src={formData.image_url} 
+                  alt="Preview" 
+                  className="h-32 w-32 object-cover rounded border"
+                />
+              </div>
+            )}
+          </div>
+
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <Label className="text-base font-medium">Contatos</Label>
+              <Button type="button" variant="outline" onClick={addContact}>
+                <Plus className="h-4 w-4 mr-2" />
+                Adicionar Contato
+              </Button>
+            </div>
+            
+            {contacts.map((contact, index) => (
+              <div key={index} className="grid grid-cols-1 md:grid-cols-5 gap-2 p-4 border rounded">
+                <div>
+                  <Select 
+                    value={contact.type} 
+                    onValueChange={(value: ContactType) => updateContact(index, 'type', value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="phone">Telefone</SelectItem>
+                      <SelectItem value="email">E-mail</SelectItem>
+                      <SelectItem value="whatsapp">WhatsApp</SelectItem>
+                      <SelectItem value="website">Website</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => removeContact(contact.id)}
-                  className="text-red-500 hover:text-red-700"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+                
+                <div>
+                  <Input
+                    placeholder="Valor do contato"
+                    value={contact.value}
+                    onChange={(e) => updateContact(index, 'value', e.target.value)}
+                  />
+                </div>
+                
+                <div>
+                  <Input
+                    placeholder="Rótulo (opcional)"
+                    value={contact.label}
+                    onChange={(e) => updateContact(index, 'label', e.target.value)}
+                  />
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    checked={contact.primary_contact}
+                    onChange={(e) => updateContact(index, 'primary_contact', e.target.checked)}
+                  />
+                  <Label className="text-sm">Principal</Label>
+                </div>
+                
+                <div>
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => removeContact(index)}
+                    className="text-red-500 hover:text-red-700"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             ))}
           </div>
-        </CardContent>
-      </Card>
 
-      <div className="flex justify-end space-x-2">
-        {onCancel && (
-          <Button type="button" variant="outline" onClick={onCancel}>
-            Cancelar
-          </Button>
-        )}
-        
-        <Button
-          type="button"
-          onClick={handleSave}
-          disabled={isSubmitting}
-        >
-          <Save className="h-4 w-4 mr-2" />
-          {school?.id ? 'Atualizar' : 'Criar'} Escola
-        </Button>
-      </div>
-    </div>
+          <div className="flex justify-end space-x-4 pt-4">
+            <Button type="button" variant="outline" onClick={onCancel}>
+              Cancelar
+            </Button>
+            <Button 
+              type="submit" 
+              disabled={saving}
+              className="bg-education-primary hover:bg-education-dark"
+            >
+              {saving ? 'Salvando...' : school ? 'Atualizar' : 'Criar'} Escola
+            </Button>
+          </div>
+        </form>
+      </CardContent>
+    </Card>
   );
 };
 

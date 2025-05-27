@@ -1,134 +1,154 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { UserRole } from '@/hooks/useUsers';
+
+export type UserRole = 'super_admin' | 'admin' | 'director' | 'coordinator' | 'teacher' | 'staff' | 'parent' | 'student';
 
 export interface Permission {
-  id: string;
   module: string;
-  action: 'create' | 'read' | 'update' | 'delete' | 'approve' | 'publish';
-  role: UserRole['role'];
-  school_id?: string;
+  action: string;
+  allowed: boolean;
+}
+
+export interface UserPermissions {
+  role: UserRole;
+  schoolId?: string;
+  permissions: Permission[];
 }
 
 export const usePermissions = () => {
-  const [userPermissions, setUserPermissions] = useState<Permission[]>([]);
+  const [userPermissions, setUserPermissions] = useState<UserPermissions | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const checkPermission = (module: string, action: Permission['action'], schoolId?: string): boolean => {
-    return userPermissions.some(permission => 
-      permission.module === module && 
-      permission.action === action &&
-      (!schoolId || !permission.school_id || permission.school_id === schoolId)
-    );
-  };
-
-  const getUserPermissions = async () => {
+  const fetchUserPermissions = async () => {
     try {
       setLoading(true);
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
-        setUserPermissions([]);
+        setUserPermissions(null);
         return;
       }
 
-      // Buscar roles do usuário
       const { data: roles, error } = await supabase
         .from('user_school_roles')
-        .select('role, school_id')
+        .select('*')
         .eq('user_id', user.id)
         .eq('active', true);
 
       if (error) throw error;
 
-      // Gerar permissões baseadas nos roles
-      const permissions: Permission[] = [];
-      
-      roles?.forEach(role => {
-        // Super admin tem todas as permissões
-        if (role.role === 'super_admin') {
-          const modules = ['schools', 'users', 'news', 'media', 'agenda', 'councils', 'reports'];
-          const actions: Permission['action'][] = ['create', 'read', 'update', 'delete', 'approve', 'publish'];
-          
-          modules.forEach(module => {
-            actions.forEach(action => {
-              permissions.push({
-                id: `${module}-${action}-${role.school_id || 'all'}`,
-                module,
-                action,
-                role: role.role,
-                school_id: role.school_id
-              });
-            });
-          });
-        }
+      if (roles && roles.length > 0) {
+        const primaryRole = roles[0];
+        const permissions = getPermissionsForRole(primaryRole.role as UserRole);
         
-        // Admin da escola
-        else if (role.role === 'admin') {
-          const modules = ['schools', 'users', 'news', 'media', 'agenda'];
-          const actions: Permission['action'][] = ['create', 'read', 'update', 'delete', 'publish'];
-          
-          modules.forEach(module => {
-            actions.forEach(action => {
-              permissions.push({
-                id: `${module}-${action}-${role.school_id}`,
-                module,
-                action,
-                role: role.role,
-                school_id: role.school_id
-              });
-            });
-          });
-        }
-        
-        // Diretor
-        else if (role.role === 'director') {
-          const modules = ['news', 'media', 'agenda'];
-          const actions: Permission['action'][] = ['create', 'read', 'update', 'approve'];
-          
-          modules.forEach(module => {
-            actions.forEach(action => {
-              permissions.push({
-                id: `${module}-${action}-${role.school_id}`,
-                module,
-                action,
-                role: role.role,
-                school_id: role.school_id
-              });
-            });
-          });
-        }
-        
-        // Professor e outros roles
-        else {
-          permissions.push({
-            id: `news-read-${role.school_id}`,
-            module: 'news',
-            action: 'read',
-            role: role.role,
-            school_id: role.school_id
-          });
-        }
-      });
-
-      setUserPermissions(permissions);
+        setUserPermissions({
+          role: primaryRole.role as UserRole,
+          schoolId: primaryRole.school_id,
+          permissions
+        });
+      } else {
+        setUserPermissions(null);
+      }
     } catch (error) {
       console.error('Error fetching permissions:', error);
-      setUserPermissions([]);
+      setUserPermissions(null);
     } finally {
       setLoading(false);
     }
   };
 
+  const getPermissionsForRole = (role: UserRole): Permission[] => {
+    const allModules = ['schools', 'news', 'users', 'media', 'agenda', 'councils', 'chatbot'];
+    const allActions = ['create', 'read', 'update', 'delete'];
+
+    const permissions: Permission[] = [];
+
+    allModules.forEach(module => {
+      allActions.forEach(action => {
+        permissions.push({
+          module,
+          action,
+          allowed: hasPermission(role, module, action)
+        });
+      });
+    });
+
+    return permissions;
+  };
+
+  const hasPermission = (role: UserRole, module: string, action: string): boolean => {
+    // Super admin has all permissions
+    if (role === 'super_admin') return true;
+
+    // Admin has most permissions except user management
+    if (role === 'admin') {
+      if (module === 'users' && (action === 'create' || action === 'delete')) return false;
+      return true;
+    }
+
+    // Director has school-specific permissions
+    if (role === 'director') {
+      if (module === 'users' && action === 'delete') return false;
+      if (module === 'schools' && action === 'delete') return false;
+      return ['schools', 'news', 'media', 'agenda'].includes(module);
+    }
+
+    // Coordinator has limited permissions
+    if (role === 'coordinator') {
+      if (action === 'delete') return false;
+      return ['news', 'media', 'agenda'].includes(module);
+    }
+
+    // Teacher has read and limited write permissions
+    if (role === 'teacher') {
+      if (action === 'delete') return false;
+      if (action === 'create' && !['news', 'media'].includes(module)) return false;
+      return ['news', 'media', 'agenda'].includes(module);
+    }
+
+    // Staff has mostly read permissions
+    if (role === 'staff') {
+      return action === 'read' && ['schools', 'news', 'agenda'].includes(module);
+    }
+
+    // Parents and students have read-only access to limited modules
+    if (role === 'parent' || role === 'student') {
+      return action === 'read' && ['schools', 'news'].includes(module);
+    }
+
+    return false;
+  };
+
+  const canAccess = (module: string, action: string = 'read'): boolean => {
+    if (!userPermissions) return false;
+    
+    const permission = userPermissions.permissions.find(
+      p => p.module === module && p.action === action
+    );
+    
+    return permission?.allowed || false;
+  };
+
+  const isAdmin = (): boolean => {
+    return userPermissions?.role === 'super_admin' || userPermissions?.role === 'admin';
+  };
+
+  const isSuperAdmin = (): boolean => {
+    return userPermissions?.role === 'super_admin';
+  };
+
   useEffect(() => {
-    getUserPermissions();
+    fetchUserPermissions();
   }, []);
 
   return {
     userPermissions,
     loading,
-    checkPermission,
-    getUserPermissions
+    fetchUserPermissions,
+    canAccess,
+    isAdmin,
+    isSuperAdmin,
+    hasPermission: (module: string, action: string) => canAccess(module, action)
   };
 };
