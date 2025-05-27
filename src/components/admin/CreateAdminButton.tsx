@@ -26,7 +26,7 @@ const CreateAdminButton = () => {
       let adminExists = false;
       let adminUserId = null;
       
-      if (!usersError && existingUsers?.users) {
+      if (!usersError && existingUsers?.users && Array.isArray(existingUsers.users)) {
         const adminUser = existingUsers.users.find(u => u.email === 'admin@araraquara.sp.gov.br');
         if (adminUser) {
           adminExists = true;

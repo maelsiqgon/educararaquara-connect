@@ -10,7 +10,7 @@ import Schools from '@/pages/Schools';
 import SchoolDetail from '@/pages/SchoolDetail';
 import Contact from '@/pages/Contact';
 import AdminLogin from '@/pages/AdminLogin';
-import AdminHome from '@/pages/admin/AdminHome';
+import Admin from '@/pages/Admin';
 import AdminSchools from '@/pages/admin/AdminSchools';
 import AdminSchoolEdit from '@/pages/admin/AdminSchoolEdit';
 import AdminSchoolCreate from '@/pages/admin/AdminSchoolCreate';
@@ -44,7 +44,7 @@ function App() {
                 path="/admin"
                 element={
                   <AdminProtected>
-                    <AdminHome />
+                    <Admin />
                   </AdminProtected>
                 }
               />
