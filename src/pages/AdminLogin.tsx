@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import AuthForm from "@/components/admin/auth/AuthForm";
+import CreateAdminButton from "@/components/admin/CreateAdminButton";
 
 const AdminLogin = () => {
   const [email, setEmail] = useState("admin@araraquara.sp.gov.br");
@@ -60,6 +61,10 @@ const AdminLogin = () => {
           <p className="mt-2 text-education-gray">Área Administrativa</p>
         </div>
         
+        <div className="text-center">
+          <CreateAdminButton />
+        </div>
+        
         <AuthForm
           title="Login Administrativo"
           description="Entre com suas credenciais para acessar o painel"
@@ -76,7 +81,7 @@ const AdminLogin = () => {
           <p><strong>Email:</strong> admin@araraquara.sp.gov.br</p>
           <p><strong>Senha:</strong> admin123456</p>
           <p className="mt-2 text-amber-600">
-            <strong>Importante:</strong> O usuário precisa ser criado no Supabase Auth!
+            <strong>Clique no botão "Create Admin User" acima se for o primeiro acesso!</strong>
           </p>
         </div>
       </div>
