@@ -2,35 +2,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-
-export interface User {
-  id: string;
-  email: string;
-  name: string;
-  cpf: string | null;
-  phone: string | null;
-  address: string | null;
-  registration: string | null;
-  avatar_url: string | null;
-  active: boolean;
-  last_access: string | null;
-  created_at: string;
-  updated_at: string;
-  roles?: UserRole[];
-}
-
-export interface UserRole {
-  id: string;
-  user_id: string;
-  school_id: string;
-  role: 'super_admin' | 'admin' | 'editor' | 'viewer';
-  active: boolean;
-  created_at: string;
-  school?: {
-    id: string;
-    name: string;
-  };
-}
+import { User, UserRole } from '@/types/user';
 
 export const useUsers = () => {
   const [users, setUsers] = useState<User[]>([]);
@@ -45,10 +17,12 @@ export const useUsers = () => {
         .select(`
           *,
           roles:user_school_roles(
-            id, 
-            school_id, 
-            role, 
+            id,
+            school_id,
+            role,
             active,
+            user_id,
+            created_at,
             school:schools(id, name)
           )
         `)
@@ -64,55 +38,19 @@ export const useUsers = () => {
     }
   };
 
-  const createUser = async (userData: {
-    email: string;
-    password: string;
-    name: string;
-    cpf?: string;
-    phone?: string;
-    address?: string;
-    registration?: string;
-    roles?: { school_id: string; role: 'super_admin' | 'admin' | 'editor' | 'viewer' }[];
-  }) => {
+  const createUser = async (userData: Omit<User, 'id' | 'created_at' | 'updated_at' | 'roles'>) => {
     try {
-      // Create auth user
-      const { data, error } = await supabase.auth.admin.createUser({
-        email: userData.email,
-        password: userData.password,
-        email_confirm: true,
-        user_metadata: { name: userData.name }
-      });
+      const { data, error } = await supabase
+        .from('profiles')
+        .insert([userData])
+        .select()
+        .single();
 
       if (error) throw error;
-
-      // Update profile with additional data
-      await supabase
-        .from('profiles')
-        .update({
-          name: userData.name,
-          cpf: userData.cpf,
-          phone: userData.phone,
-          address: userData.address,
-          registration: userData.registration,
-        })
-        .eq('id', data.user.id);
-
-      // Add roles if provided
-      if (userData.roles && userData.roles.length > 0) {
-        const roleInserts = userData.roles.map(role => ({
-          user_id: data.user.id,
-          school_id: role.school_id,
-          role: role.role
-        }));
-
-        await supabase
-          .from('user_school_roles')
-          .insert(roleInserts);
-      }
-
+      
       await fetchUsers();
       toast.success('Usuário criado com sucesso!');
-      return data.user;
+      return data;
     } catch (err: any) {
       toast.error('Erro ao criar usuário: ' + err.message);
       throw err;
@@ -136,103 +74,75 @@ export const useUsers = () => {
     }
   };
 
-  const deactivateUser = async (id: string) => {
+  const deleteUser = async (id: string) => {
     try {
       const { error } = await supabase
         .from('profiles')
-        .update({ active: false })
+        .delete()
         .eq('id', id);
 
       if (error) throw error;
       
       await fetchUsers();
-      toast.success('Usuário desativado com sucesso!');
+      toast.success('Usuário removido com sucesso!');
     } catch (err: any) {
-      toast.error('Erro ao desativar usuário: ' + err.message);
+      toast.error('Erro ao remover usuário: ' + err.message);
       throw err;
     }
   };
 
-  const activateUser = async (id: string) => {
+  const assignUserToSchool = async (userId: string, schoolId: string, role: UserRole['role']) => {
     try {
       const { error } = await supabase
-        .from('profiles')
-        .update({ active: true })
-        .eq('id', id);
-
-      if (error) throw error;
-      
-      await fetchUsers();
-      toast.success('Usuário ativado com sucesso!');
-    } catch (err: any) {
-      toast.error('Erro ao ativar usuário: ' + err.message);
-      throw err;
-    }
-  };
-
-  const assignRole = async (userId: string, schoolId: string, role: 'super_admin' | 'admin' | 'editor' | 'viewer') => {
-    try {
-      // Check if role already exists
-      const { data: existingRole } = await supabase
         .from('user_school_roles')
-        .select('id')
+        .insert([{
+          user_id: userId,
+          school_id: schoolId,
+          role,
+          active: true
+        }]);
+
+      if (error) throw error;
+      
+      await fetchUsers();
+      toast.success('Usuário vinculado à escola com sucesso!');
+    } catch (err: any) {
+      toast.error('Erro ao vincular usuário à escola: ' + err.message);
+      throw err;
+    }
+  };
+
+  const removeUserFromSchool = async (userId: string, schoolId: string) => {
+    try {
+      const { error } = await supabase
+        .from('user_school_roles')
+        .delete()
         .eq('user_id', userId)
-        .eq('school_id', schoolId)
-        .single();
+        .eq('school_id', schoolId);
 
-      if (existingRole) {
-        // Update existing role
-        const { error } = await supabase
-          .from('user_school_roles')
-          .update({ role, active: true })
-          .eq('id', existingRole.id);
-
-        if (error) throw error;
-      } else {
-        // Create new role
-        const { error } = await supabase
-          .from('user_school_roles')
-          .insert([{ user_id: userId, school_id: schoolId, role }]);
-
-        if (error) throw error;
-      }
+      if (error) throw error;
       
       await fetchUsers();
-      toast.success('Permissão atribuída com sucesso!');
+      toast.success('Usuário removido da escola com sucesso!');
     } catch (err: any) {
-      toast.error('Erro ao atribuir permissão: ' + err.message);
+      toast.error('Erro ao remover usuário da escola: ' + err.message);
       throw err;
     }
   };
 
-  const removeRole = async (roleId: string) => {
+  const toggleUserStatus = async (id: string, active: boolean) => {
     try {
       const { error } = await supabase
-        .from('user_school_roles')
-        .update({ active: false })
-        .eq('id', roleId);
+        .from('profiles')
+        .update({ active })
+        .eq('id', id);
 
       if (error) throw error;
       
       await fetchUsers();
-      toast.success('Permissão removida com sucesso!');
+      toast.success(`Usuário ${active ? 'ativado' : 'desativado'} com sucesso!`);
     } catch (err: any) {
-      toast.error('Erro ao remover permissão: ' + err.message);
-      throw err;
-    }
-  };
-
-  const resetPassword = async (email: string) => {
-    try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth/reset-password`,
-      });
-      
-      if (error) throw error;
-      
-      toast.success('Email de redefinição de senha enviado com sucesso!');
-    } catch (err: any) {
-      toast.error('Erro ao enviar email de redefinição: ' + err.message);
+      toast.error('Erro ao alterar status do usuário: ' + err.message);
       throw err;
     }
   };
@@ -248,10 +158,9 @@ export const useUsers = () => {
     fetchUsers,
     createUser,
     updateUser,
-    deactivateUser,
-    activateUser,
-    assignRole,
-    removeRole,
-    resetPassword
+    deleteUser,
+    assignUserToSchool,
+    removeUserFromSchool,
+    toggleUserStatus
   };
 };

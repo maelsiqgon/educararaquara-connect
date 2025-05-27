@@ -1,5 +1,5 @@
 
-import React, { forwardRef } from "react";
+import React from "react";
 import { Textarea } from "@/components/ui/textarea";
 
 interface EditorContentProps {
