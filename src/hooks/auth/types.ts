@@ -25,5 +25,5 @@ export interface AuthContextType {
   updatePassword: (password: string) => Promise<{ error: any }>;
   hasRole: (schoolId: string, roles: string[]) => boolean;
   isSuperAdmin: () => boolean;
-  refreshUserRoles: () => Promise<void>;
+  refreshUserRoles: () => Promise<UserRole[]>;
 }

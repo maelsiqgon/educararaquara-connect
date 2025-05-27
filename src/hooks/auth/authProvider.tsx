@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -13,7 +12,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const [userRoles, setUserRoles] = useState<UserRole[]>([]);
 
-  const refreshUserRoles = async () => {
+  const refreshUserRoles = async (): Promise<UserRole[]> => {
     if (user) {
       console.log('🔄 Refreshing user roles for:', user.email, user.id);
       try {

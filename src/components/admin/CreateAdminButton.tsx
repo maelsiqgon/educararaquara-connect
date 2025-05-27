@@ -68,7 +68,7 @@ const CreateAdminButton = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVweG10YndtbXB0YXJpY2JpeWp3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgzNTY2MjUsImV4cCI6MjA2MzkzMjYyNX0.4JmK9z74mE0LtE9SgpMv55SazN4M4MdxbWu_r2SvPrA'}`
+          'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVweG10YndtbXB0YXJpY2JpeWp3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgzNTY2MjUsImV4cCI6MjA2MzkzMjYyNX0.4JmK9z74mE0LtE9SgpMv55SazN4M4MdxbWu_r2SvPrA`
         },
         body: JSON.stringify({})
       });

@@ -76,7 +76,7 @@ const AdminProtected: React.FC<AdminProtectedProps> = ({
     };
     
     checkAuthorization();
-  }, [user, loading, requiredPermission]);
+  }, [user, loading, requiredPermission, refreshUserRoles]);
   
   // Loading state
   if (loading || isChecking || isAuthorized === null) {
