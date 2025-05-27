@@ -80,12 +80,8 @@ const CreateAdminButton = () => {
         console.log('✅ Admin user created successfully:', data);
         
         // Verificar se a resposta contém os dados esperados
-        if (data && typeof data === 'object') {
-          if ('email' in data && 'password' in data) {
-            toast.success(`Usuário admin criado! Email: ${data.email} | Senha: ${data.password}`);
-          } else {
-            toast.success('Usuário admin criado com sucesso!');
-          }
+        if (data && typeof data === 'object' && 'email' in data && 'password' in data) {
+          toast.success(`Usuário admin criado! Email: ${data.email} | Senha: ${data.password}`);
         } else {
           toast.success('Usuário admin criado com sucesso!');
         }

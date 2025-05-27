@@ -5,63 +5,21 @@ import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import AuthForm from "@/components/admin/auth/AuthForm";
 import CreateAdminButton from "@/components/admin/CreateAdminButton";
-import { checkIsSuperAdminRPC } from "@/hooks/auth/userRoleService";
 
 const AdminLogin = () => {
   const [email, setEmail] = useState("admin@araraquara.sp.gov.br");
   const [password, setPassword] = useState("admin123456");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { signIn, user, loading, isSuperAdmin, refreshUserRoles, userRoles } = useAuth();
+  const { signIn, user, loading, isSuperAdmin } = useAuth();
 
-  // Check admin access and redirect
+  // Simple redirect if already logged in as admin
   useEffect(() => {
-    if (!loading && user) {
-      console.log('👤 User already logged in, checking super admin status...', {
-        userEmail: user.email,
-        userId: user.id,
-        userRoles,
-        isSuperAdmin: isSuperAdmin()
-      });
-      
-      const checkAdminAccess = async () => {
-        try {
-          // First try RPC function
-          console.log('🔍 Checking admin access via RPC...');
-          const isSuperViaRPC = await checkIsSuperAdminRPC(user.id);
-          
-          if (isSuperViaRPC) {
-            console.log('✅ User is super admin via RPC, redirecting to admin panel');
-            navigate("/admin", { replace: true });
-            return;
-          }
-          
-          // Fallback: refresh roles and check again
-          console.log('🔄 RPC failed, refreshing roles to double-check admin access...');
-          const refreshedRoles = await refreshUserRoles();
-          
-          const isSuperAfterRefresh = refreshedRoles.some(role => role.role === 'super_admin');
-          console.log('🔍 Admin access check after refresh:', {
-            isSuperAfterRefresh,
-            refreshedRoles,
-            userEmail: user.email
-          });
-          
-          if (isSuperAfterRefresh) {
-            console.log('✅ User is super admin after refresh, redirecting to admin panel');
-            navigate("/admin", { replace: true });
-          } else {
-            console.log('❌ User is not super admin, staying on login page');
-            toast.error("Você não tem permissão para acessar a área administrativa");
-          }
-        } catch (error) {
-          console.error('❌ Error checking admin access:', error);
-        }
-      };
-      
-      checkAdminAccess();
+    if (!loading && user && isSuperAdmin()) {
+      console.log('✅ User already logged in as admin, redirecting');
+      navigate("/admin", { replace: true });
     }
-  }, [user, loading, navigate, isSuperAdmin, refreshUserRoles]);
+  }, [user, loading, isSuperAdmin, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -75,34 +33,9 @@ const AdminLogin = () => {
         console.error('❌ Login error:', error);
         toast.error("Credenciais inválidas. Verifique email e senha.");
       } else {
-        console.log('✅ Login successful, waiting for role verification...');
+        console.log('✅ Login successful');
         toast.success("Login realizado com sucesso!");
-        
-        // Wait a bit for the auth state to propagate, then check roles
-        setTimeout(async () => {
-          try {
-            console.log('🔄 Post-login role check...');
-            const roles = await refreshUserRoles();
-            
-            const isSuper = roles.some(role => role.role === 'super_admin');
-            console.log('🔍 Post-login admin check:', {
-              isSuper,
-              roles,
-              userEmail: email
-            });
-            
-            if (isSuper) {
-              console.log('✅ Redirecting to admin panel');
-              navigate("/admin", { replace: true });
-            } else {
-              console.log('❌ No admin access found');
-              toast.error("Você não tem permissão para acessar a área administrativa");
-            }
-          } catch (error) {
-            console.error('❌ Error in post-login check:', error);
-            toast.error("Erro ao verificar permissões. Tente novamente.");
-          }
-        }, 2000);
+        // Let the useEffect handle the redirect after auth state updates
       }
     } catch (error) {
       console.error('❌ Login error:', error);

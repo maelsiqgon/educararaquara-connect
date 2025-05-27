@@ -3,7 +3,6 @@ import React, { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import { checkIsSuperAdminRPC } from "@/hooks/auth/userRoleService";
 
 interface AdminProtectedProps {
   children: React.ReactNode;
@@ -14,13 +13,12 @@ const AdminProtected: React.FC<AdminProtectedProps> = ({
   children, 
   requiredPermission 
 }) => {
-  const { user, loading, isSuperAdmin, refreshUserRoles, userRoles } = useAuth();
+  const { user, loading, isSuperAdmin, userRoles } = useAuth();
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
-  const [isChecking, setIsChecking] = useState(true);
   
   useEffect(() => {
-    const checkAuthorization = async () => {
-      console.log('🛡️ AdminProtected authorization check started:', { 
+    const checkAuthorization = () => {
+      console.log('🛡️ AdminProtected simple check:', { 
         userEmail: user?.email,
         userId: user?.id, 
         loading, 
@@ -34,82 +32,33 @@ const AdminProtected: React.FC<AdminProtectedProps> = ({
         return;
       }
       
-      setIsChecking(true);
-      
-      // Check authentication
       if (!user) {
-        console.log('❌ No user found, redirecting to login');
+        console.log('❌ No user found, denying access');
         setIsAuthorized(false);
-        setIsChecking(false);
         return;
       }
       
-      console.log('👤 User found, checking admin access...');
+      // Simple check: is the user a super admin?
+      const isSuper = isSuperAdmin();
+      console.log('🔍 Simple super admin check result:', isSuper);
       
-      try {
-        // Check current isSuperAdmin status first
-        const currentSuperAdminStatus = isSuperAdmin();
-        console.log('🔍 Current super admin status from context:', currentSuperAdminStatus);
-        
-        if (currentSuperAdminStatus) {
-          console.log('✅ User is super admin via context, granting access');
-          setIsAuthorized(true);
-          setIsChecking(false);
-          return;
-        }
-        
-        // Try RPC function as backup
-        console.log('🔍 Checking super admin via RPC...');
-        const isSuperViaRPC = await checkIsSuperAdminRPC(user.id);
-        
-        if (isSuperViaRPC) {
-          console.log('✅ User is super admin via RPC, granting access');
-          setIsAuthorized(true);
-          setIsChecking(false);
-          return;
-        }
-        
-        // Final fallback: refresh roles and check again
-        console.log('🔄 Both checks failed, refreshing roles...');
-        const refreshedRoles = await refreshUserRoles();
-        console.log('✅ Roles refreshed:', refreshedRoles);
-        
-        // Check super admin status with refreshed roles
-        const isSuper = refreshedRoles.some(role => role.role === 'super_admin');
-        console.log('🔍 Super admin check with refreshed roles:', {
-          isSuper,
-          refreshedRoles,
-          userEmail: user.email,
-          requiredPermission
-        });
-        
-        if (isSuper) {
-          console.log('✅ User is super admin after refresh, granting access');
-          setIsAuthorized(true);
-        } else {
-          console.log('❌ User is not super admin, denying access');
-          console.log('🔍 Final debug info:', {
-            userRoles: refreshedRoles,
-            rolesLength: refreshedRoles.length,
-            rolesData: refreshedRoles.map(r => ({ role: r.role, active: r.active }))
-          });
-          toast.error("Você não tem permissão para acessar esta área administrativa");
-          setIsAuthorized(false);
-        }
-      } catch (error) {
-        console.error('❌ Error during authorization check:', error);
+      if (isSuper) {
+        console.log('✅ User is super admin, granting access');
+        setIsAuthorized(true);
+      } else {
+        console.log('❌ User is not super admin, denying access');
+        console.log('🔍 Available roles:', userRoles);
+        toast.error("Você não tem permissão para acessar esta área administrativa");
         setIsAuthorized(false);
       }
-      
-      setIsChecking(false);
     };
     
     checkAuthorization();
-  }, [user, loading, requiredPermission, refreshUserRoles, isSuperAdmin, userRoles]);
+  }, [user, loading, isSuperAdmin, userRoles]);
   
   // Loading state
-  if (loading || isChecking || isAuthorized === null) {
-    console.log('⏳ Showing loading state, details:', { loading, isChecking, isAuthorized });
+  if (loading || isAuthorized === null) {
+    console.log('⏳ Showing loading state');
     return (
       <div className="min-h-screen flex items-center justify-center bg-education-lightgray">
         <div className="text-center">
