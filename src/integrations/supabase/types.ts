@@ -9,7 +9,917 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      activity_logs: {
+        Row: {
+          action: string
+          created_at: string | null
+          details: Json | null
+          id: string
+          ip_address: unknown | null
+          resource_id: string | null
+          resource_type: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          ip_address?: unknown | null
+          resource_id?: string | null
+          resource_type?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          ip_address?: unknown | null
+          resource_id?: string | null
+          resource_type?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activity_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agenda_events: {
+        Row: {
+          all_day: boolean | null
+          attendees: string[] | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          end_datetime: string
+          event_type: Database["public"]["Enums"]["event_type"] | null
+          external_calendar_id: string | null
+          id: string
+          location: string | null
+          recurring: boolean | null
+          recurring_pattern: Json | null
+          school_id: string | null
+          start_datetime: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          all_day?: boolean | null
+          attendees?: string[] | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          end_datetime: string
+          event_type?: Database["public"]["Enums"]["event_type"] | null
+          external_calendar_id?: string | null
+          id?: string
+          location?: string | null
+          recurring?: boolean | null
+          recurring_pattern?: Json | null
+          school_id?: string | null
+          start_datetime: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          all_day?: boolean | null
+          attendees?: string[] | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          end_datetime?: string
+          event_type?: Database["public"]["Enums"]["event_type"] | null
+          external_calendar_id?: string | null
+          id?: string
+          location?: string | null
+          recurring?: boolean | null
+          recurring_pattern?: Json | null
+          school_id?: string | null
+          start_datetime?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agenda_events_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agenda_events_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chatbot_knowledge: {
+        Row: {
+          active: boolean | null
+          answer: string
+          category: string | null
+          created_at: string | null
+          created_by: string | null
+          id: string
+          keywords: string[] | null
+          question: string
+          updated_at: string | null
+          usage_count: number | null
+        }
+        Insert: {
+          active?: boolean | null
+          answer: string
+          category?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          keywords?: string[] | null
+          question: string
+          updated_at?: string | null
+          usage_count?: number | null
+        }
+        Update: {
+          active?: boolean | null
+          answer?: string
+          category?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          keywords?: string[] | null
+          question?: string
+          updated_at?: string | null
+          usage_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chatbot_knowledge_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      council_documents: {
+        Row: {
+          council_id: string | null
+          created_at: string | null
+          description: string | null
+          document_type: string | null
+          file_path: string
+          file_size: number | null
+          id: string
+          meeting_date: string | null
+          month: number | null
+          title: string
+          uploaded_by: string | null
+          year: number | null
+        }
+        Insert: {
+          council_id?: string | null
+          created_at?: string | null
+          description?: string | null
+          document_type?: string | null
+          file_path: string
+          file_size?: number | null
+          id?: string
+          meeting_date?: string | null
+          month?: number | null
+          title: string
+          uploaded_by?: string | null
+          year?: number | null
+        }
+        Update: {
+          council_id?: string | null
+          created_at?: string | null
+          description?: string | null
+          document_type?: string | null
+          file_path?: string
+          file_size?: number | null
+          id?: string
+          meeting_date?: string | null
+          month?: number | null
+          title?: string
+          uploaded_by?: string | null
+          year?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "council_documents_council_id_fkey"
+            columns: ["council_id"]
+            isOneToOne: false
+            referencedRelation: "councils"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "council_documents_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      council_financial_records: {
+        Row: {
+          council_id: string | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          document_path: string | null
+          expenses: number | null
+          id: string
+          month: number
+          revenue: number | null
+          year: number
+        }
+        Insert: {
+          council_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          document_path?: string | null
+          expenses?: number | null
+          id?: string
+          month: number
+          revenue?: number | null
+          year: number
+        }
+        Update: {
+          council_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          document_path?: string | null
+          expenses?: number | null
+          id?: string
+          month?: number
+          revenue?: number | null
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "council_financial_records_council_id_fkey"
+            columns: ["council_id"]
+            isOneToOne: false
+            referencedRelation: "councils"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "council_financial_records_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      council_members: {
+        Row: {
+          active: boolean | null
+          council_id: string | null
+          created_at: string | null
+          email: string | null
+          end_date: string | null
+          id: string
+          name: string
+          phone: string | null
+          position: string | null
+          start_date: string
+        }
+        Insert: {
+          active?: boolean | null
+          council_id?: string | null
+          created_at?: string | null
+          email?: string | null
+          end_date?: string | null
+          id?: string
+          name: string
+          phone?: string | null
+          position?: string | null
+          start_date: string
+        }
+        Update: {
+          active?: boolean | null
+          council_id?: string | null
+          created_at?: string | null
+          email?: string | null
+          end_date?: string | null
+          id?: string
+          name?: string
+          phone?: string | null
+          position?: string | null
+          start_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "council_members_council_id_fkey"
+            columns: ["council_id"]
+            isOneToOne: false
+            referencedRelation: "councils"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      council_school_visits: {
+        Row: {
+          council_id: string | null
+          created_at: string | null
+          created_by: string | null
+          id: string
+          observations: string | null
+          report_file_path: string | null
+          school_id: string | null
+          visit_date: string
+          visitor_name: string
+        }
+        Insert: {
+          council_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          observations?: string | null
+          report_file_path?: string | null
+          school_id?: string | null
+          visit_date: string
+          visitor_name: string
+        }
+        Update: {
+          council_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          observations?: string | null
+          report_file_path?: string | null
+          school_id?: string | null
+          visit_date?: string
+          visitor_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "council_school_visits_council_id_fkey"
+            columns: ["council_id"]
+            isOneToOne: false
+            referencedRelation: "councils"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "council_school_visits_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "council_school_visits_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      councils: {
+        Row: {
+          active: boolean | null
+          created_at: string | null
+          description: string | null
+          id: string
+          name: string
+          regulation_text: string | null
+          type: Database["public"]["Enums"]["council_type"]
+          updated_at: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          regulation_text?: string | null
+          type: Database["public"]["Enums"]["council_type"]
+          updated_at?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          regulation_text?: string | null
+          type?: Database["public"]["Enums"]["council_type"]
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      media_library: {
+        Row: {
+          alt_text: string | null
+          created_at: string | null
+          description: string | null
+          file_path: string
+          file_size: number | null
+          filename: string
+          folder: string | null
+          id: string
+          mime_type: string | null
+          original_name: string
+          school_id: string | null
+          tags: string[] | null
+          uploaded_by: string | null
+        }
+        Insert: {
+          alt_text?: string | null
+          created_at?: string | null
+          description?: string | null
+          file_path: string
+          file_size?: number | null
+          filename: string
+          folder?: string | null
+          id?: string
+          mime_type?: string | null
+          original_name: string
+          school_id?: string | null
+          tags?: string[] | null
+          uploaded_by?: string | null
+        }
+        Update: {
+          alt_text?: string | null
+          created_at?: string | null
+          description?: string | null
+          file_path?: string
+          file_size?: number | null
+          filename?: string
+          folder?: string | null
+          id?: string
+          mime_type?: string | null
+          original_name?: string
+          school_id?: string | null
+          tags?: string[] | null
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "media_library_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "media_library_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      news: {
+        Row: {
+          author_id: string | null
+          category_id: string | null
+          content: string
+          created_at: string | null
+          excerpt: string | null
+          featured: boolean | null
+          id: string
+          image_url: string | null
+          meta_description: string | null
+          meta_title: string | null
+          published_at: string | null
+          scheduled_at: string | null
+          school_id: string | null
+          slug: string
+          status: Database["public"]["Enums"]["news_status"] | null
+          tags: string[] | null
+          title: string
+          updated_at: string | null
+          views: number | null
+        }
+        Insert: {
+          author_id?: string | null
+          category_id?: string | null
+          content: string
+          created_at?: string | null
+          excerpt?: string | null
+          featured?: boolean | null
+          id?: string
+          image_url?: string | null
+          meta_description?: string | null
+          meta_title?: string | null
+          published_at?: string | null
+          scheduled_at?: string | null
+          school_id?: string | null
+          slug: string
+          status?: Database["public"]["Enums"]["news_status"] | null
+          tags?: string[] | null
+          title: string
+          updated_at?: string | null
+          views?: number | null
+        }
+        Update: {
+          author_id?: string | null
+          category_id?: string | null
+          content?: string
+          created_at?: string | null
+          excerpt?: string | null
+          featured?: boolean | null
+          id?: string
+          image_url?: string | null
+          meta_description?: string | null
+          meta_title?: string | null
+          published_at?: string | null
+          scheduled_at?: string | null
+          school_id?: string | null
+          slug?: string
+          status?: Database["public"]["Enums"]["news_status"] | null
+          tags?: string[] | null
+          title?: string
+          updated_at?: string | null
+          views?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "news_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "news_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "news_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "news_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      news_categories: {
+        Row: {
+          active: boolean | null
+          color: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          active?: boolean | null
+          color?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          active?: boolean | null
+          color?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          active: boolean | null
+          address: string | null
+          avatar_url: string | null
+          cpf: string | null
+          created_at: string | null
+          email: string
+          id: string
+          last_access: string | null
+          name: string
+          phone: string | null
+          registration: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          address?: string | null
+          avatar_url?: string | null
+          cpf?: string | null
+          created_at?: string | null
+          email: string
+          id: string
+          last_access?: string | null
+          name: string
+          phone?: string | null
+          registration?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          address?: string | null
+          avatar_url?: string | null
+          cpf?: string | null
+          created_at?: string | null
+          email?: string
+          id?: string
+          last_access?: string | null
+          name?: string
+          phone?: string | null
+          registration?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      school_contacts: {
+        Row: {
+          created_at: string | null
+          id: string
+          label: string | null
+          primary_contact: boolean | null
+          school_id: string | null
+          type: Database["public"]["Enums"]["contact_type"]
+          value: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          label?: string | null
+          primary_contact?: boolean | null
+          school_id?: string | null
+          type: Database["public"]["Enums"]["contact_type"]
+          value: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          label?: string | null
+          primary_contact?: boolean | null
+          school_id?: string | null
+          type?: Database["public"]["Enums"]["contact_type"]
+          value?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "school_contacts_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      schools: {
+        Row: {
+          active: boolean | null
+          address: string | null
+          classes: number | null
+          created_at: string | null
+          description: string | null
+          director: string | null
+          id: string
+          image_url: string | null
+          name: string
+          students: number | null
+          teachers: number | null
+          type: Database["public"]["Enums"]["school_type"]
+          updated_at: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          address?: string | null
+          classes?: number | null
+          created_at?: string | null
+          description?: string | null
+          director?: string | null
+          id?: string
+          image_url?: string | null
+          name: string
+          students?: number | null
+          teachers?: number | null
+          type: Database["public"]["Enums"]["school_type"]
+          updated_at?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          address?: string | null
+          classes?: number | null
+          created_at?: string | null
+          description?: string | null
+          director?: string | null
+          id?: string
+          image_url?: string | null
+          name?: string
+          students?: number | null
+          teachers?: number | null
+          type?: Database["public"]["Enums"]["school_type"]
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      support_tickets: {
+        Row: {
+          assigned_to: string | null
+          created_at: string | null
+          description: string
+          id: string
+          priority: number | null
+          resolution: string | null
+          resolved_at: string | null
+          school_id: string | null
+          status: Database["public"]["Enums"]["ticket_status"] | null
+          title: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          assigned_to?: string | null
+          created_at?: string | null
+          description: string
+          id?: string
+          priority?: number | null
+          resolution?: string | null
+          resolved_at?: string | null
+          school_id?: string | null
+          status?: Database["public"]["Enums"]["ticket_status"] | null
+          title: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          assigned_to?: string | null
+          created_at?: string | null
+          description?: string
+          id?: string
+          priority?: number | null
+          resolution?: string | null
+          resolved_at?: string | null
+          school_id?: string | null
+          status?: Database["public"]["Enums"]["ticket_status"] | null
+          title?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_tickets_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "support_tickets_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "support_tickets_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ticket_messages: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_internal: boolean | null
+          message: string
+          ticket_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_internal?: boolean | null
+          message: string
+          ticket_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_internal?: boolean | null
+          message?: string
+          ticket_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ticket_messages_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "support_tickets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ticket_messages_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_school_roles: {
+        Row: {
+          active: boolean | null
+          created_at: string | null
+          id: string
+          role: Database["public"]["Enums"]["user_role"]
+          school_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          created_at?: string | null
+          id?: string
+          role: Database["public"]["Enums"]["user_role"]
+          school_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["user_role"]
+          school_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_school_roles_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_school_roles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      whatsapp_settings: {
+        Row: {
+          active: boolean | null
+          api_key: string
+          api_url: string
+          created_at: string | null
+          id: string
+          instance_name: string
+          phone_number: string | null
+          updated_at: string | null
+          webhook_url: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          api_key: string
+          api_url: string
+          created_at?: string | null
+          id?: string
+          instance_name: string
+          phone_number?: string | null
+          updated_at?: string | null
+          webhook_url?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          api_key?: string
+          api_url?: string
+          created_at?: string | null
+          id?: string
+          instance_name?: string
+          phone_number?: string | null
+          updated_at?: string | null
+          webhook_url?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -18,7 +928,13 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      contact_type: "phone" | "cellphone" | "whatsapp" | "email"
+      council_type: "FUNDEB" | "CAE" | "CME" | "CACS"
+      event_type: "meeting" | "conference" | "visit" | "other"
+      news_status: "draft" | "scheduled" | "published" | "archived"
+      school_type: "EMEI" | "EMEF" | "CEMEI" | "Creche"
+      ticket_status: "open" | "in_progress" | "resolved" | "closed"
+      user_role: "super_admin" | "admin" | "editor" | "viewer"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -133,6 +1049,14 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      contact_type: ["phone", "cellphone", "whatsapp", "email"],
+      council_type: ["FUNDEB", "CAE", "CME", "CACS"],
+      event_type: ["meeting", "conference", "visit", "other"],
+      news_status: ["draft", "scheduled", "published", "archived"],
+      school_type: ["EMEI", "EMEF", "CEMEI", "Creche"],
+      ticket_status: ["open", "in_progress", "resolved", "closed"],
+      user_role: ["super_admin", "admin", "editor", "viewer"],
+    },
   },
 } as const

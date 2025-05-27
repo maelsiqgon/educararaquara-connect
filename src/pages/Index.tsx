@@ -3,11 +3,11 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import HeroBanner from "@/components/HeroBanner";
 import FeaturesSection from "@/components/FeaturesSection";
-import NewsSection from "@/components/NewsSection";
+import RealNewsSection from "@/components/RealNewsSection";
 import ProfilesSection from "@/components/ProfilesSection";
 import AppSection from "@/components/AppSection";
 import ContactSection from "@/components/ContactSection";
-import SchoolsSection from "@/components/SchoolsSection";
+import RealSchoolsSection from "@/components/RealSchoolsSection";
 import Chatbot from "@/components/Chatbot";
 
 const Index = () => {
@@ -17,9 +17,9 @@ const Index = () => {
       <main className="flex-grow">
         <HeroBanner />
         <FeaturesSection />
-        <SchoolsSection />
+        <RealSchoolsSection />
         <ProfilesSection />
-        <NewsSection />
+        <RealNewsSection />
         <AppSection />
         <ContactSection />
       </main>
