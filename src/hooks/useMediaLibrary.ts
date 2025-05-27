@@ -89,7 +89,7 @@ export const useMediaLibrary = () => {
 
       if (error) throw error;
 
-      await fetchMedia();
+      await fetchMedia(folder);
       toast.success('Arquivo enviado com sucesso!');
       return data;
     } catch (err: any) {

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -39,7 +38,8 @@ const SchoolForm: React.FC<SchoolFormProps> = ({ school, onSave, onCancel }) => 
     image_url: '',
     students: 0,
     teachers: 0,
-    classes: 0
+    classes: 0,
+    active: true
   });
 
   const [contacts, setContacts] = useState<ContactForm[]>([
@@ -60,7 +60,8 @@ const SchoolForm: React.FC<SchoolFormProps> = ({ school, onSave, onCancel }) => 
         image_url: school.image_url || '',
         students: school.students,
         teachers: school.teachers,
-        classes: school.classes
+        classes: school.classes,
+        active: school.active
       });
 
       if (school.contacts && school.contacts.length > 0) {
@@ -315,7 +316,7 @@ const SchoolForm: React.FC<SchoolFormProps> = ({ school, onSave, onCancel }) => 
                       <SelectItem value="phone">Telefone</SelectItem>
                       <SelectItem value="email">E-mail</SelectItem>
                       <SelectItem value="whatsapp">WhatsApp</SelectItem>
-                      <SelectItem value="website">Website</SelectItem>
+                      <SelectItem value="cellphone">Celular</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
