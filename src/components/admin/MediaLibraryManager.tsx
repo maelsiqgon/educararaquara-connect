@@ -23,11 +23,11 @@ const MediaLibraryManager = () => {
   );
 
   const handleUploadSuccess = () => {
-    fetchMedia(); // Recarregar a lista após upload
+    fetchMedia();
   };
 
-  const handleDelete = async (mediaId: string) => {
-    const success = await deleteMedia(mediaId);
+  const handleDelete = async (mediaId: string, filePath: string) => {
+    const success = await deleteMedia(mediaId, filePath);
     if (success) {
       toast.success('Arquivo deletado com sucesso!');
     }

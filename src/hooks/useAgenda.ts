@@ -27,39 +27,18 @@ export interface AgendaEvent {
 export const useAgenda = () => {
   const [events, setEvents] = useState<AgendaEvent[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string>('');
+  const [error, setError] = useState<string | null>(null);
 
   const fetchEvents = async () => {
     try {
       setLoading(true);
       const { data, error } = await supabase
         .from('agenda_events')
-        .select(`
-          *,
-          school:schools(name)
-        `)
+        .select('*')
         .order('start_datetime', { ascending: true });
 
       if (error) throw error;
-      
-      setEvents(data.map(event => ({
-        id: event.id,
-        title: event.title,
-        description: event.description,
-        start_datetime: event.start_datetime,
-        end_datetime: event.end_datetime,
-        location: event.location,
-        event_type: event.event_type as EventType,
-        all_day: event.all_day,
-        recurring: event.recurring,
-        recurring_pattern: event.recurring_pattern,
-        attendees: event.attendees,
-        external_calendar_id: event.external_calendar_id,
-        school_id: event.school_id,
-        created_by: event.created_by,
-        created_at: event.created_at,
-        updated_at: event.updated_at
-      })));
+      setEvents(data || []);
     } catch (err: any) {
       setError(err.message);
       toast.error('Erro ao carregar eventos');
@@ -68,16 +47,11 @@ export const useAgenda = () => {
     }
   };
 
-  const createEvent = async (eventData: Omit<AgendaEvent, 'id' | 'created_at' | 'updated_at'>): Promise<AgendaEvent> => {
+  const createEvent = async (eventData: Omit<AgendaEvent, 'id' | 'created_at' | 'updated_at'>) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
       const { data, error } = await supabase
         .from('agenda_events')
-        .insert([{
-          ...eventData,
-          created_by: user?.id
-        }])
+        .insert([eventData])
         .select()
         .single();
 
@@ -85,34 +59,31 @@ export const useAgenda = () => {
       
       await fetchEvents();
       toast.success('Evento criado com sucesso!');
-      return data as AgendaEvent;
+      return data;
     } catch (err: any) {
       toast.error('Erro ao criar evento: ' + err.message);
       throw err;
     }
   };
 
-  const updateEvent = async (id: string, updates: Partial<AgendaEvent>): Promise<AgendaEvent> => {
+  const updateEvent = async (id: string, eventData: Partial<AgendaEvent>) => {
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('agenda_events')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single();
+        .update(eventData)
+        .eq('id', id);
 
       if (error) throw error;
       
       await fetchEvents();
       toast.success('Evento atualizado com sucesso!');
-      return data as AgendaEvent;
     } catch (err: any) {
       toast.error('Erro ao atualizar evento: ' + err.message);
       throw err;
     }
   };
 
-  const deleteEvent = async (id: string): Promise<void> => {
+  const deleteEvent = async (id: string) => {
     try {
       const { error } = await supabase
         .from('agenda_events')

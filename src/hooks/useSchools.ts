@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 export interface SchoolContact {
   id: string;
   school_id: string;
-  type: 'phone' | 'email' | 'whatsapp' | 'website';
+  type: 'phone' | 'email' | 'whatsapp' | 'cellphone';
   value: string;
   label?: string;
   primary_contact: boolean;
@@ -57,11 +57,11 @@ export const useSchools = () => {
     }
   };
 
-  const createSchool = async (schoolData: Omit<School, 'id' | 'created_at' | 'updated_at' | 'contacts'>) => {
+  const createSchool = async (schoolData: Omit<School, 'id' | 'created_at' | 'updated_at' | 'contacts' | 'active'>) => {
     try {
       const { data, error } = await supabase
         .from('schools')
-        .insert([schoolData])
+        .insert([{ ...schoolData, active: true }])
         .select()
         .single();
 

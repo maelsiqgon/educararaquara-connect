@@ -129,10 +129,8 @@ const SchoolBasicInfoForm: React.FC<SchoolBasicInfoFormProps> = ({ formData, set
       <div className="space-y-2">
         <Label>Imagem da Escola</Label>
         <ImageUploader
-          currentImage={formData.image_url}
+          initialImage={formData.image_url}
           onImageChange={(url) => updateField('image_url', url)}
-          bucket="school-images"
-          folder="schools"
         />
       </div>
     </div>

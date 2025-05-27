@@ -3,7 +3,7 @@ export interface UserRole {
   id: string;
   user_id: string;
   school_id: string;
-  role: 'super_admin' | 'admin' | 'editor' | 'viewer';
+  role: 'super_admin' | 'admin' | 'director' | 'coordinator' | 'teacher' | 'staff' | 'parent' | 'student';
   active: boolean;
   created_at: string;
   school?: {

@@ -18,97 +18,96 @@ export interface SchoolContact {
 export const useSchoolContacts = () => {
   const [loading, setLoading] = useState(false);
 
-  const createContacts = async (
-    schoolId: string, 
-    contacts: Omit<SchoolContact, 'id' | 'school_id' | 'created_at'>[]
-  ): Promise<SchoolContact[]> => {
+  const createContacts = async (schoolId: string, contacts: Array<{
+    type: ContactType;
+    value: string;
+    label: string;
+    primary_contact: boolean;
+  }>) => {
     try {
       setLoading(true);
       
-      const contactsWithSchoolId = contacts.map(contact => ({
-        ...contact,
+      const contactsData = contacts.map(contact => ({
         school_id: schoolId,
-        created_at: new Date().toISOString()
+        type: contact.type,
+        value: contact.value,
+        label: contact.label,
+        primary_contact: contact.primary_contact
       }));
 
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('school_contacts')
-        .insert(contactsWithSchoolId)
-        .select();
+        .insert(contactsData);
 
       if (error) throw error;
       
       toast.success('Contatos criados com sucesso!');
-      return data as SchoolContact[];
+      return true;
     } catch (err: any) {
       toast.error('Erro ao criar contatos: ' + err.message);
-      throw err;
+      return false;
     } finally {
       setLoading(false);
     }
   };
 
-  const updateContact = async (
-    id: string, 
-    updates: Partial<Omit<SchoolContact, 'id' | 'school_id' | 'created_at'>>
-  ): Promise<SchoolContact> => {
+  const updateContacts = async (schoolId: string, contacts: Array<{
+    id?: string;
+    type: ContactType;
+    value: string;
+    label: string;
+    primary_contact: boolean;
+  }>) => {
     try {
       setLoading(true);
       
-      const { data, error } = await supabase
+      // Delete existing contacts
+      await supabase
         .from('school_contacts')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single();
+        .delete()
+        .eq('school_id', schoolId);
+
+      // Insert new contacts
+      const contactsData = contacts.map(contact => ({
+        school_id: schoolId,
+        type: contact.type,
+        value: contact.value,
+        label: contact.label,
+        primary_contact: contact.primary_contact
+      }));
+
+      const { error } = await supabase
+        .from('school_contacts')
+        .insert(contactsData);
 
       if (error) throw error;
       
-      toast.success('Contato atualizado com sucesso!');
-      return data as SchoolContact;
+      toast.success('Contatos atualizados com sucesso!');
+      return true;
     } catch (err: any) {
-      toast.error('Erro ao atualizar contato: ' + err.message);
-      throw err;
+      toast.error('Erro ao atualizar contatos: ' + err.message);
+      return false;
     } finally {
       setLoading(false);
     }
   };
 
-  const deleteContact = async (id: string): Promise<void> => {
+  const deleteContact = async (contactId: string) => {
     try {
       setLoading(true);
       
       const { error } = await supabase
         .from('school_contacts')
         .delete()
-        .eq('id', id);
+        .eq('id', contactId);
 
       if (error) throw error;
       
       toast.success('Contato removido com sucesso!');
+      return true;
     } catch (err: any) {
       toast.error('Erro ao remover contato: ' + err.message);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const getSchoolContacts = async (schoolId: string): Promise<SchoolContact[]> => {
-    try {
-      setLoading(true);
-      
-      const { data, error } = await supabase
-        .from('school_contacts')
-        .select('*')
-        .eq('school_id', schoolId);
-
-      if (error) throw error;
-      
-      return data as SchoolContact[];
-    } catch (err: any) {
-      toast.error('Erro ao buscar contatos: ' + err.message);
-      return [];
+      return false;
     } finally {
       setLoading(false);
     }
@@ -117,8 +116,7 @@ export const useSchoolContacts = () => {
   return {
     loading,
     createContacts,
-    updateContact,
-    deleteContact,
-    getSchoolContacts
+    updateContacts,
+    deleteContact
   };
 };

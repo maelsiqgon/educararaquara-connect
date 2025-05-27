@@ -143,12 +143,12 @@ export const useUsers = () => {
     try {
       const { error } = await supabase
         .from('user_school_roles')
-        .insert([{
+        .insert({
           user_id: userId,
           school_id: schoolId,
           role,
           active: true
-        }]);
+        });
 
       if (error) throw error;
       
