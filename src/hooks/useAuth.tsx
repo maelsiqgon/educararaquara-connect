@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useContext, createContext } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -14,6 +15,7 @@ interface AuthContextType {
   updatePassword: (password: string) => Promise<{ error: any }>;
   hasRole: (schoolId: string, roles: string[]) => boolean;
   isSuperAdmin: () => boolean;
+  refreshUserRoles: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({} as AuthContextType);
@@ -35,16 +37,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
         console.log('Auth state changed:', event, session?.user?.email);
         setSession(session);
         setUser(session?.user ?? null);
         
         // Fetch user roles when user changes
         if (session?.user) {
-          setTimeout(() => {
-            fetchUserRoles(session.user.id);
-          }, 100); // Small delay to ensure database consistency
+          await fetchUserRoles(session.user.id);
         } else {
           setUserRoles([]);
         }
@@ -53,14 +53,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     );
 
     // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       console.log('Initial session check:', session?.user?.email);
       setSession(session);
       setUser(session?.user ?? null);
       
       // Fetch user roles if user exists
       if (session?.user) {
-        fetchUserRoles(session.user.id);
+        await fetchUserRoles(session.user.id);
       }
       
       setLoading(false);
@@ -72,23 +72,43 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const fetchUserRoles = async (userId: string) => {
     try {
       console.log('Fetching roles for user:', userId);
+      
+      // Use RPC call to get roles to avoid RLS issues
       const { data, error } = await supabase
-        .from('user_school_roles')
-        .select('*')
-        .eq('user_id', userId)
-        .eq('active', true);
+        .rpc('get_user_roles', { user_uuid: userId });
       
       if (error) {
-        console.error('Error fetching user roles:', error);
-        setUserRoles([]);
+        console.error('RPC error, falling back to direct query:', error);
+        
+        // Fallback to direct query
+        const { data: fallbackData, error: fallbackError } = await supabase
+          .from('user_school_roles')
+          .select('*')
+          .eq('user_id', userId)
+          .eq('active', true);
+          
+        if (fallbackError) {
+          console.error('Error fetching user roles:', fallbackError);
+          setUserRoles([]);
+          return;
+        }
+        
+        console.log('User roles fetched (fallback):', fallbackData);
+        setUserRoles(fallbackData || []);
         return;
       }
       
-      console.log('User roles fetched:', data);
+      console.log('User roles fetched (RPC):', data);
       setUserRoles(data || []);
     } catch (error) {
       console.error('Error fetching user roles:', error);
       setUserRoles([]);
+    }
+  };
+
+  const refreshUserRoles = async () => {
+    if (user) {
+      await fetchUserRoles(user.id);
     }
   };
 
@@ -228,10 +248,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const isSuperAdmin = () => {
-    if (!user) return false;
+    if (!user) {
+      console.log('No user, not super admin');
+      return false;
+    }
     
     const isSuper = userRoles.some(role => role.role === 'super_admin');
-    console.log('Checking super admin status:', isSuper, userRoles);
+    console.log('Checking super admin status:', { isSuper, userRoles, userId: user.id });
     return isSuper;
   };
 
@@ -245,7 +268,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     resetPassword,
     updatePassword,
     hasRole,
-    isSuperAdmin
+    isSuperAdmin,
+    refreshUserRoles
   };
 
   return (

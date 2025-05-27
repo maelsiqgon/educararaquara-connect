@@ -11,15 +11,25 @@ const AdminLogin = () => {
   const [password, setPassword] = useState("admin123456");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { signIn, user, loading } = useAuth();
+  const { signIn, user, loading, isSuperAdmin } = useAuth();
 
-  // Redirect if already logged in
+  // Redirect if already logged in and is super admin
   useEffect(() => {
     if (!loading && user) {
-      console.log('User already logged in, redirecting to admin');
-      navigate("/admin");
+      console.log('User already logged in, checking super admin status...');
+      
+      // Give time for roles to load
+      setTimeout(() => {
+        if (isSuperAdmin()) {
+          console.log('User is super admin, redirecting to admin');
+          navigate("/admin");
+        } else {
+          console.log('User is not super admin, staying on login page');
+          toast.error("Você não tem permissão para acessar a área administrativa");
+        }
+      }, 1000);
     }
-  }, [user, loading, navigate]);
+  }, [user, loading, navigate, isSuperAdmin]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,9 +43,13 @@ const AdminLogin = () => {
         console.error('Login error:', error);
         toast.error("Credenciais inválidas. Verifique email e senha.");
       } else {
-        console.log('Login successful, redirecting to admin');
+        console.log('Login successful, waiting for role verification...');
         toast.success("Login realizado com sucesso!");
-        navigate("/admin");
+        
+        // Give time for roles to be fetched before redirecting
+        setTimeout(() => {
+          navigate("/admin");
+        }, 1500);
       }
     } catch (error) {
       console.error('Login error:', error);

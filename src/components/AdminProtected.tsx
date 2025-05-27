@@ -13,55 +13,74 @@ const AdminProtected: React.FC<AdminProtectedProps> = ({
   children, 
   requiredPermission 
 }) => {
-  const { user, loading, isSuperAdmin } = useAuth();
+  const { user, loading, isSuperAdmin, refreshUserRoles } = useAuth();
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
   const [hasChecked, setHasChecked] = useState(false);
   
   useEffect(() => {
-    console.log('AdminProtected check:', { user: user?.email, loading, isSuperAdmin: isSuperAdmin() });
+    const checkAuthorization = async () => {
+      console.log('AdminProtected check:', { 
+        userEmail: user?.email, 
+        loading, 
+        hasChecked,
+        userRoles: isSuperAdmin() 
+      });
+      
+      if (loading) {
+        return;
+      }
+      
+      // Avoid multiple checks
+      if (hasChecked) {
+        return;
+      }
+      
+      // Check authentication
+      if (!user) {
+        console.log('No user, redirecting to login');
+        setIsAuthorized(false);
+        setHasChecked(true);
+        return;
+      }
+      
+      // Refresh roles to ensure we have the latest data
+      try {
+        await refreshUserRoles();
+      } catch (error) {
+        console.error('Error refreshing user roles:', error);
+      }
+      
+      // Small delay to ensure roles are loaded
+      setTimeout(() => {
+        // Check if user is super admin (bypass all permission checks)
+        if (isSuperAdmin()) {
+          console.log('User is super admin, granting access');
+          setIsAuthorized(true);
+          setHasChecked(true);
+          return;
+        }
+        
+        // Check specific permission if required
+        if (requiredPermission) {
+          // For now, only super admins can access admin features
+          // This can be expanded later with more granular permissions
+          console.log('Required permission but user is not super admin');
+          toast.error("Você não tem permissão para acessar esta área");
+          setIsAuthorized(false);
+          setHasChecked(true);
+          return;
+        }
+        
+        // Default to requiring super admin for any admin access
+        console.log('Default permission check - requiring super admin');
+        toast.error("Você não tem permissão para acessar esta área administrativa");
+        setIsAuthorized(false);
+        setHasChecked(true);
+      }, 500); // Give time for roles to be fetched
+    };
     
-    if (loading) {
-      return;
-    }
-    
-    // Avoid multiple checks
-    if (hasChecked) {
-      return;
-    }
-    
-    // Check authentication
-    if (!user) {
-      console.log('No user, redirecting to login');
-      setIsAuthorized(false);
-      setHasChecked(true);
-      return;
-    }
-    
-    // Check if user is super admin (bypass all permission checks)
-    if (isSuperAdmin()) {
-      console.log('User is super admin, granting access');
-      setIsAuthorized(true);
-      setHasChecked(true);
-      return;
-    }
-    
-    // Check specific permission if required
-    if (requiredPermission) {
-      // For now, only super admins can access admin features
-      // This can be expanded later with more granular permissions
-      console.log('Required permission but user is not super admin');
-      toast.error("Você não tem permissão para acessar esta área");
-      setIsAuthorized(false);
-      setHasChecked(true);
-      return;
-    }
-    
-    // Default to requiring super admin for any admin access
-    console.log('Default permission check - requiring super admin');
-    toast.error("Você não tem permissão para acessar esta área administrativa");
-    setIsAuthorized(false);
-    setHasChecked(true);
-  }, [user, loading, requiredPermission, isSuperAdmin, hasChecked]);
+    checkAuthorization();
+  }, [user, loading, requiredPermission, isSuperAdmin, hasChecked, refreshUserRoles]);
   
   // Loading state
   if (loading || isAuthorized === null) {
