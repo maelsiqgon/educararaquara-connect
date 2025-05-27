@@ -1,5 +1,6 @@
 
 import { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { UserData, UpdateData } from "../types.ts";
 
 export const getUserById = async (supabaseClient: SupabaseClient, userId: string) => {
   const { data, error } = await supabaseClient
@@ -42,7 +43,7 @@ export const getAllUsers = async (supabaseClient: SupabaseClient) => {
   return data;
 };
 
-export const createUser = async (supabaseClient: SupabaseClient, userData: any) => {
+export const createUser = async (supabaseClient: SupabaseClient, userData: UserData) => {
   // First create auth user
   const { data: authData, error: authError } = await supabaseClient.auth.admin.createUser({
     email: userData.email,
@@ -72,7 +73,7 @@ export const createUser = async (supabaseClient: SupabaseClient, userData: any) 
 
   // Add role assignments if provided
   if (userData.roles && userData.roles.length > 0) {
-    const roleInserts = userData.roles.map((role: any) => ({
+    const roleInserts = userData.roles.map((role) => ({
       user_id: authData.user.id,
       school_id: role.school_id,
       role: role.role,
@@ -87,7 +88,7 @@ export const createUser = async (supabaseClient: SupabaseClient, userData: any) 
   return profileData;
 };
 
-export const updateUser = async (supabaseClient: SupabaseClient, userId: string, updateData: any) => {
+export const updateUser = async (supabaseClient: SupabaseClient, userId: string, updateData: UpdateData) => {
   if (updateData.password) {
     // Update password if provided
     const { error: passwordError } = await supabaseClient.auth.admin.updateUserById(

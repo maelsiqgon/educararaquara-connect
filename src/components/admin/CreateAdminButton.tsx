@@ -10,7 +10,8 @@ const CreateAdminButton = () => {
   const createAdminUser = async () => {
     setIsCreating(true);
     try {
-      // Use the correct Supabase edge function URL
+      console.log('Creating admin user...');
+      
       const response = await fetch('https://epxmtbwmmptaricbiyjw.supabase.co/functions/v1/create-admin', {
         method: 'POST',
         headers: {
@@ -20,22 +21,25 @@ const CreateAdminButton = () => {
         body: JSON.stringify({})
       });
 
+      console.log('Response status:', response.status);
+      
       if (response.ok) {
         const data = await response.json();
-        toast.success(`Admin user ready! Email: ${data.email} | Password: ${data.password}`);
+        console.log('Admin user created successfully:', data);
+        toast.success(`Usuário admin criado! Email: ${data.email} | Senha: ${data.password}`);
       } else {
-        const errorData = await response.text();
-        console.error('Error response:', errorData);
+        const errorText = await response.text();
+        console.error('Error response:', errorText);
         
-        if (errorData.includes('already registered') || errorData.includes('already exists')) {
-          toast.info('Admin user already exists. Use: admin@araraquara.sp.gov.br / admin123456');
+        if (errorText.includes('already registered') || errorText.includes('already exists')) {
+          toast.info('Usuário admin já existe. Use: admin@araraquara.sp.gov.br / admin123456');
         } else {
-          toast.error('Error creating admin user. Check console for details.');
+          toast.error('Erro ao criar usuário admin. Verifique o console para detalhes.');
         }
       }
     } catch (error) {
       console.error('Error creating admin user:', error);
-      toast.error('Error creating admin user. Check console for details.');
+      toast.error('Erro ao criar usuário admin. Verifique o console para detalhes.');
     } finally {
       setIsCreating(false);
     }
@@ -51,12 +55,12 @@ const CreateAdminButton = () => {
       {isCreating ? (
         <>
           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          Creating Admin...
+          Criando Admin...
         </>
       ) : (
         <>
           <UserPlus className="mr-2 h-4 w-4" />
-          Create Admin User
+          Criar Usuário Admin
         </>
       )}
     </Button>

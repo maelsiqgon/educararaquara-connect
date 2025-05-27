@@ -11,9 +11,9 @@ const AdminLogin = () => {
   const [password, setPassword] = useState("admin123456");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { signIn, user, loading, isSuperAdmin } = useAuth();
+  const { signIn, user, loading, isSuperAdmin, refreshUserRoles } = useAuth();
 
-  // Redirect if already logged in and is super admin
+  // Check admin access and redirect
   useEffect(() => {
     if (!loading && user) {
       console.log('User already logged in, checking super admin status...', {
@@ -21,18 +21,22 @@ const AdminLogin = () => {
         isSuperAdmin: isSuperAdmin()
       });
       
-      // Give time for roles to load
-      setTimeout(() => {
-        if (isSuperAdmin()) {
-          console.log('User is super admin, redirecting to admin');
-          navigate("/admin");
-        } else {
-          console.log('User is not super admin, staying on login page');
-          toast.error("Você não tem permissão para acessar a área administrativa");
-        }
-      }, 1500);
+      // Wait for roles to load and then check
+      setTimeout(async () => {
+        await refreshUserRoles();
+        
+        setTimeout(() => {
+          if (isSuperAdmin()) {
+            console.log('User is super admin, redirecting to admin');
+            navigate("/admin");
+          } else {
+            console.log('User is not super admin, staying on login page');
+            toast.error("Você não tem permissão para acessar a área administrativa");
+          }
+        }, 500);
+      }, 1000);
     }
-  }, [user, loading, navigate, isSuperAdmin]);
+  }, [user, loading, navigate, isSuperAdmin, refreshUserRoles]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,9 +53,17 @@ const AdminLogin = () => {
         console.log('Login successful, waiting for role verification...');
         toast.success("Login realizado com sucesso!");
         
-        // Give time for roles to be fetched before redirecting
-        setTimeout(() => {
-          navigate("/admin");
+        // Wait for roles to be fetched and then redirect
+        setTimeout(async () => {
+          await refreshUserRoles();
+          
+          setTimeout(() => {
+            if (isSuperAdmin()) {
+              navigate("/admin");
+            } else {
+              toast.error("Você não tem permissão para acessar a área administrativa");
+            }
+          }, 500);
         }, 2000);
       }
     } catch (error) {
@@ -98,7 +110,7 @@ const AdminLogin = () => {
           <p><strong>Email:</strong> admin@araraquara.sp.gov.br</p>
           <p><strong>Senha:</strong> admin123456</p>
           <p className="mt-2 text-amber-600">
-            <strong>Clique no botão "Create Admin User" acima se for o primeiro acesso!</strong>
+            <strong>Clique no botão "Criar Usuário Admin" acima se for o primeiro acesso!</strong>
           </p>
         </div>
       </div>

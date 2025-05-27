@@ -23,7 +23,7 @@ const AdminProtected: React.FC<AdminProtectedProps> = ({
         userEmail: user?.email, 
         loading, 
         hasChecked,
-        userRoles: isSuperAdmin() 
+        isSuperAdmin: isSuperAdmin() 
       });
       
       if (loading) {
@@ -52,7 +52,7 @@ const AdminProtected: React.FC<AdminProtectedProps> = ({
       
       // Small delay to ensure roles are loaded
       setTimeout(() => {
-        // Check if user is super admin (bypass all permission checks)
+        // Check if user is super admin
         if (isSuperAdmin()) {
           console.log('User is super admin, granting access');
           setIsAuthorized(true);
@@ -62,8 +62,6 @@ const AdminProtected: React.FC<AdminProtectedProps> = ({
         
         // Check specific permission if required
         if (requiredPermission) {
-          // For now, only super admins can access admin features
-          // This can be expanded later with more granular permissions
           console.log('Required permission but user is not super admin');
           toast.error("Você não tem permissão para acessar esta área");
           setIsAuthorized(false);
@@ -76,7 +74,7 @@ const AdminProtected: React.FC<AdminProtectedProps> = ({
         toast.error("Você não tem permissão para acessar esta área administrativa");
         setIsAuthorized(false);
         setHasChecked(true);
-      }, 500); // Give time for roles to be fetched
+      }, 1000); // Give more time for roles to be fetched
     };
     
     checkAuthorization();

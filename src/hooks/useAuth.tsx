@@ -3,28 +3,8 @@ import { useState, useEffect, useContext, createContext } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-
-interface UserRole {
-  id: string;
-  school_id: string | null;
-  role: string;
-  active: boolean;
-  created_at: string;
-}
-
-interface AuthContextType {
-  user: User | null;
-  session: Session | null;
-  loading: boolean;
-  signUp: (email: string, password: string, name?: string) => Promise<{ error: any }>;
-  signIn: (email: string, password: string) => Promise<{ error: any }>;
-  signOut: () => Promise<void>;
-  resetPassword: (email: string) => Promise<{ error: any }>;
-  updatePassword: (password: string) => Promise<{ error: any }>;
-  hasRole: (schoolId: string, roles: string[]) => boolean;
-  isSuperAdmin: () => boolean;
-  refreshUserRoles: () => Promise<void>;
-}
+import { AuthContextType, UserRole } from './auth/types';
+import { fetchUserRoles, isSuperAdmin as checkSuperAdmin, hasRole as checkHasRole } from './auth/userRoleService';
 
 const AuthContext = createContext<AuthContextType>({} as AuthContextType);
 
@@ -42,49 +22,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const [userRoles, setUserRoles] = useState<UserRole[]>([]);
 
-  const fetchUserRoles = async (userId: string) => {
-    try {
-      console.log('Fetching roles for user:', userId);
-      
-      // Try RPC function first
-      const { data: rpcData, error: rpcError } = await supabase
-        .rpc('get_user_roles', { user_uuid: userId });
-      
-      if (!rpcError && rpcData) {
-        console.log('User roles fetched (RPC):', rpcData);
-        setUserRoles(rpcData);
-        return;
-      }
-      
-      console.log('RPC failed, trying direct query:', rpcError);
-      
-      // Fallback to direct query with service role
-      const response = await fetch('/functions/v1/get-user-roles', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session?.access_token || ''}`
-        },
-        body: JSON.stringify({ user_uuid: userId })
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        console.log('User roles fetched (Edge Function):', data);
-        setUserRoles(data || []);
-      } else {
-        console.error('Failed to fetch user roles via Edge Function');
-        setUserRoles([]);
-      }
-    } catch (error) {
-      console.error('Error fetching user roles:', error);
-      setUserRoles([]);
-    }
-  };
-
   const refreshUserRoles = async () => {
     if (user) {
-      await fetchUserRoles(user.id);
+      const roles = await fetchUserRoles(user.id);
+      setUserRoles(roles);
     }
   };
 
@@ -98,8 +39,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         
         // Fetch user roles when user changes
         if (session?.user) {
-          setTimeout(() => {
-            fetchUserRoles(session.user.id);
+          setTimeout(async () => {
+            const roles = await fetchUserRoles(session.user.id);
+            setUserRoles(roles);
           }, 100);
         } else {
           setUserRoles([]);
@@ -116,8 +58,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       
       // Fetch user roles if user exists
       if (session?.user) {
-        setTimeout(() => {
-          fetchUserRoles(session.user.id);
+        setTimeout(async () => {
+          const roles = await fetchUserRoles(session.user.id);
+          setUserRoles(roles);
         }, 100);
       }
       
@@ -255,11 +198,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const hasRole = (schoolId: string, roles: string[]) => {
     if (!user) return false;
-    
-    return userRoles.some(role => 
-      role.school_id === schoolId && 
-      roles.includes(role.role)
-    );
+    return checkHasRole(userRoles, schoolId, roles);
   };
 
   const isSuperAdmin = () => {
@@ -268,7 +207,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       return false;
     }
     
-    const isSuper = userRoles.some(role => role.role === 'super_admin');
+    const isSuper = checkSuperAdmin(userRoles);
     console.log('Checking super admin status:', { 
       isSuper, 
       userRoles, 
@@ -282,6 +221,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     user,
     session,
     loading,
+    userRoles,
     signUp,
     signIn,
     signOut,

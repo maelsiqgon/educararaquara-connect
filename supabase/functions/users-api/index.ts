@@ -8,7 +8,7 @@ import { parseRequest } from "./utils/requestParser.ts";
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+};
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -19,7 +19,7 @@ serve(async (req) => {
     const authHeader = req.headers.get('Authorization');
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
       { 
         auth: { persistSession: false },
         global: { headers: authHeader ? { Authorization: authHeader } : {} }
@@ -72,6 +72,9 @@ serve(async (req) => {
         }
 
       case 'PUT':
+        if (!userId) {
+          throw new Error('User ID is required for updates');
+        }
         const updateData = await req.json();
         const updatedUser = await updateUser(supabaseClient, userId, updateData);
         return new Response(JSON.stringify(updatedUser), {
@@ -79,6 +82,9 @@ serve(async (req) => {
         });
 
       case 'DELETE':
+        if (!userId) {
+          throw new Error('User ID is required for deletion');
+        }
         const result = await deactivateUser(supabaseClient, userId);
         return new Response(JSON.stringify(result), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
