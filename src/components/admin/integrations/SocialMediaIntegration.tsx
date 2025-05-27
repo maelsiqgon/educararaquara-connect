@@ -25,7 +25,10 @@ const SocialMediaIntegration = () => {
   const [networks, setNetworks] = useState<SocialNetwork[]>(
     mockSocialNetworks.map(network => ({
       ...network,
-      followers: network.followers.toString()
+      followers: network.followers.toString(),
+      url: network.url || "",
+      lastPost: network.lastPost || "",
+      scheduledPosts: network.scheduledPosts || 0
     }))
   );
 
