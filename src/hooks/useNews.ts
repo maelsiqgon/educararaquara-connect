@@ -53,7 +53,7 @@ export const useNews = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchNews = async (status?: string) => {
+  const fetchNews = async (status?: 'draft' | 'scheduled' | 'published' | 'archived') => {
     try {
       setLoading(true);
       let query = supabase
@@ -97,16 +97,16 @@ export const useNews = () => {
     }
   };
 
-  const createNews = async (newsData: Partial<NewsArticle>) => {
+  const createNews = async (newsData: Omit<NewsArticle, 'id' | 'created_at' | 'updated_at' | 'views' | 'category' | 'author' | 'school'>) => {
     try {
       const { data, error } = await supabase
         .from('news')
         .insert([{
           ...newsData,
-          slug: newsData.title?.toLowerCase()
+          slug: newsData.title.toLowerCase()
             .replace(/[^a-z0-9]/g, '-')
             .replace(/-+/g, '-')
-            .replace(/^-|-$/g, '') || '',
+            .replace(/^-|-$/g, ''),
         }])
         .select()
         .single();
@@ -122,7 +122,7 @@ export const useNews = () => {
     }
   };
 
-  const updateNews = async (id: string, newsData: Partial<NewsArticle>) => {
+  const updateNews = async (id: string, newsData: Partial<Omit<NewsArticle, 'id' | 'created_at' | 'updated_at' | 'category' | 'author' | 'school'>>) => {
     try {
       const { error } = await supabase
         .from('news')
@@ -161,7 +161,7 @@ export const useNews = () => {
       const { error } = await supabase
         .from('news')
         .update({ 
-          status: 'published',
+          status: 'published' as const,
           published_at: new Date().toISOString()
         })
         .eq('id', id);

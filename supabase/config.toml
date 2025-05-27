@@ -1,1 +1,29 @@
+
 project_id = "epxmtbwmmptaricbiyjw"
+
+[functions.schools-api]
+verify_jwt = true
+
+[functions.news-api]
+verify_jwt = true
+
+[functions.media-api]
+verify_jwt = true
+
+[functions.users-api] 
+verify_jwt = true
+
+[functions.agenda-api]
+verify_jwt = true
+
+[functions.councils-api]
+verify_jwt = true
+
+[functions.chatbot-api]
+verify_jwt = true
+
+[functions.auth-api]
+verify_jwt = false
+
+[functions.whatsapp-webhook]
+verify_jwt = false

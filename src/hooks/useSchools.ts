@@ -56,7 +56,7 @@ export const useSchools = () => {
     }
   };
 
-  const createSchool = async (schoolData: Partial<School>) => {
+  const createSchool = async (schoolData: Omit<School, 'id' | 'created_at' | 'updated_at' | 'contacts'>) => {
     try {
       const { data, error } = await supabase
         .from('schools')
@@ -75,7 +75,7 @@ export const useSchools = () => {
     }
   };
 
-  const updateSchool = async (id: string, schoolData: Partial<School>) => {
+  const updateSchool = async (id: string, schoolData: Partial<Omit<School, 'id' | 'created_at' | 'updated_at' | 'contacts'>>) => {
     try {
       const { error } = await supabase
         .from('schools')

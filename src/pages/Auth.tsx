@@ -1,280 +1,358 @@
 
-import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { toast } from "sonner";
-import { useAuth } from '@/hooks/useAuth';
-import { Eye, EyeOff, ArrowLeft } from 'lucide-react';
+import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
 const Auth = () => {
-  const { signIn, signUp, resetPassword, user, loading } = useAuth();
-  const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState<string>("login");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [name, setName] = useState("");
+  const [resetEmail, setResetEmail] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showResetForm, setShowResetForm] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
-  // Redirect if already authenticated
+  const { user, signIn, signUp, resetPassword } = useAuth();
+  const navigate = useNavigate();
+
   useEffect(() => {
-    if (user && !loading) {
-      navigate('/');
+    // Redirect if already logged in
+    if (user) {
+      navigate("/");
     }
-  }, [user, loading, navigate]);
+  }, [user, navigate]);
 
-  const [loginForm, setLoginForm] = useState({
-    email: '',
-    password: ''
-  });
+  const validateForm = (): boolean => {
+    const newErrors: { [key: string]: string } = {};
 
-  const [signupForm, setSignupForm] = useState({
-    name: '',
-    email: '',
-    password: '',
-    confirmPassword: ''
-  });
-
-  const [resetForm, setResetForm] = useState({
-    email: ''
-  });
-
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-
-    const { error } = await signIn(loginForm.email, loginForm.password);
-    
-    if (error) {
-      toast.error(error.message);
-    } else {
-      toast.success('Login realizado com sucesso!');
-      navigate('/');
+    if (activeTab === "login") {
+      if (!email.trim()) newErrors.email = "Email é obrigatório";
+      if (!password) newErrors.password = "Senha é obrigatória";
+    } else if (activeTab === "register") {
+      if (!name.trim()) newErrors.name = "Nome é obrigatório";
+      if (!email.trim()) newErrors.email = "Email é obrigatório";
+      else if (!/^\S+@\S+\.\S+$/.test(email)) newErrors.email = "Email inválido";
+      if (!password) newErrors.password = "Senha é obrigatória";
+      else if (password.length < 6) newErrors.password = "Senha deve ter no mínimo 6 caracteres";
+      if (password !== confirmPassword) newErrors.confirmPassword = "As senhas não coincidem";
+    } else if (showResetForm) {
+      if (!resetEmail.trim()) newErrors.resetEmail = "Email é obrigatório";
+      else if (!/^\S+@\S+\.\S+$/.test(resetEmail)) newErrors.resetEmail = "Email inválido";
     }
-    
-    setIsLoading(false);
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
-  const handleSignUp = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (signupForm.password !== signupForm.confirmPassword) {
-      toast.error('As senhas não coincidem');
-      return;
-    }
+    if (!validateForm()) return;
 
-    if (signupForm.password.length < 6) {
-      toast.error('A senha deve ter pelo menos 6 caracteres');
-      return;
-    }
+    setLoading(true);
 
-    setIsLoading(true);
-
-    const { error } = await signUp(signupForm.email, signupForm.password, signupForm.name);
-    
-    if (error) {
-      toast.error(error.message);
-    } else {
-      toast.success('Conta criada com sucesso! Verifique seu e-mail para confirmar.');
+    try {
+      if (showResetForm) {
+        await handleResetPassword();
+      } else if (activeTab === "login") {
+        await handleSignIn();
+      } else {
+        await handleSignUp();
+      }
+    } finally {
+      setLoading(false);
     }
-    
-    setIsLoading(false);
   };
 
-  const handleResetPassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-
-    const { error } = await resetPassword(resetForm.email);
-    
+  const handleSignIn = async () => {
+    const { error } = await signIn(email, password);
     if (error) {
-      toast.error(error.message);
+      setErrors({ form: error.message });
     } else {
-      toast.success('E-mail de recuperação enviado! Verifique sua caixa de entrada.');
+      navigate("/");
     }
-    
-    setIsLoading(false);
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-education-primary"></div>
-      </div>
-    );
-  }
+  const handleSignUp = async () => {
+    const { error } = await signUp(email, password, name);
+    if (error) {
+      setErrors({ form: error.message });
+    } else {
+      setActiveTab("login");
+      setEmail("");
+      setPassword("");
+      setConfirmPassword("");
+      setName("");
+    }
+  };
+
+  const handleResetPassword = async () => {
+    const { error } = await resetPassword(resetEmail);
+    if (error) {
+      setErrors({ resetEmail: error.message });
+    } else {
+      setShowResetForm(false);
+      setResetEmail("");
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-education-light to-white flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        <div className="mb-8 text-center">
-          <Link to="/" className="inline-flex items-center text-education-primary hover:text-education-dark mb-4">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Voltar ao site
-          </Link>
-          <h1 className="text-3xl font-bold text-education-primary">Portal Educação</h1>
-          <p className="text-gray-600 mt-2">Secretaria Municipal de Educação</p>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8">
+        <div className="text-center">
+          <h1 className="text-3xl font-bold text-education-primary">
+            Portal da Educação
+          </h1>
+          <p className="mt-2 text-gray-600">
+            Acesso ao sistema administrativo
+          </p>
         </div>
 
-        <Card className="shadow-lg">
-          <CardHeader className="text-center">
-            <CardTitle>Acesso ao Sistema</CardTitle>
+        <Card className="w-full">
+          <CardHeader>
+            <CardTitle>
+              {showResetForm ? "Recuperar Senha" : "Acesso ao Sistema"}
+            </CardTitle>
             <CardDescription>
-              Entre com sua conta ou crie uma nova
+              {showResetForm
+                ? "Informe seu email para receber instruções de recuperação de senha."
+                : "Entre com suas credenciais para acessar o sistema."}
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Tabs defaultValue="login" className="space-y-4">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="login">Entrar</TabsTrigger>
-                <TabsTrigger value="signup">Cadastrar</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="login" className="space-y-4">
-                <form onSubmit={handleLogin} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="login-email">E-mail</Label>
-                    <Input
-                      id="login-email"
-                      type="email"
-                      value={loginForm.email}
-                      onChange={(e) => setLoginForm({...loginForm, email: e.target.value})}
-                      placeholder="seu@email.com"
-                      required
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="login-password">Senha</Label>
-                    <div className="relative">
-                      <Input
-                        id="login-password"
-                        type={showPassword ? "text" : "password"}
-                        value={loginForm.password}
-                        onChange={(e) => setLoginForm({...loginForm, password: e.target.value})}
-                        placeholder="Sua senha"
-                        required
-                      />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                        onClick={() => setShowPassword(!showPassword)}
-                      >
-                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                      </Button>
-                    </div>
-                  </div>
-                  
-                  <Button 
-                    type="submit" 
-                    className="w-full bg-education-primary hover:bg-education-dark"
-                    disabled={isLoading}
-                  >
-                    {isLoading ? 'Entrando...' : 'Entrar'}
-                  </Button>
-                </form>
-                
-                <div className="text-center">
+            {showResetForm ? (
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="resetEmail">Email</Label>
+                  <Input
+                    id="resetEmail"
+                    type="email"
+                    placeholder="seu@email.com"
+                    value={resetEmail}
+                    onChange={(e) => setResetEmail(e.target.value)}
+                  />
+                  {errors.resetEmail && (
+                    <p className="text-xs text-red-500">{errors.resetEmail}</p>
+                  )}
+                </div>
+
+                <div className="flex items-center justify-between mt-4">
                   <Button
-                    variant="link"
+                    type="button"
+                    variant="outline"
                     onClick={() => {
-                      const email = prompt('Digite seu e-mail para recuperação:');
-                      if (email) {
-                        setResetForm({email});
-                        handleResetPassword({preventDefault: () => {}} as React.FormEvent);
-                      }
+                      setShowResetForm(false);
+                      setErrors({});
                     }}
-                    className="text-sm text-education-primary"
                   >
-                    Esqueceu sua senha?
+                    Voltar
+                  </Button>
+                  <Button type="submit" disabled={loading}>
+                    {loading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Enviando...
+                      </>
+                    ) : (
+                      "Enviar Instruções"
+                    )}
                   </Button>
                 </div>
-              </TabsContent>
-              
-              <TabsContent value="signup" className="space-y-4">
-                <form onSubmit={handleSignUp} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-name">Nome Completo</Label>
-                    <Input
-                      id="signup-name"
-                      value={signupForm.name}
-                      onChange={(e) => setSignupForm({...signupForm, name: e.target.value})}
-                      placeholder="Seu nome completo"
-                      required
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-email">E-mail</Label>
-                    <Input
-                      id="signup-email"
-                      type="email"
-                      value={signupForm.email}
-                      onChange={(e) => setSignupForm({...signupForm, email: e.target.value})}
-                      placeholder="seu@email.com"
-                      required
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-password">Senha</Label>
-                    <div className="relative">
+              </form>
+            ) : (
+              <Tabs
+                value={activeTab}
+                onValueChange={setActiveTab}
+                className="w-full"
+              >
+                <TabsList className="grid grid-cols-2 mb-4">
+                  <TabsTrigger value="login">Login</TabsTrigger>
+                  <TabsTrigger value="register">Cadastro</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="login">
+                  <form onSubmit={handleSubmit} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="email">Email</Label>
                       <Input
-                        id="signup-password"
+                        id="email"
+                        type="email"
+                        placeholder="seu@email.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                      />
+                      {errors.email && (
+                        <p className="text-xs text-red-500">{errors.email}</p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="password">Senha</Label>
+                        <button
+                          type="button"
+                          className="text-xs text-education-primary hover:underline"
+                          onClick={() => {
+                            setShowResetForm(true);
+                            setErrors({});
+                          }}
+                        >
+                          Esqueceu a senha?
+                        </button>
+                      </div>
+                      <div className="relative">
+                        <Input
+                          id="password"
+                          type={showPassword ? "text" : "password"}
+                          placeholder="••••••••"
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                        />
+                        <button
+                          type="button"
+                          className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-700"
+                          onClick={() => setShowPassword(!showPassword)}
+                        >
+                          {showPassword ? (
+                            <EyeOff className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
+                        </button>
+                      </div>
+                      {errors.password && (
+                        <p className="text-xs text-red-500">{errors.password}</p>
+                      )}
+                    </div>
+
+                    {errors.form && (
+                      <div className="bg-red-50 text-red-800 p-3 rounded-md text-sm">
+                        {errors.form}
+                      </div>
+                    )}
+
+                    <Button
+                      type="submit"
+                      className="w-full bg-education-primary hover:bg-education-dark"
+                      disabled={loading}
+                    >
+                      {loading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Entrando...
+                        </>
+                      ) : (
+                        "Entrar"
+                      )}
+                    </Button>
+                  </form>
+                </TabsContent>
+
+                <TabsContent value="register">
+                  <form onSubmit={handleSubmit} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="name">Nome Completo</Label>
+                      <Input
+                        id="name"
+                        type="text"
+                        placeholder="Seu Nome"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                      />
+                      {errors.name && (
+                        <p className="text-xs text-red-500">{errors.name}</p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="registerEmail">Email</Label>
+                      <Input
+                        id="registerEmail"
+                        type="email"
+                        placeholder="seu@email.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                      />
+                      {errors.email && (
+                        <p className="text-xs text-red-500">{errors.email}</p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="registerPassword">Senha</Label>
+                      <div className="relative">
+                        <Input
+                          id="registerPassword"
+                          type={showPassword ? "text" : "password"}
+                          placeholder="••••••••"
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                        />
+                        <button
+                          type="button"
+                          className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-700"
+                          onClick={() => setShowPassword(!showPassword)}
+                        >
+                          {showPassword ? (
+                            <EyeOff className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
+                        </button>
+                      </div>
+                      {errors.password && (
+                        <p className="text-xs text-red-500">{errors.password}</p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="confirmPassword">Confirmar Senha</Label>
+                      <Input
+                        id="confirmPassword"
                         type={showPassword ? "text" : "password"}
-                        value={signupForm.password}
-                        onChange={(e) => setSignupForm({...signupForm, password: e.target.value})}
-                        placeholder="Mínimo 6 caracteres"
-                        required
+                        placeholder="••••••••"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
                       />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                        onClick={() => setShowPassword(!showPassword)}
-                      >
-                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                      </Button>
+                      {errors.confirmPassword && (
+                        <p className="text-xs text-red-500">
+                          {errors.confirmPassword}
+                        </p>
+                      )}
                     </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-confirm">Confirmar Senha</Label>
-                    <div className="relative">
-                      <Input
-                        id="signup-confirm"
-                        type={showConfirmPassword ? "text" : "password"}
-                        value={signupForm.confirmPassword}
-                        onChange={(e) => setSignupForm({...signupForm, confirmPassword: e.target.value})}
-                        placeholder="Digite a senha novamente"
-                        required
-                      />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      >
-                        {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                      </Button>
-                    </div>
-                  </div>
-                  
-                  <Button 
-                    type="submit" 
-                    className="w-full bg-education-primary hover:bg-education-dark"
-                    disabled={isLoading}
-                  >
-                    {isLoading ? 'Criando conta...' : 'Criar conta'}
-                  </Button>
-                </form>
-              </TabsContent>
-            </Tabs>
+
+                    {errors.form && (
+                      <div className="bg-red-50 text-red-800 p-3 rounded-md text-sm">
+                        {errors.form}
+                      </div>
+                    )}
+
+                    <Button
+                      type="submit"
+                      className="w-full bg-education-primary hover:bg-education-dark"
+                      disabled={loading}
+                    >
+                      {loading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Cadastrando...
+                        </>
+                      ) : (
+                        "Cadastrar"
+                      )}
+                    </Button>
+                  </form>
+                </TabsContent>
+              </Tabs>
+            )}
           </CardContent>
         </Card>
       </div>
