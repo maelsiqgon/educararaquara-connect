@@ -25,7 +25,8 @@ const AdminProtected: React.FC<AdminProtectedProps> = ({
         userId: user?.id, 
         loading, 
         userRolesLength: userRoles.length,
-        userRoles: userRoles
+        userRoles: userRoles,
+        isSuperAdminResult: isSuperAdmin()
       });
       
       if (loading) {
@@ -46,7 +47,18 @@ const AdminProtected: React.FC<AdminProtectedProps> = ({
       console.log('👤 User found, checking admin access...');
       
       try {
-        // First check using RPC function for more reliable results
+        // Check current isSuperAdmin status first
+        const currentSuperAdminStatus = isSuperAdmin();
+        console.log('🔍 Current super admin status from context:', currentSuperAdminStatus);
+        
+        if (currentSuperAdminStatus) {
+          console.log('✅ User is super admin via context, granting access');
+          setIsAuthorized(true);
+          setIsChecking(false);
+          return;
+        }
+        
+        // Try RPC function as backup
         console.log('🔍 Checking super admin via RPC...');
         const isSuperViaRPC = await checkIsSuperAdminRPC(user.id);
         
@@ -57,8 +69,8 @@ const AdminProtected: React.FC<AdminProtectedProps> = ({
           return;
         }
         
-        // Fallback: refresh roles and check again
-        console.log('🔄 RPC check failed, refreshing roles...');
+        // Final fallback: refresh roles and check again
+        console.log('🔄 Both checks failed, refreshing roles...');
         const refreshedRoles = await refreshUserRoles();
         console.log('✅ Roles refreshed:', refreshedRoles);
         
@@ -72,10 +84,15 @@ const AdminProtected: React.FC<AdminProtectedProps> = ({
         });
         
         if (isSuper) {
-          console.log('✅ User is super admin, granting access');
+          console.log('✅ User is super admin after refresh, granting access');
           setIsAuthorized(true);
         } else {
           console.log('❌ User is not super admin, denying access');
+          console.log('🔍 Final debug info:', {
+            userRoles: refreshedRoles,
+            rolesLength: refreshedRoles.length,
+            rolesData: refreshedRoles.map(r => ({ role: r.role, active: r.active }))
+          });
           toast.error("Você não tem permissão para acessar esta área administrativa");
           setIsAuthorized(false);
         }
@@ -88,11 +105,11 @@ const AdminProtected: React.FC<AdminProtectedProps> = ({
     };
     
     checkAuthorization();
-  }, [user, loading, requiredPermission, refreshUserRoles]);
+  }, [user, loading, requiredPermission, refreshUserRoles, isSuperAdmin, userRoles]);
   
   // Loading state
   if (loading || isChecking || isAuthorized === null) {
-    console.log('⏳ Showing loading state');
+    console.log('⏳ Showing loading state, details:', { loading, isChecking, isAuthorized });
     return (
       <div className="min-h-screen flex items-center justify-center bg-education-lightgray">
         <div className="text-center">
