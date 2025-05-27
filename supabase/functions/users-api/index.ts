@@ -1,6 +1,9 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { getUserById, getAllUsers, createUser, updateUser, deactivateUser } from "./handlers/userHandlers.ts";
+import { getSchoolUsers, addUserToSchool } from "./handlers/schoolUserHandlers.ts";
+import { parseRequest } from "./utils/requestParser.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -23,13 +26,7 @@ serve(async (req) => {
       }
     );
 
-    const url = new URL(req.url);
-    const pathSegments = url.pathname.split('/').filter(Boolean);
-    const userId = pathSegments[pathSegments.length - 1];
-
-    // Check if this is a school-specific user query
-    const isSchoolUsers = pathSegments.length >= 3 && pathSegments[pathSegments.length - 3] === 'schools';
-    const schoolId = isSchoolUsers ? pathSegments[pathSegments.length - 2] : null;
+    const { userId, isSchoolUsers, schoolId } = parseRequest(req.url);
 
     console.log('Users API called:', req.method, userId, { isSchoolUsers, schoolId });
 
@@ -37,133 +34,38 @@ serve(async (req) => {
       case 'GET':
         if (userId && !isSchoolUsers && userId !== 'users-api') {
           // Get single user
-          const { data, error } = await supabaseClient
-            .from('profiles')
-            .select(`
-              *,
-              roles:user_school_roles(
-                id,
-                school_id,
-                role,
-                active,
-                created_at,
-                school:schools(id, name)
-              )
-            `)
-            .eq('id', userId)
-            .single();
-
-          if (error) throw error;
-
+          const data = await getUserById(supabaseClient, userId);
           return new Response(JSON.stringify(data), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           });
         } else if (isSchoolUsers && schoolId) {
           // Get users for a specific school
-          const { data, error } = await supabaseClient
-            .from('user_school_roles')
-            .select(`
-              *,
-              user:profiles(*)
-            `)
-            .eq('school_id', schoolId);
-
-          if (error) throw error;
-
+          const data = await getSchoolUsers(supabaseClient, schoolId);
           return new Response(JSON.stringify(data), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           });
         } else {
           // Get all users
-          const { data, error } = await supabaseClient
-            .from('profiles')
-            .select(`
-              *,
-              roles:user_school_roles(
-                id,
-                school_id,
-                role,
-                active,
-                created_at,
-                school:schools(id, name)
-              )
-            `)
-            .order('name');
-
-          if (error) throw error;
-
+          const data = await getAllUsers(supabaseClient);
           return new Response(JSON.stringify(data), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           });
         }
 
       case 'POST':
+        const postData = await req.json();
+        
         if (isSchoolUsers && schoolId) {
           // Add user to a school
-          const userData = await req.json();
-          const { data: newRoleAssignment, error: assignError } = await supabaseClient
-            .from('user_school_roles')
-            .insert([{
-              user_id: userData.user_id,
-              school_id: schoolId,
-              role: userData.role,
-              active: true
-            }])
-            .select()
-            .single();
-
-          if (assignError) throw assignError;
-
-          return new Response(JSON.stringify(newRoleAssignment), {
+          const data = await addUserToSchool(supabaseClient, schoolId, postData);
+          return new Response(JSON.stringify(data), {
             status: 201,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           });
         } else {
           // Create new user
-          const userData = await req.json();
-          
-          // First create auth user
-          const { data: authData, error: authError } = await supabaseClient.auth.admin.createUser({
-            email: userData.email,
-            password: userData.password || 'temppass123',
-            email_confirm: true,
-            user_metadata: { name: userData.name }
-          });
-
-          if (authError) throw authError;
-
-          // Update profile with additional data
-          const { data: profileData, error: profileError } = await supabaseClient
-            .from('profiles')
-            .update({
-              name: userData.name,
-              cpf: userData.cpf,
-              phone: userData.phone,
-              address: userData.address,
-              registration: userData.registration,
-              active: true
-            })
-            .eq('id', authData.user.id)
-            .select()
-            .single();
-
-          if (profileError) throw profileError;
-
-          // Add role assignments if provided
-          if (userData.roles && userData.roles.length > 0) {
-            const roleInserts = userData.roles.map((role: any) => ({
-              user_id: authData.user.id,
-              school_id: role.school_id,
-              role: role.role,
-              active: true
-            }));
-
-            await supabaseClient
-              .from('user_school_roles')
-              .insert(roleInserts);
-          }
-
-          return new Response(JSON.stringify(profileData), {
+          const data = await createUser(supabaseClient, postData);
+          return new Response(JSON.stringify(data), {
             status: 201,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           });
@@ -171,46 +73,14 @@ serve(async (req) => {
 
       case 'PUT':
         const updateData = await req.json();
-        
-        if (updateData.password) {
-          // Update password if provided
-          const { error: passwordError } = await supabaseClient.auth.admin.updateUserById(
-            userId,
-            { password: updateData.password }
-          );
-          
-          if (passwordError) throw passwordError;
-          
-          // Remove password from profile update
-          delete updateData.password;
-        }
-        
-        // Update profile data
-        const { data: updatedUser, error: updateError } = await supabaseClient
-          .from('profiles')
-          .update(updateData)
-          .eq('id', userId)
-          .select()
-          .single();
-
-        if (updateError) throw updateError;
-
+        const updatedUser = await updateUser(supabaseClient, userId, updateData);
         return new Response(JSON.stringify(updatedUser), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
 
       case 'DELETE':
-        // Soft delete - deactivate user
-        const { data: deactivatedUser, error: deactivateError } = await supabaseClient
-          .from('profiles')
-          .update({ active: false })
-          .eq('id', userId)
-          .select()
-          .single();
-
-        if (deactivateError) throw deactivateError;
-
-        return new Response(JSON.stringify({ message: 'User deactivated successfully' }), {
+        const result = await deactivateUser(supabaseClient, userId);
+        return new Response(JSON.stringify(result), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
 

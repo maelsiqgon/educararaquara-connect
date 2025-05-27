@@ -16,7 +16,10 @@ const AdminLogin = () => {
   // Redirect if already logged in and is super admin
   useEffect(() => {
     if (!loading && user) {
-      console.log('User already logged in, checking super admin status...');
+      console.log('User already logged in, checking super admin status...', {
+        userEmail: user.email,
+        isSuperAdmin: isSuperAdmin()
+      });
       
       // Give time for roles to load
       setTimeout(() => {
@@ -27,7 +30,7 @@ const AdminLogin = () => {
           console.log('User is not super admin, staying on login page');
           toast.error("Você não tem permissão para acessar a área administrativa");
         }
-      }, 1000);
+      }, 1500);
     }
   }, [user, loading, navigate, isSuperAdmin]);
 
@@ -49,7 +52,7 @@ const AdminLogin = () => {
         // Give time for roles to be fetched before redirecting
         setTimeout(() => {
           navigate("/admin");
-        }, 1500);
+        }, 2000);
       }
     } catch (error) {
       console.error('Login error:', error);

@@ -10,22 +10,27 @@ const CreateAdminButton = () => {
   const createAdminUser = async () => {
     setIsCreating(true);
     try {
-      const response = await fetch('/functions/v1/create-admin', {
+      // Use the correct Supabase edge function URL
+      const response = await fetch('https://epxmtbwmmptaricbiyjw.supabase.co/functions/v1/create-admin', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVweG10YndtbXB0YXJpY2JpeWp3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgzNTY2MjUsImV4cCI6MjA2MzkzMjYyNX0.4JmK9z74mE0LtE9SgpMv55SazN4M4MdxbWu_r2SvPrA`
         },
+        body: JSON.stringify({})
       });
 
-      const data = await response.json();
-      
       if (response.ok) {
+        const data = await response.json();
         toast.success(`Admin user ready! Email: ${data.email} | Password: ${data.password}`);
       } else {
-        if (data.error?.includes('already registered')) {
+        const errorData = await response.text();
+        console.error('Error response:', errorData);
+        
+        if (errorData.includes('already registered') || errorData.includes('already exists')) {
           toast.info('Admin user already exists. Use: admin@araraquara.sp.gov.br / admin123456');
         } else {
-          toast.error('Error: ' + (data.error || 'Failed to create admin user'));
+          toast.error('Error creating admin user. Check console for details.');
         }
       }
     } catch (error) {

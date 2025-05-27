@@ -4,6 +4,14 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
+interface UserRole {
+  id: string;
+  school_id: string | null;
+  role: string;
+  active: boolean;
+  created_at: string;
+}
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
@@ -32,7 +40,53 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const [userRoles, setUserRoles] = useState<any[]>([]);
+  const [userRoles, setUserRoles] = useState<UserRole[]>([]);
+
+  const fetchUserRoles = async (userId: string) => {
+    try {
+      console.log('Fetching roles for user:', userId);
+      
+      // Try RPC function first
+      const { data: rpcData, error: rpcError } = await supabase
+        .rpc('get_user_roles', { user_uuid: userId });
+      
+      if (!rpcError && rpcData) {
+        console.log('User roles fetched (RPC):', rpcData);
+        setUserRoles(rpcData);
+        return;
+      }
+      
+      console.log('RPC failed, trying direct query:', rpcError);
+      
+      // Fallback to direct query with service role
+      const response = await fetch('/functions/v1/get-user-roles', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token || ''}`
+        },
+        body: JSON.stringify({ user_uuid: userId })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('User roles fetched (Edge Function):', data);
+        setUserRoles(data || []);
+      } else {
+        console.error('Failed to fetch user roles via Edge Function');
+        setUserRoles([]);
+      }
+    } catch (error) {
+      console.error('Error fetching user roles:', error);
+      setUserRoles([]);
+    }
+  };
+
+  const refreshUserRoles = async () => {
+    if (user) {
+      await fetchUserRoles(user.id);
+    }
+  };
 
   useEffect(() => {
     // Set up auth state listener
@@ -44,7 +98,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         
         // Fetch user roles when user changes
         if (session?.user) {
-          await fetchUserRoles(session.user.id);
+          setTimeout(() => {
+            fetchUserRoles(session.user.id);
+          }, 100);
         } else {
           setUserRoles([]);
         }
@@ -60,7 +116,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       
       // Fetch user roles if user exists
       if (session?.user) {
-        await fetchUserRoles(session.user.id);
+        setTimeout(() => {
+          fetchUserRoles(session.user.id);
+        }, 100);
       }
       
       setLoading(false);
@@ -68,49 +126,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     return () => subscription.unsubscribe();
   }, []);
-
-  const fetchUserRoles = async (userId: string) => {
-    try {
-      console.log('Fetching roles for user:', userId);
-      
-      // Use RPC call to get roles to avoid RLS issues
-      const { data, error } = await supabase
-        .rpc('get_user_roles', { user_uuid: userId });
-      
-      if (error) {
-        console.error('RPC error, falling back to direct query:', error);
-        
-        // Fallback to direct query
-        const { data: fallbackData, error: fallbackError } = await supabase
-          .from('user_school_roles')
-          .select('*')
-          .eq('user_id', userId)
-          .eq('active', true);
-          
-        if (fallbackError) {
-          console.error('Error fetching user roles:', fallbackError);
-          setUserRoles([]);
-          return;
-        }
-        
-        console.log('User roles fetched (fallback):', fallbackData);
-        setUserRoles(fallbackData || []);
-        return;
-      }
-      
-      console.log('User roles fetched (RPC):', data);
-      setUserRoles(data || []);
-    } catch (error) {
-      console.error('Error fetching user roles:', error);
-      setUserRoles([]);
-    }
-  };
-
-  const refreshUserRoles = async () => {
-    if (user) {
-      await fetchUserRoles(user.id);
-    }
-  };
 
   const signUp = async (email: string, password: string, name?: string) => {
     try {
@@ -148,7 +163,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         console.log('Login successful:', data.user.email);
         toast.success('Login realizado com sucesso!');
         
-        // Update last access time and log activity via API
+        // Update last access time and log activity
         setTimeout(async () => {
           try {
             await supabase.from('profiles')
@@ -254,7 +269,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
     
     const isSuper = userRoles.some(role => role.role === 'super_admin');
-    console.log('Checking super admin status:', { isSuper, userRoles, userId: user.id });
+    console.log('Checking super admin status:', { 
+      isSuper, 
+      userRoles, 
+      userId: user.id,
+      userEmail: user.email 
+    });
     return isSuper;
   };
 
