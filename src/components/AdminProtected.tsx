@@ -15,6 +15,7 @@ const AdminProtected: React.FC<AdminProtectedProps> = ({
 }) => {
   const { user, loading, isSuperAdmin } = useAuth();
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
+  const [hasChecked, setHasChecked] = useState(false);
   
   useEffect(() => {
     console.log('AdminProtected check:', { user: user?.email, loading, isSuperAdmin: isSuperAdmin() });
@@ -23,10 +24,16 @@ const AdminProtected: React.FC<AdminProtectedProps> = ({
       return;
     }
     
+    // Avoid multiple checks
+    if (hasChecked) {
+      return;
+    }
+    
     // Check authentication
     if (!user) {
       console.log('No user, redirecting to login');
       setIsAuthorized(false);
+      setHasChecked(true);
       return;
     }
     
@@ -34,6 +41,7 @@ const AdminProtected: React.FC<AdminProtectedProps> = ({
     if (isSuperAdmin()) {
       console.log('User is super admin, granting access');
       setIsAuthorized(true);
+      setHasChecked(true);
       return;
     }
     
@@ -44,6 +52,7 @@ const AdminProtected: React.FC<AdminProtectedProps> = ({
       console.log('Required permission but user is not super admin');
       toast.error("Você não tem permissão para acessar esta área");
       setIsAuthorized(false);
+      setHasChecked(true);
       return;
     }
     
@@ -51,12 +60,13 @@ const AdminProtected: React.FC<AdminProtectedProps> = ({
     console.log('Default permission check - requiring super admin');
     toast.error("Você não tem permissão para acessar esta área administrativa");
     setIsAuthorized(false);
-  }, [user, loading, requiredPermission, isSuperAdmin]);
+    setHasChecked(true);
+  }, [user, loading, requiredPermission, isSuperAdmin, hasChecked]);
   
   // Loading state
   if (loading || isAuthorized === null) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-education-light">
+      <div className="min-h-screen flex items-center justify-center bg-education-lightgray">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-education-primary"></div>
       </div>
     );

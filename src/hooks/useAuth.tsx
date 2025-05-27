@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useContext, createContext } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -45,7 +44,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         if (session?.user) {
           setTimeout(() => {
             fetchUserRoles(session.user.id);
-          }, 0);
+          }, 100); // Small delay to ensure database consistency
         } else {
           setUserRoles([]);
         }
@@ -72,13 +71,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const fetchUserRoles = async (userId: string) => {
     try {
+      console.log('Fetching roles for user:', userId);
       const { data, error } = await supabase
         .from('user_school_roles')
         .select('*')
         .eq('user_id', userId)
         .eq('active', true);
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching user roles:', error);
+        setUserRoles([]);
+        return;
+      }
+      
       console.log('User roles fetched:', data);
       setUserRoles(data || []);
     } catch (error) {
