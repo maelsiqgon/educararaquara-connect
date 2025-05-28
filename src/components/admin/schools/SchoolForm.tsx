@@ -2,7 +2,9 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useSchools, School } from '@/hooks/useSchools';
+import { useSchools } from '@/hooks/useSchools';
+import { School } from '@/types/school';
+import { SchoolBasicInfo, ContactForm } from '@/types/school';
 import SchoolBasicInfoForm from './SchoolBasicInfoForm';
 import SchoolContactsForm from './SchoolContactsForm';
 
@@ -16,9 +18,9 @@ const SchoolForm: React.FC<SchoolFormProps> = ({ school, onSuccess, onCancel }) 
   const { createSchool, updateSchool } = useSchools();
   const [loading, setLoading] = useState(false);
   
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<SchoolBasicInfo>({
     name: '',
-    type: 'EMEI' as const,
+    type: 'EMEI',
     director: '',
     address: '',
     description: '',
@@ -28,8 +30,8 @@ const SchoolForm: React.FC<SchoolFormProps> = ({ school, onSuccess, onCancel }) 
     image_url: ''
   });
 
-  const [contacts, setContacts] = useState([
-    { type: 'phone' as const, value: '', label: 'Telefone Principal', primary_contact: true }
+  const [contacts, setContacts] = useState<ContactForm[]>([
+    { type: 'phone', value: '', label: 'Telefone Principal', primary_contact: true }
   ]);
 
   useEffect(() => {

@@ -1,20 +1,12 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Calendar, Plus, Filter } from "lucide-react";
-import { useAgenda, AgendaEvent, EventType } from '@/hooks/useAgenda';
+import { useAgenda, AgendaEvent } from '@/hooks/useAgenda';
 import EventForm from './EventForm';
-import EventList from './EventList';
-
-const eventTypes = [
-  { value: 'meeting', label: 'Reunião', color: 'bg-blue-100 text-blue-800' },
-  { value: 'visit', label: 'Visita', color: 'bg-green-100 text-green-800' },
-  { value: 'event', label: 'Evento', color: 'bg-purple-100 text-purple-800' },
-  { value: 'conference', label: 'Conferência', color: 'bg-orange-100 text-orange-800' }
-];
+import AgendaHeader from './AgendaHeader';
+import AgendaFilters from './AgendaFilters';
+import AgendaEventsList from './AgendaEventsList';
 
 const AgendaManager = () => {
   const { events, loading, createEvent, updateEvent, deleteEvent } = useAgenda();
@@ -93,9 +85,8 @@ const AgendaManager = () => {
   return (
     <Card className="border-0 shadow-soft">
       <CardHeader className="bg-education-light rounded-t-lg">
-        <CardTitle className="text-education-primary flex items-center">
-          <Calendar className="h-5 w-5 mr-2" />
-          Agenda do Secretário
+        <CardTitle className="text-education-primary">
+          <AgendaHeader onCreateEvent={handleCreateEvent} />
         </CardTitle>
         <CardDescription>
           Gestão completa da agenda e eventos da Secretaria
@@ -103,39 +94,14 @@ const AgendaManager = () => {
       </CardHeader>
       <CardContent className="pt-6">
         <div className="space-y-6">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-4">
-              <Button onClick={handleCreateEvent} className="bg-education-primary hover:bg-education-dark">
-                <Plus className="h-4 w-4 mr-2" />
-                Novo Evento
-              </Button>
-              
-              <Select value={filter} onValueChange={setFilter}>
-                <SelectTrigger className="w-48">
-                  <Filter className="h-4 w-4 mr-2" />
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos os Eventos</SelectItem>
-                  {eventTypes.map((type) => (
-                    <SelectItem key={type.value} value={type.value}>
-                      {type.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          {loading ? (
-            <div className="text-center py-8">Carregando eventos...</div>
-          ) : (
-            <EventList
-              events={filteredEvents}
-              onEdit={(event) => setSelectedEvent(event)}
-              onDelete={handleDeleteEvent}
-            />
-          )}
+          <AgendaFilters filter={filter} onFilterChange={setFilter} />
+          
+          <AgendaEventsList
+            events={filteredEvents}
+            loading={loading}
+            onEdit={(event) => setSelectedEvent(event)}
+            onDelete={handleDeleteEvent}
+          />
         </div>
       </CardContent>
     </Card>

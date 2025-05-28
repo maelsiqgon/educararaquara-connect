@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Phone, Mail, MessageCircle } from 'lucide-react';
-import { School } from '@/hooks/useSchools';
+import { School } from '@/types/school';
 
 export interface SchoolContactProps {
   school: School;

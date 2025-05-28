@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { School } from '@/hooks/useSchools';
+import { School } from '@/types/school';
 
 export interface SchoolInfoProps {
   school: School;

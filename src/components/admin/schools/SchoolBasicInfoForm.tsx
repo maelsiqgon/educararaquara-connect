@@ -1,22 +1,10 @@
-
 import React from 'react';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SchoolBasicInfo } from '@/types/school';
 import ImageUploader from '../ImageUploader';
-
-interface SchoolBasicInfo {
-  name: string;
-  type: 'EMEI' | 'EMEF' | 'CEMEI' | 'Creche';
-  director: string;
-  address: string;
-  description: string;
-  students: number;
-  teachers: number;
-  classes: number;
-  image_url: string;
-}
 
 interface SchoolBasicInfoFormProps {
   formData: SchoolBasicInfo;
