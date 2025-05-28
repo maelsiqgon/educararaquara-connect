@@ -1,10 +1,10 @@
 
 import React from 'react';
-import { Phone, Mail, MapPin, Globe } from 'lucide-react';
+import { Phone, Mail, MapPin, Globe, MessageCircle } from 'lucide-react';
 
 export interface SchoolContact {
   id: string;
-  type: 'phone' | 'email' | 'website' | 'address';
+  type: 'phone' | 'email' | 'website' | 'address' | 'whatsapp' | 'cellphone';
   value: string;
   label?: string;
   primary_contact?: boolean;
@@ -18,6 +18,7 @@ const SchoolContact: React.FC<SchoolContactProps> = ({ contacts }) => {
   const getIcon = (type: string) => {
     switch (type) {
       case 'phone':
+      case 'cellphone':
         return <Phone className="h-4 w-4" />;
       case 'email':
         return <Mail className="h-4 w-4" />;
@@ -25,6 +26,8 @@ const SchoolContact: React.FC<SchoolContactProps> = ({ contacts }) => {
         return <Globe className="h-4 w-4" />;
       case 'address':
         return <MapPin className="h-4 w-4" />;
+      case 'whatsapp':
+        return <MessageCircle className="h-4 w-4" />;
       default:
         return <Phone className="h-4 w-4" />;
     }
@@ -34,12 +37,16 @@ const SchoolContact: React.FC<SchoolContactProps> = ({ contacts }) => {
     switch (type) {
       case 'phone':
         return 'Telefone';
+      case 'cellphone':
+        return 'Celular';
       case 'email':
         return 'E-mail';
       case 'website':
         return 'Site';
       case 'address':
         return 'Endereço';
+      case 'whatsapp':
+        return 'WhatsApp';
       default:
         return 'Contato';
     }

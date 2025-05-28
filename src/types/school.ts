@@ -2,7 +2,7 @@
 export interface SchoolContact {
   id: string;
   school_id: string;
-  type: 'phone' | 'email' | 'whatsapp' | 'cellphone';
+  type: 'phone' | 'email' | 'whatsapp' | 'cellphone' | 'website' | 'address';
   value: string;
   label?: string;
   primary_contact: boolean;
@@ -39,7 +39,7 @@ export interface SchoolBasicInfo {
 }
 
 export interface ContactForm {
-  type: 'phone' | 'email' | 'whatsapp' | 'cellphone';
+  type: 'phone' | 'email' | 'whatsapp' | 'cellphone' | 'website' | 'address';
   value: string;
   label: string;
   primary_contact: boolean;

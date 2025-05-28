@@ -92,7 +92,7 @@ const SchoolDetail = () => {
 
           {/* Sidebar */}
           <div className="space-y-8">
-            <SchoolContact contacts={school.contacts} />
+            <SchoolContact contacts={school.contacts || []} />
           </div>
         </div>
       </div>

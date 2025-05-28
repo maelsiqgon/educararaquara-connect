@@ -95,15 +95,23 @@ const EscolaDetalhes = () => {
                   name={school.name} 
                 />
                 
-                <SchoolInfo school={school} />
+                <SchoolInfo 
+                  address={school.address}
+                  director={school.director}
+                  description={school.description}
+                />
                 
-                <SchoolStats school={school} />
+                <SchoolStats 
+                  students={school.students || 0}
+                  teachers={school.teachers || 0}
+                  classes={school.classes || 0}
+                />
               </CardContent>
             </Card>
           </div>
 
           <div className="space-y-6">
-            <SchoolContact school={school} />
+            <SchoolContact contacts={school.contacts || []} />
           </div>
         </div>
       </div>
