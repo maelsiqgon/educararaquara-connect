@@ -1,9 +1,20 @@
 
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import SchoolForm from '@/components/admin/schools/SchoolForm';
 import BackButton from '@/components/admin/navigation/BackButton';
 
 const AdminSchoolCreate = () => {
+  const navigate = useNavigate();
+
+  const handleSuccess = () => {
+    navigate('/admin/schools');
+  };
+
+  const handleCancel = () => {
+    navigate('/admin/schools');
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -17,7 +28,7 @@ const AdminSchoolCreate = () => {
       
       <BackButton to="/admin/schools" label="Voltar para Escolas" />
       
-      <SchoolForm />
+      <SchoolForm onSuccess={handleSuccess} onCancel={handleCancel} />
     </div>
   );
 };

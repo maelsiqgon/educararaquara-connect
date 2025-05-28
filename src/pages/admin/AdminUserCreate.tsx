@@ -1,9 +1,20 @@
 
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import UserForm from '@/components/admin/users/UserForm';
 import BackButton from '@/components/admin/navigation/BackButton';
 
 const AdminUserCreate = () => {
+  const navigate = useNavigate();
+
+  const handleSuccess = () => {
+    navigate('/admin/users');
+  };
+
+  const handleCancel = () => {
+    navigate('/admin/users');
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -17,7 +28,7 @@ const AdminUserCreate = () => {
       
       <BackButton to="/admin/users" label="Voltar para Usuários" />
       
-      <UserForm />
+      <UserForm onSuccess={handleSuccess} onCancel={handleCancel} />
     </div>
   );
 };
