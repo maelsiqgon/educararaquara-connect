@@ -1,6 +1,6 @@
 
 import React from 'react';
-import SchoolUserManager from '@/components/admin/SchoolUserManager';
+import UserList from '@/components/admin/users/UserList';
 
 const AdminUsers = () => {
   return (
@@ -12,7 +12,7 @@ const AdminUsers = () => {
         </p>
       </div>
       
-      <SchoolUserManager />
+      <UserList />
     </div>
   );
 };

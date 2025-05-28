@@ -49,9 +49,30 @@ export const useAgenda = () => {
 
   const createEvent = async (eventData: Omit<AgendaEvent, 'id' | 'created_at' | 'updated_at'>) => {
     try {
+      // Validate and format dates
+      const formattedData = {
+        ...eventData,
+        start_datetime: eventData.start_datetime || new Date().toISOString(),
+        end_datetime: eventData.end_datetime || new Date(Date.now() + 3600000).toISOString(), // +1 hour
+      };
+
+      // Ensure dates are valid
+      if (!formattedData.start_datetime || formattedData.start_datetime === '') {
+        throw new Error('Data de início é obrigatória');
+      }
+      
+      if (!formattedData.end_datetime || formattedData.end_datetime === '') {
+        throw new Error('Data de fim é obrigatória');
+      }
+
+      // Validate that end date is after start date
+      if (new Date(formattedData.end_datetime) <= new Date(formattedData.start_datetime)) {
+        throw new Error('Data de fim deve ser posterior à data de início');
+      }
+
       const { data, error } = await supabase
         .from('agenda_events')
-        .insert([eventData])
+        .insert([formattedData])
         .select()
         .single();
 
@@ -61,6 +82,7 @@ export const useAgenda = () => {
       toast.success('Evento criado com sucesso!');
       return data;
     } catch (err: any) {
+      console.error('Error creating event:', err);
       toast.error('Erro ao criar evento: ' + err.message);
       throw err;
     }
@@ -68,6 +90,15 @@ export const useAgenda = () => {
 
   const updateEvent = async (id: string, eventData: Partial<AgendaEvent>) => {
     try {
+      // Validate dates if they are being updated
+      if (eventData.start_datetime && eventData.start_datetime === '') {
+        throw new Error('Data de início não pode estar vazia');
+      }
+      
+      if (eventData.end_datetime && eventData.end_datetime === '') {
+        throw new Error('Data de fim não pode estar vazia');
+      }
+
       const { error } = await supabase
         .from('agenda_events')
         .update(eventData)
@@ -78,6 +109,7 @@ export const useAgenda = () => {
       await fetchEvents();
       toast.success('Evento atualizado com sucesso!');
     } catch (err: any) {
+      console.error('Error updating event:', err);
       toast.error('Erro ao atualizar evento: ' + err.message);
       throw err;
     }
@@ -95,6 +127,7 @@ export const useAgenda = () => {
       await fetchEvents();
       toast.success('Evento removido com sucesso!');
     } catch (err: any) {
+      console.error('Error deleting event:', err);
       toast.error('Erro ao remover evento: ' + err.message);
       throw err;
     }

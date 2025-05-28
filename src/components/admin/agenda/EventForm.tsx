@@ -1,146 +1,229 @@
 
-import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { EventType } from '@/hooks/useAgenda';
-
-interface AgendaEvent {
-  id: string;
-  title: string;
-  description?: string;
-  start_datetime: string;
-  end_datetime: string;
-  location?: string;
-  event_type: EventType;
-  all_day: boolean;
-  recurring: boolean;
-  recurring_pattern?: any;
-  attendees?: string[];
-  external_calendar_id?: string;
-  school_id?: string;
-  created_by?: string;
-  created_at: string;
-  updated_at: string;
-}
+import { Switch } from "@/components/ui/switch";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { CalendarIcon, Clock } from "lucide-react";
+import { AgendaEvent, EventType } from "@/hooks/useAgenda";
 
 interface EventFormProps {
-  event: AgendaEvent | null;
-  isCreating: boolean;
-  onSave: () => void;
+  event?: AgendaEvent;
+  onSubmit: (eventData: Omit<AgendaEvent, 'id' | 'created_at' | 'updated_at'>) => Promise<void>;
   onCancel: () => void;
-  onChange: (event: AgendaEvent) => void;
+  isSubmitting?: boolean;
 }
 
-const eventTypes = [
-  { value: 'meeting', label: 'Reunião', color: 'bg-blue-100 text-blue-800' },
-  { value: 'visit', label: 'Visita', color: 'bg-green-100 text-green-800' },
-  { value: 'event', label: 'Evento', color: 'bg-purple-100 text-purple-800' },
-  { value: 'conference', label: 'Conferência', color: 'bg-orange-100 text-orange-800' }
-];
+const EventForm: React.FC<EventFormProps> = ({
+  event,
+  onSubmit,
+  onCancel,
+  isSubmitting = false
+}) => {
+  const [formData, setFormData] = useState({
+    title: event?.title || '',
+    description: event?.description || '',
+    start_datetime: event?.start_datetime ? new Date(event.start_datetime).toISOString().slice(0, 16) : '',
+    end_datetime: event?.end_datetime ? new Date(event.end_datetime).toISOString().slice(0, 16) : '',
+    location: event?.location || '',
+    event_type: (event?.event_type || 'meeting') as EventType,
+    all_day: event?.all_day || false,
+    recurring: event?.recurring || false,
+    school_id: event?.school_id || '',
+    attendees: event?.attendees || []
+  });
 
-const EventForm: React.FC<EventFormProps> = ({ event, isCreating, onSave, onCancel, onChange }) => {
-  if (!event) return null;
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Validate required fields
+    if (!formData.title.trim()) {
+      alert('Título é obrigatório');
+      return;
+    }
+
+    if (!formData.start_datetime) {
+      alert('Data e hora de início são obrigatórias');
+      return;
+    }
+
+    if (!formData.end_datetime) {
+      alert('Data e hora de fim são obrigatórias');
+      return;
+    }
+
+    // Convert datetime-local format to ISO string
+    const startDate = new Date(formData.start_datetime);
+    const endDate = new Date(formData.end_datetime);
+
+    // Validate dates
+    if (isNaN(startDate.getTime())) {
+      alert('Data de início inválida');
+      return;
+    }
+
+    if (isNaN(endDate.getTime())) {
+      alert('Data de fim inválida');
+      return;
+    }
+
+    if (endDate <= startDate) {
+      alert('Data de fim deve ser posterior à data de início');
+      return;
+    }
+
+    try {
+      await onSubmit({
+        ...formData,
+        start_datetime: startDate.toISOString(),
+        end_datetime: endDate.toISOString(),
+        created_by: undefined // Will be set by the server
+      });
+    } catch (error) {
+      console.error('Error submitting form:', error);
+    }
+  };
+
+  const handleInputChange = (field: string, value: any) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const eventTypes = [
+    { value: 'meeting', label: 'Reunião' },
+    { value: 'conference', label: 'Conferência' },
+    { value: 'visit', label: 'Visita' },
+    { value: 'event', label: 'Evento' }
+  ];
 
   return (
-    <Card className="border-0 shadow-soft">
-      <CardHeader className="bg-education-light rounded-t-lg">
-        <CardTitle className="text-education-primary">
-          {isCreating ? 'Novo Evento' : 'Editar Evento'}
+    <Card className="w-full max-w-2xl">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <CalendarIcon className="h-5 w-5" />
+          {event ? 'Editar Evento' : 'Novo Evento'}
         </CardTitle>
-        <CardDescription>
-          {isCreating ? 'Criar um novo evento na agenda' : 'Modificar informações do evento'}
-        </CardDescription>
       </CardHeader>
-      <CardContent className="pt-6">
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Título *</Label>
-              <Input
-                value={event.title}
-                onChange={(e) => onChange({...event, title: e.target.value})}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label>Tipo de Evento</Label>
-              <Select 
-                value={event.event_type} 
-                onValueChange={(value) => onChange({...event, event_type: value as EventType})}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {eventTypes.map((type) => (
-                    <SelectItem key={type.value} value={type.value}>
-                      {type.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+      
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="space-y-2">
+            <Label htmlFor="title">Título *</Label>
+            <Input
+              id="title"
+              value={formData.title}
+              onChange={(e) => handleInputChange('title', e.target.value)}
+              placeholder="Digite o título do evento"
+              required
+            />
           </div>
 
           <div className="space-y-2">
-            <Label>Descrição</Label>
+            <Label htmlFor="description">Descrição</Label>
             <Textarea
-              value={event.description || ''}
-              onChange={(e) => onChange({...event, description: e.target.value})}
+              id="description"
+              value={formData.description}
+              onChange={(e) => handleInputChange('description', e.target.value)}
+              placeholder="Descrição do evento"
               rows={3}
             />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Data/Hora Início</Label>
+              <Label htmlFor="start_datetime">Data e Hora de Início *</Label>
               <Input
+                id="start_datetime"
                 type="datetime-local"
-                value={event.start_datetime}
-                onChange={(e) => onChange({...event, start_datetime: e.target.value})}
+                value={formData.start_datetime}
+                onChange={(e) => handleInputChange('start_datetime', e.target.value)}
+                required
               />
             </div>
-            
+
             <div className="space-y-2">
-              <Label>Data/Hora Fim</Label>
+              <Label htmlFor="end_datetime">Data e Hora de Fim *</Label>
               <Input
+                id="end_datetime"
                 type="datetime-local"
-                value={event.end_datetime}
-                onChange={(e) => onChange({...event, end_datetime: e.target.value})}
+                value={formData.end_datetime}
+                onChange={(e) => handleInputChange('end_datetime', e.target.value)}
+                required
               />
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label>Local</Label>
+            <Label htmlFor="location">Local</Label>
             <Input
-              value={event.location || ''}
-              onChange={(e) => onChange({...event, location: e.target.value})}
+              id="location"
+              value={formData.location}
+              onChange={(e) => handleInputChange('location', e.target.value)}
+              placeholder="Local do evento"
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="event_type">Tipo de Evento</Label>
+            <Select
+              value={formData.event_type}
+              onValueChange={(value) => handleInputChange('event_type', value as EventType)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione o tipo" />
+              </SelectTrigger>
+              <SelectContent>
+                {eventTypes.map((type) => (
+                  <SelectItem key={type.value} value={type.value}>
+                    {type.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              checked={event.all_day}
-              onChange={(e) => onChange({...event, all_day: e.target.checked})}
+            <Switch
+              id="all_day"
+              checked={formData.all_day}
+              onCheckedChange={(checked) => handleInputChange('all_day', checked)}
             />
-            <Label>Evento de dia inteiro</Label>
+            <Label htmlFor="all_day">Evento de dia inteiro</Label>
           </div>
 
-          <div className="flex justify-end space-x-4 pt-4">
-            <Button variant="outline" onClick={onCancel}>
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="recurring"
+              checked={formData.recurring}
+              onCheckedChange={(checked) => handleInputChange('recurring', checked)}
+            />
+            <Label htmlFor="recurring">Evento recorrente</Label>
+          </div>
+
+          <div className="flex gap-3 pt-6">
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              className="flex-1"
+            >
+              {isSubmitting ? 'Salvando...' : event ? 'Atualizar Evento' : 'Criar Evento'}
+            </Button>
+            
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onCancel}
+              disabled={isSubmitting}
+            >
               Cancelar
             </Button>
-            <Button onClick={onSave} className="bg-education-primary hover:bg-education-dark">
-              {isCreating ? 'Criar' : 'Salvar'} Evento
-            </Button>
           </div>
-        </div>
+        </form>
       </CardContent>
     </Card>
   );

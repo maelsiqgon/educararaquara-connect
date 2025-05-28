@@ -179,6 +179,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  // Add logout as alias for signOut to match interface
+  const logout = signOut;
+
   const resetPassword = async (email: string) => {
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
@@ -245,6 +248,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     signUp,
     signIn,
     signOut,
+    logout, // Add logout method
     resetPassword,
     updatePassword,
     hasRole,

@@ -1,6 +1,6 @@
 
 import React from 'react';
-import SchoolContentManager from '@/components/admin/SchoolContentManager';
+import SchoolList from '@/components/admin/schools/SchoolList';
 
 const AdminSchools = () => {
   return (
@@ -12,7 +12,7 @@ const AdminSchools = () => {
         </p>
       </div>
       
-      <SchoolContentManager />
+      <SchoolList />
     </div>
   );
 };
