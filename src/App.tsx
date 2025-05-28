@@ -11,13 +11,6 @@ import SchoolDetail from '@/pages/SchoolDetail';
 import Contact from '@/pages/Contact';
 import AdminLogin from '@/pages/AdminLogin';
 import Admin from '@/pages/Admin';
-import AdminSchools from '@/pages/admin/AdminSchools';
-import AdminSchoolEdit from '@/pages/admin/AdminSchoolEdit';
-import AdminSchoolCreate from '@/pages/admin/AdminSchoolCreate';
-import AdminUsers from '@/pages/admin/AdminUsers';
-import AdminUserEdit from '@/pages/admin/AdminUserEdit';
-import AdminUserCreate from '@/pages/admin/AdminUserCreate';
-import AdminMedia from '@/pages/admin/AdminMedia';
 import AdminProtected from '@/components/AdminProtected';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { AuthProvider } from '@/hooks/useAuth';
@@ -41,66 +34,10 @@ function App() {
               {/* Admin Routes */}
               <Route path="/admin/login" element={<AdminLogin />} />
               <Route
-                path="/admin"
+                path="/admin/*"
                 element={
                   <AdminProtected>
                     <Admin />
-                  </AdminProtected>
-                }
-              />
-              <Route
-                path="/admin/escolas"
-                element={
-                  <AdminProtected>
-                    <AdminSchools />
-                  </AdminProtected>
-                }
-              />
-              <Route
-                path="/admin/escolas/editar/:id"
-                element={
-                  <AdminProtected>
-                    <AdminSchoolEdit />
-                  </AdminProtected>
-                }
-              />
-              <Route
-                path="/admin/escolas/criar"
-                element={
-                  <AdminProtected>
-                    <AdminSchoolCreate />
-                  </AdminProtected>
-                }
-              />
-              <Route
-                path="/admin/usuarios"
-                element={
-                  <AdminProtected>
-                    <AdminUsers />
-                  </AdminProtected>
-                }
-              />
-              <Route
-                path="/admin/usuarios/editar/:id"
-                element={
-                  <AdminProtected>
-                    <AdminUserEdit />
-                  </AdminProtected>
-                }
-              />
-              <Route
-                path="/admin/usuarios/criar"
-                element={
-                  <AdminProtected>
-                    <AdminUserCreate />
-                  </AdminProtected>
-                }
-              />
-              <Route
-                path="/admin/media"
-                element={
-                  <AdminProtected>
-                    <AdminMedia />
                   </AdminProtected>
                 }
               />
@@ -110,6 +47,6 @@ function App() {
       </QueryClientProvider>
     </AuthProvider>
   );
-}
+};
 
 export default App;
