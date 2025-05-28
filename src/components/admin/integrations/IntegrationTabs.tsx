@@ -1,89 +1,63 @@
 
-import React from "react";
+import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import MicrosoftIntegration from "./MicrosoftIntegration";
-import SocialMediaIntegration from "./SocialMediaIntegration";
-import TeamsIntegration from "./TeamsIntegration";
-import ChatAI from "../chat/ChatAI";
-import ChatbotIntegration from "./ChatbotIntegration";
-import WhatsAppIntegration from "./WhatsAppIntegration";
-import EmailIntegration from "./EmailIntegration";
-import BackupIntegration from "./BackupIntegration";
-import MonitoringIntegration from "./MonitoringIntegration";
+import SocialMediaIntegration from './SocialMediaIntegration';
+import WhatsAppIntegration from './WhatsAppIntegration';
+import EmailIntegration from './EmailIntegration';
+import BackupIntegration from './BackupIntegration';
+import MonitoringIntegration from './MonitoringIntegration';
+import IntegrationTester from './IntegrationTester';
+import APIValidator from './APIValidator';
 
 const IntegrationTabs = () => {
   return (
-    <div className="mt-8">
-      <h2 className="text-2xl font-bold text-education-primary mb-6">Integrações e Automação</h2>
-      
-      <Tabs defaultValue="whatsapp" className="space-y-6">
-        <TabsList className="bg-white shadow-sm border-0 p-1 rounded-lg flex-wrap h-auto">
-          <TabsTrigger value="whatsapp" className="data-[state=active]:bg-education-light data-[state=active]:text-education-primary">
-            WhatsApp/Evolution API
-          </TabsTrigger>
-          <TabsTrigger value="email" className="data-[state=active]:bg-education-light data-[state=active]:text-education-primary">
-            Sistema de E-mails
-          </TabsTrigger>
-          <TabsTrigger value="backup" className="data-[state=active]:bg-education-light data-[state=active]:text-education-primary">
-            Backups Automatizados
-          </TabsTrigger>
-          <TabsTrigger value="monitoring" className="data-[state=active]:bg-education-light data-[state=active]:text-education-primary">
-            Monitoramento
-          </TabsTrigger>
-          <TabsTrigger value="chatbot" className="data-[state=active]:bg-education-light data-[state=active]:text-education-primary">
-            Chatbot & n8n
-          </TabsTrigger>
-          <TabsTrigger value="microsoft" className="data-[state=active]:bg-education-light data-[state=active]:text-education-primary">
-            Microsoft 365 e Azure AD
-          </TabsTrigger>
-          <TabsTrigger value="teams" className="data-[state=active]:bg-education-light data-[state=active]:text-education-primary">
-            Microsoft Teams
-          </TabsTrigger>
-          <TabsTrigger value="social" className="data-[state=active]:bg-education-light data-[state=active]:text-education-primary">
-            Redes Sociais
-          </TabsTrigger>
-          <TabsTrigger value="chat" className="data-[state=active]:bg-education-light data-[state=active]:text-education-primary">
-            Chat Inteligente e Tickets
-          </TabsTrigger>
-        </TabsList>
+    <Tabs defaultValue="social" className="space-y-4">
+      <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8">
+        <TabsTrigger value="social">Redes Sociais</TabsTrigger>
+        <TabsTrigger value="whatsapp">WhatsApp</TabsTrigger>
+        <TabsTrigger value="email">E-mail</TabsTrigger>
+        <TabsTrigger value="backup">Backup</TabsTrigger>
+        <TabsTrigger value="monitoring">Monitoramento</TabsTrigger>
+        <TabsTrigger value="chatbot">Chatbot</TabsTrigger>
+        <TabsTrigger value="tester">Testes</TabsTrigger>
+        <TabsTrigger value="validator">Validador</TabsTrigger>
+      </TabsList>
 
-        <TabsContent value="whatsapp">
-          <WhatsAppIntegration />
-        </TabsContent>
+      <TabsContent value="social">
+        <SocialMediaIntegration />
+      </TabsContent>
 
-        <TabsContent value="email">
-          <EmailIntegration />
-        </TabsContent>
+      <TabsContent value="whatsapp">
+        <WhatsAppIntegration />
+      </TabsContent>
 
-        <TabsContent value="backup">
-          <BackupIntegration />
-        </TabsContent>
+      <TabsContent value="email">
+        <EmailIntegration />
+      </TabsContent>
 
-        <TabsContent value="monitoring">
-          <MonitoringIntegration />
-        </TabsContent>
+      <TabsContent value="backup">
+        <BackupIntegration />
+      </TabsContent>
 
-        <TabsContent value="chatbot">
-          <ChatbotIntegration />
-        </TabsContent>
-        
-        <TabsContent value="microsoft">
-          <MicrosoftIntegration />
-        </TabsContent>
-        
-        <TabsContent value="teams">
-          <TeamsIntegration />
-        </TabsContent>
-        
-        <TabsContent value="social">
-          <SocialMediaIntegration />
-        </TabsContent>
-        
-        <TabsContent value="chat">
-          <ChatAI />
-        </TabsContent>
-      </Tabs>
-    </div>
+      <TabsContent value="monitoring">
+        <MonitoringIntegration />
+      </TabsContent>
+
+      <TabsContent value="chatbot">
+        <div className="text-center py-8">
+          <h3 className="text-lg font-medium mb-2">Integração de Chatbot</h3>
+          <p className="text-gray-600">Sistema de chatbot em desenvolvimento</p>
+        </div>
+      </TabsContent>
+
+      <TabsContent value="tester">
+        <IntegrationTester />
+      </TabsContent>
+
+      <TabsContent value="validator">
+        <APIValidator />
+      </TabsContent>
+    </Tabs>
   );
 };
 
