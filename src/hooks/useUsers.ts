@@ -2,9 +2,9 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { User, UserRole } from '@/types/user';
+import type { User, UserRole } from '@/types/user';
 
-export { User, UserRole } from '@/types/user';
+export type { User, UserRole } from '@/types/user';
 
 export const useUsers = () => {
   const [users, setUsers] = useState<User[]>([]);
@@ -196,6 +196,60 @@ export const useUsers = () => {
     }
   };
 
+  const bulkUpdateUsers = async (userIds: string[], updates: Partial<User>) => {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update(updates)
+        .in('id', userIds);
+
+      if (error) throw error;
+      
+      await fetchUsers();
+      toast.success(`${userIds.length} usuários atualizados com sucesso!`);
+    } catch (err: any) {
+      toast.error('Erro ao atualizar usuários em lote: ' + err.message);
+      throw err;
+    }
+  };
+
+  const blockUser = async (id: string, reason?: string) => {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ 
+          active: false,
+          last_access: new Date().toISOString()
+        })
+        .eq('id', id);
+
+      if (error) throw error;
+      
+      await fetchUsers();
+      toast.success('Usuário bloqueado com sucesso!');
+    } catch (err: any) {
+      toast.error('Erro ao bloquear usuário: ' + err.message);
+      throw err;
+    }
+  };
+
+  const unblockUser = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ active: true })
+        .eq('id', id);
+
+      if (error) throw error;
+      
+      await fetchUsers();
+      toast.success('Usuário desbloqueado com sucesso!');
+    } catch (err: any) {
+      toast.error('Erro ao desbloquear usuário: ' + err.message);
+      throw err;
+    }
+  };
+
   useEffect(() => {
     fetchUsers();
   }, []);
@@ -211,6 +265,9 @@ export const useUsers = () => {
     assignUserToSchool,
     removeUserFromSchool,
     toggleUserStatus,
-    getUserById
+    getUserById,
+    bulkUpdateUsers,
+    blockUser,
+    unblockUser
   };
 };
