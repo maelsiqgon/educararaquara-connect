@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { CalendarIcon, Clock } from "lucide-react";
+import { CalendarIcon } from "lucide-react";
 import { AgendaEvent, EventType } from "@/hooks/useAgenda";
 
 interface EventFormProps {
@@ -80,7 +80,7 @@ const EventForm: React.FC<EventFormProps> = ({
         ...formData,
         start_datetime: startDate.toISOString(),
         end_datetime: endDate.toISOString(),
-        created_by: undefined // Will be set by the server
+        created_by: undefined
       });
     } catch (error) {
       console.error('Error submitting form:', error);
@@ -98,7 +98,11 @@ const EventForm: React.FC<EventFormProps> = ({
     { value: 'meeting', label: 'Reunião' },
     { value: 'conference', label: 'Conferência' },
     { value: 'visit', label: 'Visita' },
-    { value: 'event', label: 'Evento' }
+    { value: 'event', label: 'Evento' },
+    { value: 'training', label: 'Treinamento' },
+    { value: 'ceremony', label: 'Cerimônia' },
+    { value: 'workshop', label: 'Workshop' },
+    { value: 'presentation', label: 'Apresentação' }
   ];
 
   return (

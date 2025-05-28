@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
-export type EventType = 'meeting' | 'conference' | 'visit' | 'event';
+export type EventType = 'meeting' | 'conference' | 'visit' | 'event' | 'training' | 'ceremony' | 'workshop' | 'presentation';
 
 export interface AgendaEvent {
   id: string;
@@ -53,10 +53,10 @@ export const useAgenda = () => {
       const formattedData = {
         ...eventData,
         start_datetime: eventData.start_datetime || new Date().toISOString(),
-        end_datetime: eventData.end_datetime || new Date(Date.now() + 3600000).toISOString(), // +1 hour
+        end_datetime: eventData.end_datetime || new Date(Date.now() + 3600000).toISOString(),
       };
 
-      // Ensure dates are valid
+      // Ensure dates are valid and not empty strings
       if (!formattedData.start_datetime || formattedData.start_datetime === '') {
         throw new Error('Data de início é obrigatória');
       }

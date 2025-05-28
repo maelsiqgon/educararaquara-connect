@@ -32,17 +32,12 @@ const AgendaManager = () => {
     setIsCreating(true);
   };
 
-  const handleSaveEvent = async () => {
-    if (!selectedEvent || !selectedEvent.title.trim()) {
-      toast.error('Título é obrigatório');
-      return;
-    }
-
+  const handleSubmitEvent = async (eventData: Omit<AgendaEvent, 'id' | 'created_at' | 'updated_at'>) => {
     try {
       if (isCreating) {
-        await createEvent(selectedEvent);
-      } else {
-        await updateEvent(selectedEvent.id, selectedEvent);
+        await createEvent(eventData);
+      } else if (selectedEvent) {
+        await updateEvent(selectedEvent.id, eventData);
       }
 
       setSelectedEvent(null);
@@ -71,13 +66,11 @@ const AgendaManager = () => {
     return (
       <EventForm
         event={selectedEvent}
-        isCreating={isCreating}
-        onSave={handleSaveEvent}
+        onSubmit={handleSubmitEvent}
         onCancel={() => {
           setSelectedEvent(null);
           setIsCreating(false);
         }}
-        onChange={setSelectedEvent}
       />
     );
   }
