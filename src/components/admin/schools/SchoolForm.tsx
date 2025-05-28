@@ -1,40 +1,24 @@
 
-import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { toast } from "sonner";
-import { useSchools } from '@/hooks/useSchools';
-import { useSchoolContacts, ContactType } from '@/hooks/useSchoolContacts';
+import { useSchools, School } from '@/hooks/useSchools';
 import SchoolBasicInfoForm from './SchoolBasicInfoForm';
 import SchoolContactsForm from './SchoolContactsForm';
 
-interface SchoolFormData {
-  name: string;
-  type: 'EMEI' | 'EMEF' | 'CEMEI' | 'Creche';
-  director: string;
-  address: string;
-  description: string;
-  students: number;
-  teachers: number;
-  classes: number;
-  image_url: string;
+interface SchoolFormProps {
+  school?: School;
+  onSuccess: () => void;
+  onCancel: () => void;
 }
 
-interface ContactForm {
-  type: ContactType;
-  value: string;
-  label: string;
-  primary_contact: boolean;
-}
-
-const SchoolForm = () => {
-  const { createSchool, loading } = useSchools();
-  const { createContacts } = useSchoolContacts();
-
-  const [formData, setFormData] = useState<SchoolFormData>({
+const SchoolForm: React.FC<SchoolFormProps> = ({ school, onSuccess, onCancel }) => {
+  const { createSchool, updateSchool } = useSchools();
+  const [loading, setLoading] = useState(false);
+  
+  const [formData, setFormData] = useState({
     name: '',
-    type: 'EMEI',
+    type: 'EMEI' as const,
     director: '',
     address: '',
     description: '',
@@ -44,117 +28,82 @@ const SchoolForm = () => {
     image_url: ''
   });
 
-  const [contacts, setContacts] = useState<ContactForm[]>([
-    { type: 'phone', value: '', label: 'Secretaria', primary_contact: true }
+  const [contacts, setContacts] = useState([
+    { type: 'phone' as const, value: '', label: 'Telefone Principal', primary_contact: true }
   ]);
 
-  const [activeTab, setActiveTab] = useState('basic');
+  useEffect(() => {
+    if (school) {
+      setFormData({
+        name: school.name,
+        type: school.type,
+        director: school.director || '',
+        address: school.address || '',
+        description: school.description || '',
+        students: school.students,
+        teachers: school.teachers,
+        classes: school.classes,
+        image_url: school.image_url || ''
+      });
+
+      if (school.contacts && school.contacts.length > 0) {
+        setContacts(school.contacts.map(contact => ({
+          type: contact.type,
+          value: contact.value,
+          label: contact.label || '',
+          primary_contact: contact.primary_contact
+        })));
+      }
+    }
+  }, [school]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
+    
     if (!formData.name.trim()) {
-      toast.error('Nome da escola é obrigatório');
       return;
     }
 
+    setLoading(true);
     try {
-      // Criar escola
-      const school = await createSchool(formData);
-      
-      // Criar contatos se houver
-      const validContacts = contacts.filter(contact => contact.value.trim());
-      if (validContacts.length > 0) {
-        await createContacts(school.id, validContacts);
+      if (school) {
+        await updateSchool(school.id, formData);
+      } else {
+        await createSchool(formData);
       }
-
-      toast.success('Escola criada com sucesso!');
-      
-      // Reset form
-      setFormData({
-        name: '',
-        type: 'EMEI',
-        director: '',
-        address: '',
-        description: '',
-        students: 0,
-        teachers: 0,
-        classes: 0,
-        image_url: ''
-      });
-      setContacts([
-        { type: 'phone', value: '', label: 'Secretaria', primary_contact: true }
-      ]);
-      setActiveTab('basic');
-      
+      onSuccess();
     } catch (error) {
-      console.error('Erro ao criar escola:', error);
+      console.error('Erro ao salvar escola:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const isFormValid = formData.name.trim() !== '';
-
   return (
-    <Card className="border-0 shadow-soft">
-      <CardHeader className="bg-education-light rounded-t-lg">
-        <CardTitle className="text-education-primary">Nova Escola</CardTitle>
-        <CardDescription>
-          Adicione uma nova escola à rede municipal de ensino
-        </CardDescription>
+    <Card className="max-w-4xl mx-auto">
+      <CardHeader>
+        <CardTitle>
+          {school ? 'Editar Escola' : 'Nova Escola'}
+        </CardTitle>
       </CardHeader>
-      <CardContent className="pt-6">
-        <form onSubmit={handleSubmit}>
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="basic">Informações Básicas</TabsTrigger>
-              <TabsTrigger value="contacts">Contatos</TabsTrigger>
-            </TabsList>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <SchoolBasicInfoForm 
+            formData={formData}
+            setFormData={setFormData}
+          />
+          
+          <SchoolContactsForm 
+            contacts={contacts}
+            setContacts={setContacts}
+          />
 
-            <TabsContent value="basic" className="space-y-4">
-              <SchoolBasicInfoForm 
-                formData={formData}
-                setFormData={setFormData}
-              />
-            </TabsContent>
-
-            <TabsContent value="contacts" className="space-y-4">
-              <SchoolContactsForm 
-                contacts={contacts}
-                setContacts={setContacts}
-              />
-            </TabsContent>
-          </Tabs>
-
-          <div className="flex justify-end space-x-4 pt-6 border-t">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                setFormData({
-                  name: '',
-                  type: 'EMEI',
-                  director: '',
-                  address: '',
-                  description: '',
-                  students: 0,
-                  teachers: 0,
-                  classes: 0,
-                  image_url: ''
-                });
-                setContacts([
-                  { type: 'phone', value: '', label: 'Secretaria', primary_contact: true }
-                ]);
-                setActiveTab('basic');
-              }}
-            >
+          <div className="flex justify-end space-x-4">
+            <Button type="button" variant="outline" onClick={onCancel}>
               Cancelar
             </Button>
-            <Button 
-              type="submit" 
-              disabled={loading || !isFormValid}
-              className="bg-education-primary hover:bg-education-dark"
-            >
-              {loading ? 'Criando...' : 'Criar Escola'}
+            <Button type="submit" disabled={loading}>
+              {loading ? 'Salvando...' : (school ? 'Atualizar' : 'Criar')}
             </Button>
           </div>
         </form>

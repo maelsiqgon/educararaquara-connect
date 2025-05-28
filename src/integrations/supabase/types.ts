@@ -950,7 +950,17 @@ export type Database = {
       news_status: "draft" | "scheduled" | "published" | "archived"
       school_type: "EMEI" | "EMEF" | "CEMEI" | "Creche"
       ticket_status: "open" | "in_progress" | "resolved" | "closed"
-      user_role: "super_admin" | "admin" | "editor" | "viewer"
+      user_role:
+        | "super_admin"
+        | "admin"
+        | "editor"
+        | "viewer"
+        | "director"
+        | "coordinator"
+        | "teacher"
+        | "staff"
+        | "parent"
+        | "student"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1072,7 +1082,18 @@ export const Constants = {
       news_status: ["draft", "scheduled", "published", "archived"],
       school_type: ["EMEI", "EMEF", "CEMEI", "Creche"],
       ticket_status: ["open", "in_progress", "resolved", "closed"],
-      user_role: ["super_admin", "admin", "editor", "viewer"],
+      user_role: [
+        "super_admin",
+        "admin",
+        "editor",
+        "viewer",
+        "director",
+        "coordinator",
+        "teacher",
+        "staff",
+        "parent",
+        "student",
+      ],
     },
   },
 } as const

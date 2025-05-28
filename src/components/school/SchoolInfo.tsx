@@ -1,49 +1,44 @@
 
 import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { MapPin, User } from 'lucide-react';
+import { School } from '@/hooks/useSchools';
 
-interface SchoolInfoProps {
-  address?: string;
-  director?: string;
-  description?: string;
+export interface SchoolInfoProps {
+  school: School;
 }
 
-const SchoolInfo: React.FC<SchoolInfoProps> = ({ address, director, description }) => {
+const SchoolInfo: React.FC<SchoolInfoProps> = ({ school }) => {
   return (
-    <Card>
-      <CardContent className="p-6">
-        <h3 className="text-xl font-bold text-education-primary mb-4">Informações</h3>
-        <div className="space-y-4">
-          {director && (
-            <div className="flex items-start space-x-3">
-              <User className="h-5 w-5 text-education-primary mt-0.5" />
-              <div>
-                <p className="font-medium">Diretor(a)</p>
-                <p className="text-gray-600">{director}</p>
-              </div>
-            </div>
-          )}
-          
-          {address && (
-            <div className="flex items-start space-x-3">
-              <MapPin className="h-5 w-5 text-education-primary mt-0.5" />
-              <div>
-                <p className="font-medium">Endereço</p>
-                <p className="text-gray-600">{address}</p>
-              </div>
-            </div>
-          )}
-          
-          {description && (
-            <div>
-              <p className="font-medium mb-2">Sobre a Escola</p>
-              <p className="text-gray-600 leading-relaxed">{description}</p>
-            </div>
-          )}
+    <div className="bg-white rounded-lg shadow-md p-6">
+      <h2 className="text-2xl font-bold text-education-primary mb-4">{school.name}</h2>
+      
+      <div className="space-y-3">
+        <div>
+          <span className="font-semibold text-gray-700">Tipo:</span>
+          <span className="ml-2 text-gray-600">{school.type}</span>
         </div>
-      </CardContent>
-    </Card>
+        
+        {school.director && (
+          <div>
+            <span className="font-semibold text-gray-700">Diretor(a):</span>
+            <span className="ml-2 text-gray-600">{school.director}</span>
+          </div>
+        )}
+        
+        {school.address && (
+          <div>
+            <span className="font-semibold text-gray-700">Endereço:</span>
+            <span className="ml-2 text-gray-600">{school.address}</span>
+          </div>
+        )}
+        
+        {school.description && (
+          <div>
+            <span className="font-semibold text-gray-700">Descrição:</span>
+            <p className="mt-2 text-gray-600">{school.description}</p>
+          </div>
+        )}
+      </div>
+    </div>
   );
 };
 

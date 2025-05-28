@@ -26,8 +26,8 @@ const MediaLibraryManager = () => {
     fetchMedia();
   };
 
-  const handleDelete = async (mediaId: string, filePath: string) => {
-    const success = await deleteMedia(mediaId, filePath);
+  const handleDelete = async (mediaId: string) => {
+    const success = await deleteMedia(mediaId);
     if (success) {
       toast.success('Arquivo deletado com sucesso!');
     }

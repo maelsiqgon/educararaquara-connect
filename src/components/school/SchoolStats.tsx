@@ -1,53 +1,32 @@
 
 import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Users, UserCheck, BookOpen } from 'lucide-react';
+import { School } from '@/hooks/useSchools';
 
-interface SchoolStatsProps {
-  students?: number;
-  teachers?: number;
-  classes?: number;
+export interface SchoolStatsProps {
+  school: School;
 }
 
-const SchoolStats: React.FC<SchoolStatsProps> = ({ students = 0, teachers = 0, classes = 0 }) => {
-  const stats = [
-    {
-      label: 'Alunos',
-      value: students,
-      icon: Users,
-      color: 'text-blue-600 bg-blue-100'
-    },
-    {
-      label: 'Professores',
-      value: teachers,
-      icon: UserCheck,
-      color: 'text-green-600 bg-green-100'
-    },
-    {
-      label: 'Turmas',
-      value: classes,
-      icon: BookOpen,
-      color: 'text-purple-600 bg-purple-100'
-    }
-  ];
-
+const SchoolStats: React.FC<SchoolStatsProps> = ({ school }) => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-      {stats.map((stat, index) => (
-        <Card key={index}>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">{stat.label}</p>
-                <p className="text-3xl font-bold text-education-primary">{stat.value}</p>
-              </div>
-              <div className={`p-3 rounded-full ${stat.color}`}>
-                <stat.icon className="h-6 w-6" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      ))}
+    <div className="bg-white rounded-lg shadow-md p-6">
+      <h3 className="text-xl font-bold text-education-primary mb-4">Estatísticas</h3>
+      
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="text-center p-4 bg-blue-50 rounded-lg">
+          <div className="text-3xl font-bold text-blue-600">{school.students}</div>
+          <div className="text-sm text-gray-600">Alunos</div>
+        </div>
+        
+        <div className="text-center p-4 bg-green-50 rounded-lg">
+          <div className="text-3xl font-bold text-green-600">{school.teachers}</div>
+          <div className="text-sm text-gray-600">Professores</div>
+        </div>
+        
+        <div className="text-center p-4 bg-purple-50 rounded-lg">
+          <div className="text-3xl font-bold text-purple-600">{school.classes}</div>
+          <div className="text-sm text-gray-600">Salas</div>
+        </div>
+      </div>
     </div>
   );
 };
