@@ -1,20 +1,19 @@
 
 import React from 'react';
-import AdminProtected from '@/components/AdminProtected';
-import AdminHeader from '@/components/admin/AdminHeader';
 import MediaLibraryManager from '@/components/admin/MediaLibraryManager';
 
 const AdminMedia = () => {
   return (
-    <AdminProtected>
-      <div className="min-h-screen bg-gray-50">
-        <AdminHeader />
-        <div className="container mx-auto px-4 py-8">
-          <h1 className="text-3xl font-bold text-education-primary mb-8">Biblioteca de Mídias</h1>
-          <MediaLibraryManager />
-        </div>
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Gerenciamento de Mídia</h1>
+        <p className="text-muted-foreground">
+          Gerencie imagens, vídeos e documentos do sistema
+        </p>
       </div>
-    </AdminProtected>
+      
+      <MediaLibraryManager />
+    </div>
   );
 };
 

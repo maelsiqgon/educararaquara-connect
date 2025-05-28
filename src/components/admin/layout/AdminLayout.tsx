@@ -27,16 +27,20 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({
   backButtonLabel
 }) => {
   return (
-    <SidebarProvider>
-      <AdminSidebar />
-      <SidebarInset>
-        <AdminHeader />
-        <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
-          <AdminBreadcrumb items={breadcrumbItems} />
-          {children || <Outlet />}
+    <div className="min-h-screen w-full">
+      <SidebarProvider>
+        <div className="flex min-h-screen w-full">
+          <AdminSidebar />
+          <SidebarInset className="flex-1">
+            <AdminHeader />
+            <main className="flex-1 space-y-4 p-4 md:p-8 pt-6">
+              <AdminBreadcrumb items={breadcrumbItems} />
+              {children || <Outlet />}
+            </main>
+          </SidebarInset>
         </div>
-      </SidebarInset>
-    </SidebarProvider>
+      </SidebarProvider>
+    </div>
   );
 };
 

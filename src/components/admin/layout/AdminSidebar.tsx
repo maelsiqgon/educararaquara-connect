@@ -27,11 +27,11 @@ import {
   UserCheck,
   LogOut
 } from 'lucide-react';
-import { useAuth } from '@/hooks/auth/authContext';
+import { useAuth } from '@/hooks/useAuth';
 
 const AdminSidebar = () => {
   const location = useLocation();
-  const { logout } = useAuth();
+  const { signOut } = useAuth();
 
   const menuItems = [
     {
@@ -52,7 +52,7 @@ const AdminSidebar = () => {
     },
     {
       title: "Notícias",
-      url: "/admin/news",
+      url: "/admin/modules/news",
       icon: FileText,
     },
     {
@@ -62,37 +62,37 @@ const AdminSidebar = () => {
     },
     {
       title: "Agenda",
-      url: "/admin/agenda",
+      url: "/admin/modules/agenda",
       icon: Calendar,
     },
     {
       title: "Conselhos",
-      url: "/admin/councils",
+      url: "/admin/modules/councils",
       icon: UserCheck,
     },
     {
       title: "Chatbot",
-      url: "/admin/chatbot",
+      url: "/admin/modules/chatbot",
       icon: MessageSquare,
     },
     {
       title: "Relatórios",
-      url: "/admin/reports",
+      url: "/admin/modules/reports",
       icon: BarChart3,
     },
     {
       title: "Páginas",
-      url: "/admin/pages",
+      url: "/admin/modules/pages",
       icon: BookOpen,
     },
     {
       title: "Integrações",
-      url: "/admin/integrations",
+      url: "/admin/modules/integrations",
       icon: Zap,
     },
     {
       title: "Configurações",
-      url: "/admin/settings",
+      url: "/admin/modules/settings",
       icon: Settings,
     }
   ];
@@ -102,6 +102,10 @@ const AdminSidebar = () => {
       return location.pathname === url;
     }
     return location.pathname.startsWith(url);
+  };
+
+  const handleLogout = async () => {
+    await signOut();
   };
 
   return (
@@ -138,7 +142,7 @@ const AdminSidebar = () => {
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton onClick={logout}>
+            <SidebarMenuButton onClick={handleLogout}>
               <LogOut className="h-4 w-4" />
               <span>Sair</span>
             </SidebarMenuButton>

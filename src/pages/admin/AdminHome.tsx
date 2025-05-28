@@ -1,17 +1,20 @@
 
 import React from 'react';
-import AdminHeader from '@/components/admin/AdminHeader';
 import DashboardStats from '@/components/admin/DashboardStats';
 import AdminWelcome from '@/components/admin/AdminWelcome';
 
 const AdminHome = () => {
   return (
-    <div className="min-h-screen bg-gray-50">
-      <AdminHeader />
-      <div className="container mx-auto px-4 py-8">
-        <AdminWelcome />
-        <DashboardStats />
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+        <p className="text-muted-foreground">
+          Visão geral do sistema educacional
+        </p>
       </div>
+      
+      <AdminWelcome />
+      <DashboardStats />
     </div>
   );
 };

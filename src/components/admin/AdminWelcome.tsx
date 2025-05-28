@@ -41,7 +41,7 @@ const AdminWelcome = () => {
         )}
         <p className="text-education-gray">
           Neste painel, você pode gerenciar as seções, notícias e outros elementos da página inicial.
-          Utilize as abas abaixo para navegar entre as diferentes opções de gerenciamento.
+          Utilize o menu lateral para navegar entre as diferentes opções de gerenciamento.
         </p>
       </CardContent>
     </Card>
