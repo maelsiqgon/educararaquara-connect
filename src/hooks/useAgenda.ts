@@ -54,6 +54,7 @@ export const useAgenda = () => {
         ...eventData,
         start_datetime: eventData.start_datetime || new Date().toISOString(),
         end_datetime: eventData.end_datetime || new Date(Date.now() + 3600000).toISOString(),
+        event_type: eventData.event_type as any, // Cast to any to match database enum
       };
 
       // Ensure dates are valid and not empty strings
@@ -99,9 +100,15 @@ export const useAgenda = () => {
         throw new Error('Data de fim não pode estar vazia');
       }
 
+      // Cast event_type to any to match database enum
+      const updateData = {
+        ...eventData,
+        event_type: eventData.event_type as any
+      };
+
       const { error } = await supabase
         .from('agenda_events')
-        .update(eventData)
+        .update(updateData)
         .eq('id', id);
 
       if (error) throw error;

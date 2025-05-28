@@ -1,8 +1,7 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import type { User, UserRole } from '@/types/user';
+import type { User, UserRole, UserContact } from '@/types/user';
 
 export type { User, UserRole } from '@/types/user';
 
@@ -18,7 +17,7 @@ export const useUsers = () => {
         .from('profiles')
         .select(`
           *,
-          roles:user_school_roles(
+          userRoles:user_school_roles(
             id,
             school_id,
             role,
@@ -26,7 +25,8 @@ export const useUsers = () => {
             user_id,
             created_at,
             school:schools(id, name)
-          )
+          ),
+          contacts:user_contacts(*)
         `)
         .order('name');
 
@@ -48,7 +48,7 @@ export const useUsers = () => {
     address?: string;
     registration?: string;
     active?: boolean;
-  }) => {
+  }, contacts?: UserContact[]) => {
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -61,6 +61,24 @@ export const useUsers = () => {
         .single();
 
       if (error) throw error;
+
+      // Criar contatos se fornecidos
+      if (contacts && contacts.length > 0) {
+        const contactsToInsert = contacts.map(contact => ({
+          user_id: data.id,
+          contact_type: contact.contact_type,
+          contact_value: contact.contact_value,
+          is_primary: contact.is_primary
+        }));
+
+        const { error: contactsError } = await supabase
+          .from('user_contacts')
+          .insert(contactsToInsert);
+
+        if (contactsError) {
+          console.error('Erro ao criar contatos:', contactsError);
+        }
+      }
       
       await fetchUsers();
       toast.success('Usuário criado com sucesso!');
@@ -79,7 +97,7 @@ export const useUsers = () => {
     address?: string;
     registration?: string;
     active?: boolean;
-  }>) => {
+  }>, contacts?: UserContact[]) => {
     try {
       const { error } = await supabase
         .from('profiles')
@@ -87,6 +105,33 @@ export const useUsers = () => {
         .eq('id', id);
 
       if (error) throw error;
+
+      // Atualizar contatos se fornecidos
+      if (contacts) {
+        // Primeiro, remover todos os contatos existentes
+        await supabase
+          .from('user_contacts')
+          .delete()
+          .eq('user_id', id);
+
+        // Inserir novos contatos
+        if (contacts.length > 0) {
+          const contactsToInsert = contacts.map(contact => ({
+            user_id: id,
+            contact_type: contact.contact_type,
+            contact_value: contact.contact_value,
+            is_primary: contact.is_primary
+          }));
+
+          const { error: contactsError } = await supabase
+            .from('user_contacts')
+            .insert(contactsToInsert);
+
+          if (contactsError) {
+            console.error('Erro ao atualizar contatos:', contactsError);
+          }
+        }
+      }
       
       await fetchUsers();
       toast.success('Usuário atualizado com sucesso!');
@@ -175,7 +220,7 @@ export const useUsers = () => {
         .from('profiles')
         .select(`
           *,
-          roles:user_school_roles(
+          userRoles:user_school_roles(
             id,
             school_id,
             role,
@@ -183,7 +228,8 @@ export const useUsers = () => {
             user_id,
             created_at,
             school:schools(id, name)
-          )
+          ),
+          contacts:user_contacts(*)
         `)
         .eq('id', id)
         .single();

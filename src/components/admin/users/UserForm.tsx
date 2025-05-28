@@ -8,13 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import { useUsers, User } from '@/hooks/useUsers';
 import { validateCPF, formatCPF } from '@/utils/cpfValidator';
 import UserContactsForm from './UserContactsForm';
-
-interface UserContact {
-  id?: string;
-  contact_type: 'phone' | 'mobile' | 'whatsapp' | 'email';
-  contact_value: string;
-  is_primary: boolean;
-}
+import type { UserContact } from '@/types/user';
 
 interface UserFormProps {
   user?: User;
@@ -38,7 +32,15 @@ const UserForm: React.FC<UserFormProps> = ({ user, onSuccess, onCancel }) => {
   });
 
   const [contacts, setContacts] = useState<UserContact[]>([
-    { contact_type: 'phone' as const, contact_value: '', is_primary: true }
+    { 
+      id: '',
+      user_id: '',
+      contact_type: 'phone' as const, 
+      contact_value: '', 
+      is_primary: true,
+      created_at: '',
+      updated_at: ''
+    }
   ]);
 
   useEffect(() => {
@@ -54,12 +56,7 @@ const UserForm: React.FC<UserFormProps> = ({ user, onSuccess, onCancel }) => {
       });
 
       if (user.contacts && user.contacts.length > 0) {
-        setContacts(user.contacts.map(contact => ({
-          id: contact.id,
-          contact_type: contact.contact_type,
-          contact_value: contact.contact_value,
-          is_primary: contact.is_primary
-        })));
+        setContacts(user.contacts);
       }
     }
   }, [user]);
@@ -94,9 +91,9 @@ const UserForm: React.FC<UserFormProps> = ({ user, onSuccess, onCancel }) => {
     setLoading(true);
     try {
       if (user) {
-        await updateUser(user.id, formData);
+        await updateUser(user.id, formData, contacts);
       } else {
-        await createUser(formData);
+        await createUser(formData, contacts);
       }
       onSuccess();
     } catch (error) {

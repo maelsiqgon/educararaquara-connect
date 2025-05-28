@@ -1,143 +1,235 @@
 
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { Shield, Plus, Trash2, School } from 'lucide-react';
-import { useUsers, User, UserRole } from '@/hooks/useUsers';
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Plus, Trash2, Shield } from "lucide-react";
+import { useUsers } from '@/hooks/useUsers';
 import { useSchools } from '@/hooks/useSchools';
+import type { User, UserRole } from '@/types/user';
 
 interface UserRoleManagerProps {
-  user: User;
-  onRoleUpdate?: () => void;
+  selectedUser: User | null;
+  onBack: () => void;
 }
 
-const UserRoleManager: React.FC<UserRoleManagerProps> = ({ user, onRoleUpdate }) => {
-  const { assignUserToSchool, removeUserFromSchool } = useUsers();
+const UserRoleManager: React.FC<UserRoleManagerProps> = ({ selectedUser, onBack }) => {
+  const { assignUserToSchool, removeUserFromSchool, fetchUsers } = useUsers();
   const { schools } = useSchools();
-  
-  const [newRole, setNewRole] = useState({
-    school_id: '',
-    role: 'teacher' as UserRole['role']
-  });
+  const [selectedSchool, setSelectedSchool] = useState('');
+  const [selectedRole, setSelectedRole] = useState<UserRole['role']>('viewer');
+  const [loading, setLoading] = useState(false);
 
-  const roleLabels = {
-    super_admin: 'Super Administrador',
-    admin: 'Administrador',
-    director: 'Diretor',
-    coordinator: 'Coordenador',
-    teacher: 'Professor',
-    staff: 'Funcionário',
-    parent: 'Responsável',
-    student: 'Aluno'
-  };
+  if (!selectedUser) {
+    return null;
+  }
 
-  const addRole = async () => {
-    if (!newRole.school_id) return;
+  const handleAssignRole = async () => {
+    if (!selectedSchool || !selectedRole) return;
 
+    setLoading(true);
     try {
-      await assignUserToSchool(user.id, newRole.school_id, newRole.role);
-      setNewRole({ school_id: '', role: 'teacher' });
-      onRoleUpdate?.();
+      await assignUserToSchool(selectedUser.id, selectedSchool, selectedRole);
+      await fetchUsers();
+      setSelectedSchool('');
+      setSelectedRole('viewer');
     } catch (error) {
-      console.error('Error adding role:', error);
+      console.error('Erro ao atribuir função:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const removeRole = async (schoolId: string) => {
+  const handleRemoveRole = async (roleId: string, schoolId: string) => {
+    if (!window.confirm('Tem certeza que deseja remover esta função?')) return;
+
+    setLoading(true);
     try {
-      await removeUserFromSchool(user.id, schoolId);
-      onRoleUpdate?.();
+      await removeUserFromSchool(selectedUser.id, schoolId);
+      await fetchUsers();
     } catch (error) {
-      console.error('Error removing role:', error);
+      console.error('Erro ao remover função:', error);
+    } finally {
+      setLoading(false);
     }
   };
+
+  const getRoleColor = (role: string) => {
+    switch (role) {
+      case 'super_admin': return 'bg-red-100 text-red-800';
+      case 'admin': return 'bg-orange-100 text-orange-800';
+      case 'director': return 'bg-purple-100 text-purple-800';
+      case 'coordinator': return 'bg-blue-100 text-blue-800';
+      case 'teacher': return 'bg-green-100 text-green-800';
+      case 'staff': return 'bg-yellow-100 text-yellow-800';
+      case 'editor': return 'bg-indigo-100 text-indigo-800';
+      case 'viewer': return 'bg-gray-100 text-gray-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getRoleText = (role: string) => {
+    switch (role) {
+      case 'super_admin': return 'Super Administrador';
+      case 'admin': return 'Administrador';
+      case 'director': return 'Diretor';
+      case 'coordinator': return 'Coordenador';
+      case 'teacher': return 'Professor';
+      case 'staff': return 'Funcionário';
+      case 'editor': return 'Editor';
+      case 'viewer': return 'Visualizador';
+      default: return 'Desconhecido';
+    }
+  };
+
+  const roles = [
+    { value: 'super_admin', label: 'Super Administrador' },
+    { value: 'admin', label: 'Administrador' },
+    { value: 'director', label: 'Diretor' },
+    { value: 'coordinator', label: 'Coordenador' },
+    { value: 'teacher', label: 'Professor' },
+    { value: 'staff', label: 'Funcionário' },
+    { value: 'editor', label: 'Editor' },
+    { value: 'viewer', label: 'Visualizador' }
+  ];
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center">
-          <Shield className="h-5 w-5 mr-2" />
-          Funções e Permissões
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {/* Adicionar nova função */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-          <Select 
-            value={newRole.school_id} 
-            onValueChange={(value) => setNewRole(prev => ({ ...prev, school_id: value }))}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Selecionar escola" />
-            </SelectTrigger>
-            <SelectContent>
-              {schools.map(school => (
-                <SelectItem key={school.id} value={school.id}>
-                  {school.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Select 
-            value={newRole.role} 
-            onValueChange={(value) => setNewRole(prev => ({ ...prev, role: value as UserRole['role'] }))}
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {Object.entries(roleLabels).map(([key, label]) => (
-                <SelectItem key={key} value={key}>
-                  {label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Button onClick={addRole} disabled={!newRole.school_id}>
-            <Plus className="h-4 w-4 mr-2" />
-            Adicionar
+    <Card className="border-0 shadow-soft">
+      <CardHeader className="bg-education-light rounded-t-lg">
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="text-education-primary flex items-center">
+              <Shield className="h-5 w-5 mr-2" />
+              Gestão de Funções - {selectedUser.name}
+            </CardTitle>
+            <CardDescription>
+              Gerencie as funções e permissões do usuário nas diferentes escolas
+            </CardDescription>
+          </div>
+          <Button variant="outline" onClick={onBack}>
+            Voltar
           </Button>
         </div>
-
-        <Separator />
-
-        {/* Lista de funções atuais */}
-        <div className="space-y-2">
-          <h4 className="font-medium text-gray-700">Funções Atuais</h4>
-          {user.roles && user.roles.length > 0 ? (
-            user.roles.map((role) => (
-              <div key={role.id} className="flex items-center justify-between p-3 border rounded-md">
-                <div className="flex items-center space-x-4">
-                  <Badge variant="outline" className="flex items-center">
-                    <Shield className="h-3 w-3 mr-1" />
-                    {roleLabels[role.role]}
-                  </Badge>
-                  <div className="flex items-center text-sm text-gray-600">
-                    <School className="h-4 w-4 mr-1" />
-                    {role.school?.name || 'Escola não encontrada'}
-                  </div>
-                  {!role.active && (
-                    <Badge variant="destructive">Inativo</Badge>
-                  )}
+      </CardHeader>
+      <CardContent className="pt-6">
+        <div className="space-y-6">
+          {/* Formulário para adicionar nova função */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Adicionar Nova Função</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Escola</label>
+                  <Select value={selectedSchool} onValueChange={setSelectedSchool}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione a escola" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {schools.map((school) => (
+                        <SelectItem key={school.id} value={school.id}>
+                          {school.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => removeRole(role.school_id)}
-                  className="text-red-500 hover:text-red-700"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+                
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Função</label>
+                  <Select value={selectedRole} onValueChange={(value) => setSelectedRole(value as UserRole['role'])}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione a função" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {roles.map((role) => (
+                        <SelectItem key={role.value} value={role.value}>
+                          {role.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="flex items-end">
+                  <Button 
+                    onClick={handleAssignRole}
+                    disabled={!selectedSchool || !selectedRole || loading}
+                    className="w-full"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Adicionar Função
+                  </Button>
+                </div>
               </div>
-            ))
-          ) : (
-            <p className="text-gray-500 text-sm">Nenhuma função atribuída</p>
-          )}
+            </CardContent>
+          </Card>
+
+          {/* Lista de funções atuais */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Funções Atuais</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {selectedUser.userRoles && selectedUser.userRoles.length > 0 ? (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Escola</TableHead>
+                      <TableHead>Função</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Data de Criação</TableHead>
+                      <TableHead className="text-right">Ações</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {selectedUser.userRoles.map((userRole) => (
+                      <TableRow key={userRole.id}>
+                        <TableCell className="font-medium">
+                          {userRole.school?.name || 'Escola não encontrada'}
+                        </TableCell>
+                        <TableCell>
+                          <Badge className={getRoleColor(userRole.role)}>
+                            {getRoleText(userRole.role)}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <span className={`inline-block px-2 py-1 text-xs rounded-full ${
+                            userRole.active 
+                              ? 'bg-green-100 text-green-800' 
+                              : 'bg-red-100 text-red-800'
+                          }`}>
+                            {userRole.active ? 'Ativo' : 'Inativo'}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-sm text-gray-600">
+                          {new Date(userRole.created_at).toLocaleDateString('pt-BR')}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleRemoveRole(userRole.id, userRole.school_id)}
+                            className="text-red-500 hover:text-red-700"
+                            disabled={loading}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  Este usuário ainda não possui funções atribuídas
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
       </CardContent>
     </Card>
