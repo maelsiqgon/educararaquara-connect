@@ -5,12 +5,11 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { useMediaLibrary } from '@/hooks/useMediaLibrary';
 import { Loader2, Search, Image as ImageIcon } from 'lucide-react';
-import { toast } from 'sonner';
 import MediaUploadForm from './media/MediaUploadForm';
 import MediaGrid from './media/MediaGrid';
 
 const MediaLibraryManager = () => {
-  const { media, loading, fetchMedia, deleteFile } = useMediaLibrary();
+  const { media, loading, fetchMedia, deleteMedia } = useMediaLibrary();
   const [searchTerm, setSearchTerm] = useState('');
   
   useEffect(() => {
@@ -27,16 +26,9 @@ const MediaLibraryManager = () => {
   };
 
   const handleDelete = async (mediaId: string) => {
-    // Find the media item to get the file path
-    const mediaItem = media.find(item => item.id === mediaId);
-    if (!mediaItem) {
-      toast.error('Arquivo não encontrado');
-      return;
-    }
-
-    const success = await deleteFile(mediaId, mediaItem.file_path);
+    const success = await deleteMedia(mediaId, '');
     if (success) {
-      toast.success('Arquivo deletado com sucesso!');
+      fetchMedia();
     }
   };
 

@@ -1,39 +1,13 @@
 
 import React, { useState } from 'react';
+import { usePages } from '@/hooks/usePages';
 import { toast } from "sonner";
-import { mockPages } from './mockData';
 import PageForm from './page/PageForm';
 import PageList from './page/PageList';
 
-interface Page {
-  id: number;
-  title: string;
-  slug: string;
-  content: string;
-  status: 'published' | 'draft';
-  featured: boolean;
-  image?: string;
-  category: string;
-  author: string;
-  createdAt: string;
-  updatedAt: string;
-  metaDescription?: string;
-  tags: string[];
-}
-
 const PageManager = () => {
-  const [pages, setPages] = useState<Page[]>(
-    mockPages.map(page => ({
-      ...page,
-      status: page.status as 'published' | 'draft',
-      category: 'Geral',
-      author: 'Administrador',
-      metaDescription: page.content.substring(0, 150) + '...',
-      tags: ['educação', 'araraquara']
-    }))
-  );
-  
-  const [editingPage, setEditingPage] = useState<Page | null>(null);
+  const { pages, loading, createPage, updatePage, deletePage } = usePages();
+  const [editingPage, setEditingPage] = useState<any>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -43,23 +17,22 @@ const PageManager = () => {
 
   const handleCreatePage = () => {
     setEditingPage({
-      id: 0,
+      id: '',
       title: "",
       slug: "",
       content: "",
       status: 'draft',
       featured: false,
       category: 'Geral',
-      author: 'Administrador',
-      createdAt: new Date().toISOString().slice(0, 10),
-      updatedAt: new Date().toISOString().slice(0, 10),
-      metaDescription: "",
+      author_id: '',
+      meta_title: "",
+      meta_description: "",
       tags: []
     });
     setIsCreating(true);
   };
 
-  const handleSavePage = () => {
+  const handleSavePage = async () => {
     if (!editingPage) return;
 
     if (!editingPage.title.trim()) {
@@ -67,50 +40,49 @@ const PageManager = () => {
       return;
     }
 
-    const now = new Date().toISOString().slice(0, 10);
+    try {
+      if (isCreating) {
+        await createPage(editingPage);
+      } else {
+        await updatePage(editingPage.id, editingPage);
+      }
 
-    if (isCreating) {
-      const newPage = {
-        ...editingPage,
-        id: Math.max(...pages.map(p => p.id), 0) + 1,
-        createdAt: now,
-        updatedAt: now
-      };
-      setPages([...pages, newPage]);
-      toast.success("Página criada com sucesso!");
-    } else {
-      setPages(pages.map(p => p.id === editingPage.id ? {...editingPage, updatedAt: now} : p));
-      toast.success("Página atualizada com sucesso!");
+      setEditingPage(null);
+      setIsCreating(false);
+    } catch (error) {
+      console.error('Erro ao salvar página:', error);
     }
-
-    setEditingPage(null);
-    setIsCreating(false);
   };
 
-  const handleDeletePage = (id: number) => {
+  const handleDeletePage = async (id: string) => {
     if (window.confirm("Tem certeza que deseja excluir esta página?")) {
-      setPages(pages.filter(p => p.id !== id));
-      toast.success("Página removida com sucesso!");
+      await deletePage(id);
     }
   };
 
-  const handleToggleStatus = (id: number) => {
-    setPages(pages.map(p => 
-      p.id === id ? { ...p, status: p.status === 'published' ? 'draft' : 'published' } : p
-    ));
-    toast.success("Status da página atualizado!");
+  const handleToggleStatus = async (id: string) => {
+    const page = pages.find(p => p.id === id);
+    if (page) {
+      await updatePage(id, { 
+        status: page.status === 'published' ? 'draft' : 'published' 
+      });
+    }
   };
 
-  const handleToggleFeatured = (id: number) => {
-    setPages(pages.map(p => 
-      p.id === id ? {...p, featured: !p.featured} : p
-    ));
-    toast.success("Status de destaque atualizado!");
+  const handleToggleFeatured = async (id: string) => {
+    const page = pages.find(p => p.id === id);
+    if (page) {
+      await updatePage(id, { featured: !page.featured });
+    }
   };
 
-  const handlePreview = (page: Page) => {
+  const handlePreview = (page: any) => {
     toast.info(`Visualizando página: ${page.title}`);
   };
+
+  if (loading) {
+    return <div>Carregando páginas...</div>;
+  }
 
   if (editingPage) {
     return (

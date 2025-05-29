@@ -12,9 +12,11 @@ export const useUserContacts = (userId?: string) => {
     try {
       setLoading(true);
       
-      // Usar função SQL para buscar contatos
+      // Buscar contatos diretamente da tabela
       const { data, error } = await supabase
-        .rpc('get_user_contacts', { user_uuid: targetUserId });
+        .from('user_contacts')
+        .select('*')
+        .eq('user_id', targetUserId);
       
       if (error) {
         console.error('Erro ao carregar contatos:', error);
@@ -34,10 +36,24 @@ export const useUserContacts = (userId?: string) => {
 
   const saveContacts = async (userId: string, contactsData: UserContact[]) => {
     try {
-      // Simular operação de salvamento até que a tabela esteja disponível nos tipos
-      console.log('Salvando contatos para usuário:', userId, contactsData);
+      // Deletar contatos existentes
+      await supabase
+        .from('user_contacts')
+        .delete()
+        .eq('user_id', userId);
+
+      // Inserir novos contatos
+      if (contactsData.length > 0) {
+        const { error } = await supabase
+          .from('user_contacts')
+          .insert(contactsData.map(contact => ({
+            ...contact,
+            user_id: userId
+          })));
+
+        if (error) throw error;
+      }
       
-      // Por enquanto, apenas mostrar sucesso
       toast.success('Contatos salvos com sucesso!');
     } catch (err: any) {
       console.error('Erro ao salvar contatos:', err);
