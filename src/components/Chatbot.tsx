@@ -7,7 +7,13 @@ import ChatHeader from './chatbot/ChatHeader';
 import MessagesList from './chatbot/MessagesList';
 import ChatInput from './chatbot/ChatInput';
 import TicketForm from './chatbot/TicketForm';
-import { useChatbot } from '@/hooks/useChatbot';
+import { useChatbot, ChatMessage } from '@/hooks/useChatbot';
+
+// Converter ChatMessage para o formato esperado pelo MessagesList
+const convertChatMessage = (message: ChatMessage) => ({
+  ...message,
+  isUser: message.sender === 'user'
+});
 
 const Chatbot = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -72,7 +78,7 @@ const Chatbot = () => {
               />
             ) : (
               <MessagesList 
-                messages={messages} 
+                messages={messages.map(convertChatMessage)} 
                 isTyping={isTyping}
                 onOpenTicketForm={() => setShowTicketForm(true)}
               />

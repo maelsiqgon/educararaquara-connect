@@ -10,19 +10,20 @@ import WysiwygEditor from "../WysiwygEditor";
 import ImageUploader from "../ImageUploader";
 
 interface Page {
-  id: number;
+  id: string;
   title: string;
   slug: string;
   content: string;
   status: 'published' | 'draft';
   featured: boolean;
-  image?: string;
+  image_url?: string;
   category: string;
-  author: string;
-  createdAt: string;
-  updatedAt: string;
-  metaDescription?: string;
-  tags: string[];
+  author_id?: string;
+  meta_title?: string;
+  meta_description?: string;
+  tags?: string[];
+  created_at: string;
+  updated_at: string;
 }
 
 interface PageFormProps {
@@ -119,7 +120,7 @@ const PageForm: React.FC<PageFormProps> = ({
             <Label htmlFor="page-tags">Tags (separadas por vírgula)</Label>
             <Input
               id="page-tags"
-              value={page.tags.join(', ')}
+              value={page.tags?.join(', ') || ''}
               onChange={(e) => onPageChange({
                 ...page, 
                 tags: e.target.value.split(',').map(tag => tag.trim()).filter(Boolean)
@@ -134,22 +135,22 @@ const PageForm: React.FC<PageFormProps> = ({
           <Label htmlFor="meta-description">Meta Descrição (SEO)</Label>
           <Input
             id="meta-description"
-            value={page.metaDescription || ""}
-            onChange={(e) => onPageChange({...page, metaDescription: e.target.value})}
+            value={page.meta_description || ""}
+            onChange={(e) => onPageChange({...page, meta_description: e.target.value})}
             className="border-gray-300 focus-visible:ring-education-primary"
             placeholder="Descrição para mecanismos de busca (até 160 caracteres)"
             maxLength={160}
           />
           <p className="text-xs text-gray-500">
-            {page.metaDescription?.length || 0}/160 caracteres
+            {page.meta_description?.length || 0}/160 caracteres
           </p>
         </div>
 
         <div className="space-y-2">
           <Label>Imagem de Destaque</Label>
           <ImageUploader
-            initialImage={page.image}
-            onImageChange={(image) => onPageChange({...page, image})}
+            initialImage={page.image_url}
+            onImageChange={(image) => onPageChange({...page, image_url: image})}
           />
         </div>
 

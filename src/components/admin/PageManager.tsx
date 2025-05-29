@@ -27,7 +27,9 @@ const PageManager = () => {
       author_id: '',
       meta_title: "",
       meta_description: "",
-      tags: []
+      tags: [],
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
     });
     setIsCreating(true);
   };
