@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import type { User, UserRole, UserContact } from '@/types/user';
+import { useUserContacts } from './useUserContacts';
 
 export type { User, UserRole } from '@/types/user';
 
@@ -56,10 +57,13 @@ export const useUsers = () => {
     active?: boolean;
   }, contacts?: UserContact[]) => {
     try {
+      const userId = crypto.randomUUID();
+      
+      // Primeiro, criar o usuário
       const { data, error } = await supabase
         .from('profiles')
         .insert([{
-          id: crypto.randomUUID(),
+          id: userId,
           ...userData,
           active: userData.active ?? true
         }])
@@ -68,8 +72,11 @@ export const useUsers = () => {
 
       if (error) throw error;
 
-      console.log('Usuário criado:', data);
-      console.log('Contatos para salvar:', contacts);
+      // Se houver contatos, salvá-los
+      if (contacts && contacts.length > 0) {
+        const { saveContacts } = useUserContacts();
+        await saveContacts(userId, contacts);
+      }
       
       await fetchUsers();
       toast.success('Usuário criado com sucesso!');
@@ -90,6 +97,7 @@ export const useUsers = () => {
     active?: boolean;
   }>, contacts?: UserContact[]) => {
     try {
+      // Primeiro, atualizar o usuário
       const { error } = await supabase
         .from('profiles')
         .update(userData)
@@ -97,8 +105,11 @@ export const useUsers = () => {
 
       if (error) throw error;
 
-      console.log('Usuário atualizado:', id);
-      console.log('Contatos para salvar:', contacts);
+      // Se houver contatos, salvá-los
+      if (contacts) {
+        const { saveContacts } = useUserContacts();
+        await saveContacts(id, contacts);
+      }
       
       await fetchUsers();
       toast.success('Usuário atualizado com sucesso!');

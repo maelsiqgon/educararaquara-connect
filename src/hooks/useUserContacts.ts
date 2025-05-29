@@ -11,23 +11,14 @@ export const useUserContacts = (userId?: string) => {
   const fetchContacts = async (targetUserId: string) => {
     try {
       setLoading(true);
-      // Como a tabela user_contacts pode não estar no types ainda, vou usar uma query direta
-      const { data, error } = await supabase
-        .rpc('get_user_contacts', { user_uuid: targetUserId });
-
-      if (error) {
-        console.log('Tentando query direta...');
-        // Fallback para query direta se a função não existir
-        const { data: directData, error: directError } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', targetUserId);
-        
-        if (directError) throw directError;
-        setContacts([]);
-        return;
-      }
       
+      // Query direta na tabela user_contacts
+      const { data, error } = await supabase
+        .from('user_contacts')
+        .select('*')
+        .eq('user_id', targetUserId);
+      
+      if (error) throw error;
       setContacts(data || []);
     } catch (err: any) {
       console.error('Erro ao carregar contatos:', err);
@@ -40,8 +31,30 @@ export const useUserContacts = (userId?: string) => {
 
   const saveContacts = async (userId: string, contactsData: UserContact[]) => {
     try {
-      // Por enquanto, vou salvar os contatos de forma simplificada usando uma abordagem que funciona
-      console.log('Salvando contatos:', contactsData);
+      // Primeiro, deletar todos os contatos existentes do usuário
+      const { error: deleteError } = await supabase
+        .from('user_contacts')
+        .delete()
+        .eq('user_id', userId);
+
+      if (deleteError) throw deleteError;
+
+      // Inserir os novos contatos
+      if (contactsData.length > 0) {
+        const contactsToInsert = contactsData.map(contact => ({
+          user_id: userId,
+          contact_type: contact.contact_type,
+          contact_value: contact.contact_value,
+          is_primary: contact.is_primary
+        }));
+
+        const { error: insertError } = await supabase
+          .from('user_contacts')
+          .insert(contactsToInsert);
+
+        if (insertError) throw insertError;
+      }
+
       toast.success('Contatos salvos com sucesso!');
     } catch (err: any) {
       console.error('Erro ao salvar contatos:', err);

@@ -85,7 +85,7 @@ export const useAgenda = () => {
 
       const { data, error } = await supabase
         .from('agenda_events')
-        .insert([formattedData])
+        .insert(formattedData)
         .select()
         .single();
 
