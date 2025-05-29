@@ -41,7 +41,8 @@ export const useAgenda = () => {
       setEvents(data || []);
     } catch (err: any) {
       setError(err.message);
-      toast.error('Erro ao carregar eventos');
+      toast.error('Erro ao carregar eventos: ' + err.message);
+      console.error('Error fetching events:', err);
     } finally {
       setLoading(false);
     }
@@ -49,12 +50,23 @@ export const useAgenda = () => {
 
   const createEvent = async (eventData: Omit<AgendaEvent, 'id' | 'created_at' | 'updated_at'>) => {
     try {
+      console.log('Criando evento:', eventData);
+
       // Validate and format dates
       const formattedData = {
-        ...eventData,
-        start_datetime: eventData.start_datetime || new Date().toISOString(),
-        end_datetime: eventData.end_datetime || new Date(Date.now() + 3600000).toISOString(),
-        event_type: eventData.event_type as any, // Cast to any to match database enum
+        title: eventData.title,
+        description: eventData.description || null,
+        start_datetime: eventData.start_datetime,
+        end_datetime: eventData.end_datetime,
+        location: eventData.location || null,
+        event_type: eventData.event_type,
+        all_day: eventData.all_day || false,
+        recurring: eventData.recurring || false,
+        recurring_pattern: eventData.recurring_pattern || null,
+        attendees: eventData.attendees || null,
+        external_calendar_id: eventData.external_calendar_id || null,
+        school_id: eventData.school_id || null,
+        created_by: eventData.created_by || null
       };
 
       // Ensure dates are valid and not empty strings
@@ -77,7 +89,10 @@ export const useAgenda = () => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
       
       await fetchEvents();
       toast.success('Evento criado com sucesso!');
@@ -100,15 +115,9 @@ export const useAgenda = () => {
         throw new Error('Data de fim não pode estar vazia');
       }
 
-      // Cast event_type to any to match database enum
-      const updateData = {
-        ...eventData,
-        event_type: eventData.event_type as any
-      };
-
       const { error } = await supabase
         .from('agenda_events')
-        .update(updateData)
+        .update(eventData)
         .eq('id', id);
 
       if (error) throw error;

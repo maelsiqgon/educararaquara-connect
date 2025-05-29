@@ -1,12 +1,12 @@
 
 export interface UserContact {
-  id: string;
-  user_id: string;
+  id?: string;
+  user_id?: string;
   contact_type: 'phone' | 'mobile' | 'whatsapp' | 'email';
   contact_value: string;
   is_primary: boolean;
-  created_at: string;
-  updated_at: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface UserRole {

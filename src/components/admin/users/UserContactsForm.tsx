@@ -7,13 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Trash2, Plus } from "lucide-react";
 import { formatPhone } from "@/utils/cpfValidator";
-
-interface UserContact {
-  id?: string;
-  contact_type: 'phone' | 'mobile' | 'whatsapp' | 'email';
-  contact_value: string;
-  is_primary: boolean;
-}
+import type { UserContact } from '@/types/user';
 
 interface UserContactsFormProps {
   contacts: UserContact[];

@@ -33,13 +33,9 @@ const UserForm: React.FC<UserFormProps> = ({ user, onSuccess, onCancel }) => {
 
   const [contacts, setContacts] = useState<UserContact[]>([
     { 
-      id: '',
-      user_id: '',
       contact_type: 'phone' as const, 
       contact_value: '', 
-      is_primary: true,
-      created_at: '',
-      updated_at: ''
+      is_primary: true
     }
   ]);
 
