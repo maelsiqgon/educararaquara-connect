@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import type { User, UserRole, UserContact } from '@/types/user';
-import { useUserContacts } from './useUserContacts';
 
 export type { User, UserRole } from '@/types/user';
 
@@ -32,13 +31,14 @@ export const useUsers = () => {
 
       if (error) throw error;
       
-      // Mapear os dados para incluir um array vazio de contatos por enquanto
-      const usersWithContacts = (data || []).map(user => ({
+      // Mapear os dados e adicionar aliases para compatibilidade
+      const usersWithRoles = (data || []).map(user => ({
         ...user,
-        contacts: [] // Por enquanto, array vazio até resolver os tipos do Supabase
+        roles: user.userRoles || [], // Alias para compatibilidade
+        contacts: [] // Por enquanto, array vazio
       }));
       
-      setUsers(usersWithContacts);
+      setUsers(usersWithRoles);
     } catch (err: any) {
       setError(err.message);
       toast.error('Erro ao carregar usuários');
@@ -59,7 +59,7 @@ export const useUsers = () => {
     try {
       const userId = crypto.randomUUID();
       
-      // Primeiro, criar o usuário
+      // Criar o usuário
       const { data, error } = await supabase
         .from('profiles')
         .insert([{
@@ -72,10 +72,9 @@ export const useUsers = () => {
 
       if (error) throw error;
 
-      // Se houver contatos, salvá-los
+      // Por enquanto, apenas logar os contatos até resolver os tipos
       if (contacts && contacts.length > 0) {
-        const { saveContacts } = useUserContacts();
-        await saveContacts(userId, contacts);
+        console.log('Contatos para salvar após criação:', contacts);
       }
       
       await fetchUsers();
@@ -97,7 +96,7 @@ export const useUsers = () => {
     active?: boolean;
   }>, contacts?: UserContact[]) => {
     try {
-      // Primeiro, atualizar o usuário
+      // Atualizar o usuário
       const { error } = await supabase
         .from('profiles')
         .update(userData)
@@ -105,10 +104,9 @@ export const useUsers = () => {
 
       if (error) throw error;
 
-      // Se houver contatos, salvá-los
+      // Por enquanto, apenas logar os contatos até resolver os tipos
       if (contacts) {
-        const { saveContacts } = useUserContacts();
-        await saveContacts(id, contacts);
+        console.log('Contatos para salvar após atualização:', contacts);
       }
       
       await fetchUsers();
@@ -214,7 +212,8 @@ export const useUsers = () => {
       if (error) throw error;
       return {
         ...data,
-        contacts: [] // Por enquanto, array vazio
+        roles: data.userRoles || [],
+        contacts: []
       };
     } catch (err: any) {
       toast.error('Usuário não encontrado');

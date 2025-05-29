@@ -3,7 +3,8 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
-export type EventType = 'meeting' | 'conference' | 'visit' | 'event' | 'training' | 'ceremony' | 'workshop' | 'presentation';
+// Usar apenas os tipos que existem no banco atualmente
+export type EventType = 'meeting' | 'conference' | 'visit' | 'event';
 
 export interface AgendaEvent {
   id: string;
@@ -52,7 +53,7 @@ export const useAgenda = () => {
     try {
       console.log('Criando evento:', eventData);
 
-      // Validate and format dates
+      // Validar e formatar dados
       const formattedData = {
         title: eventData.title,
         description: eventData.description || null,
@@ -69,7 +70,7 @@ export const useAgenda = () => {
         created_by: eventData.created_by || null
       };
 
-      // Ensure dates are valid and not empty strings
+      // Garantir que as datas sejam válidas
       if (!formattedData.start_datetime || formattedData.start_datetime === '') {
         throw new Error('Data de início é obrigatória');
       }
@@ -78,14 +79,14 @@ export const useAgenda = () => {
         throw new Error('Data de fim é obrigatória');
       }
 
-      // Validate that end date is after start date
+      // Validar que a data de fim é posterior à data de início
       if (new Date(formattedData.end_datetime) <= new Date(formattedData.start_datetime)) {
         throw new Error('Data de fim deve ser posterior à data de início');
       }
 
       const { data, error } = await supabase
         .from('agenda_events')
-        .insert(formattedData)
+        .insert([formattedData])
         .select()
         .single();
 
@@ -106,7 +107,7 @@ export const useAgenda = () => {
 
   const updateEvent = async (id: string, eventData: Partial<AgendaEvent>) => {
     try {
-      // Validate dates if they are being updated
+      // Validar datas se estão sendo atualizadas
       if (eventData.start_datetime && eventData.start_datetime === '') {
         throw new Error('Data de início não pode estar vazia');
       }

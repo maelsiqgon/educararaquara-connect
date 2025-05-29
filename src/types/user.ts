@@ -36,5 +36,6 @@ export interface User {
   created_at: string;
   updated_at: string;
   userRoles: UserRole[];
+  roles?: UserRole[]; // Adicionada para compatibilidade
   contacts?: UserContact[];
 }
