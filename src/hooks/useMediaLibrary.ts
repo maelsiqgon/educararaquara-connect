@@ -58,14 +58,15 @@ export const useMediaLibrary = () => {
       const fileName = `${Date.now()}.${fileExt}`;
       const filePath = `${folder}/${fileName}`;
 
+      // Upload para o bucket 'media'
       const { error: uploadError } = await supabase.storage
-        .from('uploads')
+        .from('media')
         .upload(filePath, file);
 
       if (uploadError) throw uploadError;
 
       const { data: { publicUrl } } = supabase.storage
-        .from('uploads')
+        .from('media')
         .getPublicUrl(filePath);
 
       const { data: { user } } = await supabase.auth.getUser();
@@ -101,11 +102,12 @@ export const useMediaLibrary = () => {
   const deleteFile = async (id: string, filePath: string): Promise<boolean> => {
     try {
       // Extract path from URL for storage deletion
-      const pathParts = filePath.split('/');
+      const url = new URL(filePath);
+      const pathParts = url.pathname.split('/');
       const storagePath = pathParts.slice(-2).join('/');
 
       const { error: storageError } = await supabase.storage
-        .from('uploads')
+        .from('media')
         .remove([storagePath]);
 
       if (storageError) throw storageError;

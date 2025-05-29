@@ -28,25 +28,13 @@ export const usePages = () => {
   const fetchPages = async () => {
     try {
       setLoading(true);
-      // Por enquanto, usar dados mock até criarmos a tabela pages
-      const mockPages: Page[] = [
-        {
-          id: '1',
-          title: 'Página inicial',
-          slug: 'home',
-          content: 'Conteúdo da página inicial',
-          status: 'published',
-          featured: true,
-          category: 'Geral',
-          author_id: '',
-          meta_title: 'Home',
-          meta_description: 'Página inicial do portal',
-          tags: ['home', 'principal'],
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        }
-      ];
-      setPages(mockPages);
+      const { data, error } = await supabase
+        .from('pages')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setPages(data || []);
     } catch (err: any) {
       setError(err.message);
       toast.error('Erro ao carregar páginas');
@@ -57,17 +45,22 @@ export const usePages = () => {
 
   const createPage = async (pageData: Omit<Page, 'id' | 'created_at' | 'updated_at'>) => {
     try {
-      // Mock implementation - aguardando criação da tabela
-      const newPage: Page = {
-        ...pageData,
-        id: Math.random().toString(36).substr(2, 9),
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
+      const { data: { user } } = await supabase.auth.getUser();
       
-      setPages(prev => [newPage, ...prev]);
+      const { data, error } = await supabase
+        .from('pages')
+        .insert([{
+          ...pageData,
+          author_id: user?.id
+        }])
+        .select()
+        .single();
+
+      if (error) throw error;
+      
+      await fetchPages();
       toast.success('Página criada com sucesso!');
-      return newPage;
+      return data;
     } catch (err: any) {
       toast.error('Erro ao criar página: ' + err.message);
       throw err;
@@ -76,12 +69,14 @@ export const usePages = () => {
 
   const updatePage = async (id: string, pageData: Partial<Page>) => {
     try {
-      // Mock implementation - aguardando criação da tabela
-      setPages(prev => prev.map(page => 
-        page.id === id 
-          ? { ...page, ...pageData, updated_at: new Date().toISOString() }
-          : page
-      ));
+      const { error } = await supabase
+        .from('pages')
+        .update(pageData)
+        .eq('id', id);
+
+      if (error) throw error;
+      
+      await fetchPages();
       toast.success('Página atualizada com sucesso!');
     } catch (err: any) {
       toast.error('Erro ao atualizar página: ' + err.message);
@@ -91,8 +86,14 @@ export const usePages = () => {
 
   const deletePage = async (id: string) => {
     try {
-      // Mock implementation - aguardando criação da tabela
-      setPages(prev => prev.filter(page => page.id !== id));
+      const { error } = await supabase
+        .from('pages')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      
+      await fetchPages();
       toast.success('Página removida com sucesso!');
     } catch (err: any) {
       toast.error('Erro ao remover página: ' + err.message);

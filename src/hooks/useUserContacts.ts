@@ -12,20 +12,15 @@ export const useUserContacts = (userId?: string) => {
     try {
       setLoading(true);
       
-      // Por enquanto retornar dados mock já que a tabela user_contacts não existe
-      const mockContacts: UserContact[] = [
-        {
-          id: '1',
-          user_id: targetUserId,
-          contact_type: 'email',
-          contact_value: 'usuario@exemplo.com',
-          is_primary: true,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        }
-      ];
+      const { data, error } = await supabase
+        .from('user_contacts')
+        .select('*')
+        .eq('user_id', targetUserId)
+        .order('is_primary', { ascending: false });
+
+      if (error) throw error;
       
-      setContacts(mockContacts);
+      setContacts(data || []);
     } catch (err: any) {
       console.error('Erro ao carregar contatos:', err);
       toast.error('Erro ao carregar contatos');
@@ -37,7 +32,30 @@ export const useUserContacts = (userId?: string) => {
 
   const saveContacts = async (userId: string, contactsData: UserContact[]) => {
     try {
-      // Mock implementation - aguardando criação da tabela
+      // Primeiro, deletar todos os contatos existentes do usuário
+      const { error: deleteError } = await supabase
+        .from('user_contacts')
+        .delete()
+        .eq('user_id', userId);
+
+      if (deleteError) throw deleteError;
+
+      // Depois, inserir os novos contatos
+      if (contactsData.length > 0) {
+        const contactsToInsert = contactsData.map(contact => ({
+          user_id: userId,
+          contact_type: contact.contact_type,
+          contact_value: contact.contact_value,
+          is_primary: contact.is_primary
+        }));
+
+        const { error: insertError } = await supabase
+          .from('user_contacts')
+          .insert(contactsToInsert);
+
+        if (insertError) throw insertError;
+      }
+
       setContacts(contactsData);
       toast.success('Contatos salvos com sucesso!');
     } catch (err: any) {
