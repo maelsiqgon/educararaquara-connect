@@ -11,6 +11,28 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const fetchProfile = async (userId: string) => {
+    try {
+      console.log('🔍 Fetching profile for user:', userId);
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (error) {
+        console.error('❌ Error fetching profile:', error);
+        return null;
+      }
+
+      console.log('✅ Profile fetched successfully:', data);
+      return data;
+    } catch (error) {
+      console.error('❌ Exception fetching profile:', error);
+      return null;
+    }
+  };
+
   useEffect(() => {
     console.log('🚀 Setting up auth state listener');
     
@@ -24,25 +46,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setSession(session);
         setUser(session?.user ?? null);
         
-        if (session?.user && event === 'SIGNED_IN') {
-          console.log('👤 User signed in, fetching profile...');
-          setTimeout(async () => {
-            try {
-              const { data: userProfile } = await supabase
-                .from('profiles')
-                .select('*')
-                .eq('id', session.user.id)
-                .single();
-              
-              console.log('📋 Profile fetched:', userProfile);
-              setProfile(userProfile);
-            } catch (error) {
-              console.error('Error fetching profile:', error);
-              setProfile(null);
-            }
-          }, 100);
-        } else if (!session?.user) {
-          console.log('👤 User signed out, clearing profile');
+        if (session?.user) {
+          console.log('👤 User found, fetching profile...');
+          const userProfile = await fetchProfile(session.user.id);
+          setProfile(userProfile);
+        } else {
+          console.log('👤 No user, clearing profile');
           setProfile(null);
         }
         
@@ -50,6 +59,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
     );
 
+    // Check for existing session
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       console.log('🔍 Initial session check:', {
         hasSession: !!session,
@@ -62,19 +72,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       
       if (session?.user) {
         console.log('👤 Existing session found, fetching profile...');
-        try {
-          const { data: userProfile } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .single();
-          
-          console.log('📋 Profile fetched for existing session:', userProfile);
-          setProfile(userProfile);
-        } catch (error) {
-          console.error('Error fetching profile:', error);
-          setProfile(null);
-        }
+        const userProfile = await fetchProfile(session.user.id);
+        setProfile(userProfile);
       }
       
       setLoading(false);
@@ -116,28 +115,38 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         password
       });
       
-      if (!error && data.user) {
-        console.log('✅ Login successful for:', data.user.email);
-        toast.success('Login realizado com sucesso!');
-        
-        setTimeout(async () => {
-          try {
-            await supabase.from('profiles')
-              .update({ last_access: new Date().toISOString() })
-              .eq('id', data.user.id);
-              
-            await supabase.from('activity_logs').insert([{
-              user_id: data.user.id,
-              action: 'login',
-              user_agent: navigator.userAgent,
-            }]);
-          } catch (err) {
-            console.warn('Failed to update last access or log activity:', err);
-          }
-        }, 0);
-      } else if (error) {
+      if (error) {
         console.error('❌ Login error:', error);
         toast.error('Erro ao fazer login: ' + error.message);
+        return { error };
+      }
+
+      if (data.user) {
+        console.log('✅ Login successful for:', data.user.email);
+        
+        // Fetch profile immediately after login
+        const userProfile = await fetchProfile(data.user.id);
+        if (userProfile) {
+          setProfile(userProfile);
+          console.log('✅ Profile set after login:', userProfile);
+        }
+        
+        // Update last access
+        try {
+          await supabase.from('profiles')
+            .update({ last_access: new Date().toISOString() })
+            .eq('id', data.user.id);
+            
+          await supabase.from('activity_logs').insert([{
+            user_id: data.user.id,
+            action: 'login',
+            user_agent: navigator.userAgent,
+          }]);
+        } catch (err) {
+          console.warn('Failed to update last access or log activity:', err);
+        }
+        
+        toast.success('Login realizado com sucesso!');
       }
       
       return { error };
@@ -151,17 +160,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const signOut = async () => {
     try {
       if (user) {
-        setTimeout(async () => {
-          try {
-            await supabase.from('activity_logs').insert([{
-              user_id: user.id,
-              action: 'logout',
-              user_agent: navigator.userAgent,
-            }]);
-          } catch (err) {
-            console.warn('Failed to log logout activity:', err);
-          }
-        }, 0);
+        try {
+          await supabase.from('activity_logs').insert([{
+            user_id: user.id,
+            action: 'logout',
+            user_agent: navigator.userAgent,
+          }]);
+        } catch (err) {
+          console.warn('Failed to log logout activity:', err);
+        }
       }
       
       await supabase.auth.signOut();
@@ -211,24 +218,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const isSuperAdmin = () => {
-    if (!user || !profile) {
-      console.log('❌ No user or profile, not super admin');
-      return false;
-    }
-    
-    const isSuper = profile.role === 'super_admin';
+    const result = profile?.role === 'super_admin' && profile?.active === true;
     console.log('🔍 Checking super admin status:', { 
-      isSuper, 
-      role: profile.role,
-      userId: user.id,
-      userEmail: user.email 
+      result, 
+      role: profile?.role,
+      active: profile?.active,
+      hasProfile: !!profile,
+      userId: user?.id,
+      userEmail: user?.email 
     });
-    return isSuper;
+    return result;
   };
 
   const isAdmin = () => {
-    if (!user || !profile) return false;
-    return ['admin', 'super_admin'].includes(profile.role);
+    if (!profile) return false;
+    return ['admin', 'super_admin'].includes(profile.role) && profile.active === true;
   };
 
   const value = {

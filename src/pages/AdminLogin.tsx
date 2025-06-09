@@ -10,14 +10,32 @@ const AdminLogin = () => {
   const [password, setPassword] = useState("admin123456");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { signIn, user, profile, loading, isSuperAdmin } = useAuth();
+  const { signIn, user, profile, loading, isSuperAdmin, isAdmin } = useAuth();
 
   useEffect(() => {
-    if (!loading && user && profile && isSuperAdmin()) {
-      console.log('✅ User already logged in as admin, redirecting');
-      navigate("/admin", { replace: true });
+    console.log('🔍 AdminLogin useEffect - checking auth state:', {
+      loading,
+      hasUser: !!user,
+      hasProfile: !!profile,
+      userEmail: user?.email,
+      profileRole: profile?.role,
+      isSuperAdminResult: isSuperAdmin(),
+      isAdminResult: isAdmin()
+    });
+
+    if (!loading && user && profile) {
+      const hasAdminAccess = isSuperAdmin() || isAdmin();
+      console.log('🔍 Admin access check:', hasAdminAccess);
+      
+      if (hasAdminAccess) {
+        console.log('✅ User has admin access, redirecting to admin panel');
+        navigate("/admin", { replace: true });
+      } else {
+        console.log('❌ User does not have admin access');
+        toast.error("Você não tem permissão para acessar esta área administrativa");
+      }
     }
-  }, [user, profile, loading, isSuperAdmin, navigate]);
+  }, [user, profile, loading, navigate, isSuperAdmin, isAdmin]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,8 +49,8 @@ const AdminLogin = () => {
         console.error('❌ Login error:', error);
         toast.error("Credenciais inválidas. Verifique email e senha.");
       } else {
-        console.log('✅ Login successful');
-        toast.success("Login realizado com sucesso!");
+        console.log('✅ Login successful, waiting for profile...');
+        // O redirecionamento será feito pelo useEffect quando o profile for carregado
       }
     } catch (error) {
       console.error('❌ Login error:', error);

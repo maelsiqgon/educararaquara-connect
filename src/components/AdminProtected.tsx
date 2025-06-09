@@ -18,9 +18,11 @@ const AdminProtected: React.FC<AdminProtectedProps> = ({ children }) => {
         userEmail: user?.email,
         userId: user?.id, 
         loading,
-        profile,
-        isSuperAdminResult: isSuperAdmin(),
-        isAdminResult: isAdmin()
+        hasProfile: !!profile,
+        profileRole: profile?.role,
+        profileActive: profile?.active,
+        isSuperAdminResult: profile ? isSuperAdmin() : false,
+        isAdminResult: profile ? isAdmin() : false
       });
       
       if (loading) {
@@ -28,8 +30,14 @@ const AdminProtected: React.FC<AdminProtectedProps> = ({ children }) => {
         return;
       }
       
-      if (!user || !profile) {
-        console.log('❌ No user or profile found, denying access');
+      if (!user) {
+        console.log('❌ No user found, denying access');
+        setIsAuthorized(false);
+        return;
+      }
+
+      if (!profile) {
+        console.log('❌ No profile found, denying access');
         setIsAuthorized(false);
         return;
       }
