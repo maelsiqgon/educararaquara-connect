@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import type { User, UserContact } from '@/types/user';
+import type { User } from '@/types/user';
 
 export const useUsers = () => {
   const [users, setUsers] = useState<User[]>([]);
@@ -34,25 +34,29 @@ export const useUsers = () => {
     phone?: string;
     role?: string;
     active?: boolean;
-  }, contacts?: UserContact[]) => {
+  }) => {
     try {
-      const userId = crypto.randomUUID();
-      
-      const { data, error } = await supabase
-        .from('profiles')
-        .insert([{
-          id: userId,
-          ...userData,
-          active: userData.active ?? true,
-          role: userData.role ?? 'user'
-        }])
-        .select()
-        .single();
+      const { data, error } = await supabase.auth.admin.createUser({
+        email: userData.email,
+        password: 'temp123456',
+        email_confirm: true,
+        user_metadata: {
+          name: userData.name
+        }
+      });
 
       if (error) throw error;
 
-      if (contacts && contacts.length > 0) {
-        console.log('Contatos para salvar após criação:', contacts);
+      if (data.user) {
+        await supabase
+          .from('profiles')
+          .update({
+            name: userData.name,
+            phone: userData.phone || null,
+            role: userData.role || 'user',
+            active: userData.active !== false
+          })
+          .eq('id', data.user.id);
       }
       
       await fetchUsers();
@@ -64,7 +68,7 @@ export const useUsers = () => {
     }
   };
 
-  const updateUser = async (id: string, userData: Partial<User>, contacts?: UserContact[]) => {
+  const updateUser = async (id: string, userData: Partial<User>) => {
     try {
       const { error } = await supabase
         .from('profiles')
@@ -72,10 +76,6 @@ export const useUsers = () => {
         .eq('id', id);
 
       if (error) throw error;
-
-      if (contacts) {
-        console.log('Contatos para salvar após atualização:', contacts);
-      }
       
       await fetchUsers();
       toast.success('Usuário atualizado com sucesso!');
@@ -87,11 +87,7 @@ export const useUsers = () => {
 
   const deleteUser = async (id: string) => {
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .delete()
-        .eq('id', id);
-
+      const { error } = await supabase.auth.admin.deleteUser(id);
       if (error) throw error;
       
       await fetchUsers();

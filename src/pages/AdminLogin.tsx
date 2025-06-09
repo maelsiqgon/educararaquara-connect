@@ -4,22 +4,20 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import AuthForm from "@/components/admin/auth/AuthForm";
-import CreateAdminButton from "@/components/admin/CreateAdminButton";
 
 const AdminLogin = () => {
   const [email, setEmail] = useState("admin@araraquara.sp.gov.br");
   const [password, setPassword] = useState("admin123456");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { signIn, user, loading, isSuperAdmin } = useAuth();
+  const { signIn, user, profile, loading, isSuperAdmin } = useAuth();
 
-  // Simple redirect if already logged in as admin
   useEffect(() => {
-    if (!loading && user && isSuperAdmin()) {
+    if (!loading && user && profile && isSuperAdmin()) {
       console.log('✅ User already logged in as admin, redirecting');
       navigate("/admin", { replace: true });
     }
-  }, [user, loading, isSuperAdmin, navigate]);
+  }, [user, profile, loading, isSuperAdmin, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,7 +33,6 @@ const AdminLogin = () => {
       } else {
         console.log('✅ Login successful');
         toast.success("Login realizado com sucesso!");
-        // Let the useEffect handle the redirect after auth state updates
       }
     } catch (error) {
       console.error('❌ Login error:', error);
@@ -64,10 +61,6 @@ const AdminLogin = () => {
           <p className="mt-2 text-education-gray">Área Administrativa</p>
         </div>
         
-        <div className="text-center">
-          <CreateAdminButton />
-        </div>
-        
         <AuthForm
           title="Login Administrativo"
           description="Entre com suas credenciais para acessar o painel"
@@ -80,12 +73,9 @@ const AdminLogin = () => {
         />
         
         <div className="text-center text-xs text-gray-500">
-          <p>Para testar, use o usuário administrador padrão:</p>
+          <p>Para acessar, use as credenciais:</p>
           <p><strong>Email:</strong> admin@araraquara.sp.gov.br</p>
           <p><strong>Senha:</strong> admin123456</p>
-          <p className="mt-2 text-amber-600">
-            <strong>Clique no botão "Criar Usuário Admin" acima se for o primeiro acesso!</strong>
-          </p>
         </div>
       </div>
     </div>

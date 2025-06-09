@@ -4,6 +4,7 @@ import { User, Session } from '@supabase/supabase-js';
 
 export interface AuthContextType {
   user: User | null;
+  profile: any | null;
   session: Session | null;
   loading: boolean;
   signUp: (email: string, password: string, userData?: any) => Promise<any>;

@@ -12,7 +12,7 @@ export type Database = {
       activity_logs: {
         Row: {
           action: string
-          created_at: string | null
+          created_at: string
           details: Json | null
           id: string
           ip_address: unknown | null
@@ -23,7 +23,7 @@ export type Database = {
         }
         Insert: {
           action: string
-          created_at?: string | null
+          created_at?: string
           details?: Json | null
           id?: string
           ip_address?: unknown | null
@@ -34,7 +34,7 @@ export type Database = {
         }
         Update: {
           action?: string
-          created_at?: string | null
+          created_at?: string
           details?: Json | null
           id?: string
           ip_address?: unknown | null
@@ -110,13 +110,6 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "agenda_events_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "agenda_events_school_id_fkey"
             columns: ["school_id"]
             isOneToOne: false
@@ -162,15 +155,7 @@ export type Database = {
           updated_at?: string | null
           usage_count?: number | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "chatbot_knowledge_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       council_documents: {
         Row: {
@@ -223,13 +208,6 @@ export type Database = {
             referencedRelation: "councils"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "council_documents_uploaded_by_fkey"
-            columns: ["uploaded_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
         ]
       }
       council_financial_records: {
@@ -275,13 +253,6 @@ export type Database = {
             columns: ["council_id"]
             isOneToOne: false
             referencedRelation: "councils"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "council_financial_records_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -373,13 +344,6 @@ export type Database = {
             columns: ["council_id"]
             isOneToOne: false
             referencedRelation: "councils"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "council_school_visits_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
@@ -478,13 +442,6 @@ export type Database = {
             referencedRelation: "schools"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "media_library_uploaded_by_fkey"
-            columns: ["uploaded_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
         ]
       }
       news: {
@@ -552,13 +509,6 @@ export type Database = {
           views?: number | null
         }
         Relationships: [
-          {
-            foreignKeyName: "news_author_id_fkey"
-            columns: ["author_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "news_category_id_fkey"
             columns: ["category_id"]
@@ -655,46 +605,40 @@ export type Database = {
       }
       profiles: {
         Row: {
-          active: boolean | null
-          address: string | null
+          active: boolean
           avatar_url: string | null
-          cpf: string | null
-          created_at: string | null
+          created_at: string
           email: string
           id: string
           last_access: string | null
           name: string
           phone: string | null
-          registration: string | null
-          updated_at: string | null
+          role: string
+          updated_at: string
         }
         Insert: {
-          active?: boolean | null
-          address?: string | null
+          active?: boolean
           avatar_url?: string | null
-          cpf?: string | null
-          created_at?: string | null
+          created_at?: string
           email: string
           id: string
           last_access?: string | null
           name: string
           phone?: string | null
-          registration?: string | null
-          updated_at?: string | null
+          role?: string
+          updated_at?: string
         }
         Update: {
-          active?: boolean | null
-          address?: string | null
+          active?: boolean
           avatar_url?: string | null
-          cpf?: string | null
-          created_at?: string | null
+          created_at?: string
           email?: string
           id?: string
           last_access?: string | null
           name?: string
           phone?: string | null
-          registration?: string | null
-          updated_at?: string | null
+          role?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -829,24 +773,10 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "support_tickets_assigned_to_fkey"
-            columns: ["assigned_to"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "support_tickets_school_id_fkey"
             columns: ["school_id"]
             isOneToOne: false
             referencedRelation: "schools"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "support_tickets_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -882,85 +812,6 @@ export type Database = {
             columns: ["ticket_id"]
             isOneToOne: false
             referencedRelation: "support_tickets"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "ticket_messages_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      user_contacts: {
-        Row: {
-          contact_type: string
-          contact_value: string
-          created_at: string
-          id: string
-          is_primary: boolean
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          contact_type: string
-          contact_value: string
-          created_at?: string
-          id?: string
-          is_primary?: boolean
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          contact_type?: string
-          contact_value?: string
-          created_at?: string
-          id?: string
-          is_primary?: boolean
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      user_school_roles: {
-        Row: {
-          active: boolean | null
-          created_at: string | null
-          id: string
-          role: Database["public"]["Enums"]["user_role"]
-          school_id: string | null
-          user_id: string | null
-        }
-        Insert: {
-          active?: boolean | null
-          created_at?: string | null
-          id?: string
-          role: Database["public"]["Enums"]["user_role"]
-          school_id?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          active?: boolean | null
-          created_at?: string | null
-          id?: string
-          role?: Database["public"]["Enums"]["user_role"]
-          school_id?: string | null
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "user_school_roles_school_id_fkey"
-            columns: ["school_id"]
-            isOneToOne: false
-            referencedRelation: "schools"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "user_school_roles_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -1006,21 +857,12 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      get_user_roles: {
-        Args: { user_uuid: string }
-        Returns: {
-          id: string
-          user_id: string
-          school_id: string
-          role: string
-          active: boolean
-          created_at: string
-          school_name: string
-          school_id_text: string
-        }[]
+      is_admin: {
+        Args: { user_uuid?: string }
+        Returns: boolean
       }
       is_super_admin: {
-        Args: { user_uuid: string }
+        Args: { user_uuid?: string }
         Returns: boolean
       }
     }

@@ -5,10 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useUsers } from '@/hooks/useUsers';
-import { validateCPF, formatCPF } from '@/utils/cpfValidator';
-import UserContactsForm from './UserContactsForm';
-import type { User, UserContact } from '@/types/user';
+import type { User } from '@/types/user';
 
 interface UserFormProps {
   user?: User;
@@ -19,58 +18,26 @@ interface UserFormProps {
 const UserForm: React.FC<UserFormProps> = ({ user, onSuccess, onCancel }) => {
   const { createUser, updateUser } = useUsers();
   const [loading, setLoading] = useState(false);
-  const [cpfError, setCpfError] = useState('');
   
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    cpf: '',
     phone: '',
-    address: '',
-    registration: '',
+    role: 'user' as 'super_admin' | 'admin' | 'user',
     active: true
   });
-
-  const [contacts, setContacts] = useState<UserContact[]>([
-    { 
-      contact_type: 'phone' as const, 
-      contact_value: '', 
-      is_primary: true
-    }
-  ]);
 
   useEffect(() => {
     if (user) {
       setFormData({
         name: user.name || '',
         email: user.email || '',
-        cpf: user.cpf || '',
         phone: user.phone || '',
-        address: user.address || '',
-        registration: user.registration || '',
+        role: user.role,
         active: user.active
       });
-
-      if (user.contacts && user.contacts.length > 0) {
-        setContacts(user.contacts);
-      }
     }
   }, [user]);
-
-  const handleCPFChange = (value: string) => {
-    const formattedCPF = formatCPF(value);
-    setFormData(prev => ({ ...prev, cpf: formattedCPF }));
-    
-    if (formattedCPF.length === 14) { // CPF completo formatado
-      if (!validateCPF(formattedCPF)) {
-        setCpfError('CPF inválido');
-      } else {
-        setCpfError('');
-      }
-    } else {
-      setCpfError('');
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,17 +46,12 @@ const UserForm: React.FC<UserFormProps> = ({ user, onSuccess, onCancel }) => {
       return;
     }
 
-    if (formData.cpf && !validateCPF(formData.cpf)) {
-      setCpfError('CPF inválido');
-      return;
-    }
-
     setLoading(true);
     try {
       if (user) {
-        await updateUser(user.id, formData, contacts);
+        await updateUser(user.id, formData);
       } else {
-        await createUser(formData, contacts);
+        await createUser(formData);
       }
       onSuccess();
     } catch (error) {
@@ -127,45 +89,35 @@ const UserForm: React.FC<UserFormProps> = ({ user, onSuccess, onCancel }) => {
                 value={formData.email}
                 onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
                 required
+                disabled={!!user}
               />
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="cpf">CPF</Label>
+              <Label htmlFor="phone">Telefone</Label>
               <Input
-                id="cpf"
-                value={formData.cpf}
-                onChange={(e) => handleCPFChange(e.target.value)}
-                placeholder="000.000.000-00"
+                id="phone"
+                value={formData.phone}
+                onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
               />
-              {cpfError && <p className="text-red-500 text-sm">{cpfError}</p>}
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="registration">Matrícula</Label>
-              <Input
-                id="registration"
-                value={formData.registration}
-                onChange={(e) => setFormData(prev => ({ ...prev, registration: e.target.value }))}
-              />
+              <Label htmlFor="role">Função</Label>
+              <Select value={formData.role} onValueChange={(value: any) => setFormData(prev => ({ ...prev, role: value }))}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione a função" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="user">Usuário</SelectItem>
+                  <SelectItem value="admin">Administrador</SelectItem>
+                  <SelectItem value="super_admin">Super Admin</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="address">Endereço</Label>
-            <Input
-              id="address"
-              value={formData.address}
-              onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
-            />
-          </div>
-
-          <UserContactsForm 
-            contacts={contacts}
-            onContactsChange={setContacts}
-          />
 
           <div className="flex items-center space-x-2">
             <Switch

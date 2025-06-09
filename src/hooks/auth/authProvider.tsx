@@ -7,9 +7,9 @@ import { AuthContext } from './authContext';
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [profile, setProfile] = useState<any>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const [userProfile, setUserProfile] = useState<any>(null);
 
   useEffect(() => {
     console.log('🚀 Setting up auth state listener');
@@ -28,21 +28,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           console.log('👤 User signed in, fetching profile...');
           setTimeout(async () => {
             try {
-              const { data: profile } = await supabase
+              const { data: userProfile } = await supabase
                 .from('profiles')
                 .select('*')
                 .eq('id', session.user.id)
                 .single();
               
-              console.log('📋 Profile fetched:', profile);
-              setUserProfile(profile);
+              console.log('📋 Profile fetched:', userProfile);
+              setProfile(userProfile);
             } catch (error) {
               console.error('Error fetching profile:', error);
+              setProfile(null);
             }
-          }, 500);
+          }, 100);
         } else if (!session?.user) {
           console.log('👤 User signed out, clearing profile');
-          setUserProfile(null);
+          setProfile(null);
         }
         
         setLoading(false);
@@ -62,16 +63,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (session?.user) {
         console.log('👤 Existing session found, fetching profile...');
         try {
-          const { data: profile } = await supabase
+          const { data: userProfile } = await supabase
             .from('profiles')
             .select('*')
             .eq('id', session.user.id)
             .single();
           
-          console.log('📋 Profile fetched for existing session:', profile);
-          setUserProfile(profile);
+          console.log('📋 Profile fetched for existing session:', userProfile);
+          setProfile(userProfile);
         } catch (error) {
           console.error('Error fetching profile:', error);
+          setProfile(null);
         }
       }
       
@@ -84,26 +86,24 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
   }, []);
 
-  const signUp = async (email: string, password: string, name?: string) => {
+  const signUp = async (email: string, password: string, userData?: any) => {
     try {
       const { error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          data: {
-            name: name || email.split('@')[0]
-          }
+          data: userData || {}
         }
       });
       
       if (!error) {
-        toast.success('Cadastro realizado com sucesso! Verifique seu email para confirmação.');
+        toast.success('Usuário criado com sucesso!');
       }
       
       return { error };
     } catch (error: any) {
       console.error('SignUp error:', error);
-      toast.error('Erro ao criar conta: ' + error.message);
+      toast.error('Erro ao criar usuário: ' + error.message);
       return { error };
     }
   };
@@ -211,15 +211,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const isSuperAdmin = () => {
-    if (!user || !userProfile) {
+    if (!user || !profile) {
       console.log('❌ No user or profile, not super admin');
       return false;
     }
     
-    const isSuper = userProfile.role === 'super_admin';
+    const isSuper = profile.role === 'super_admin';
     console.log('🔍 Checking super admin status:', { 
       isSuper, 
-      role: userProfile.role,
+      role: profile.role,
       userId: user.id,
       userEmail: user.email 
     });
@@ -227,12 +227,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const isAdmin = () => {
-    if (!user || !userProfile) return false;
-    return ['admin', 'super_admin'].includes(userProfile.role);
+    if (!user || !profile) return false;
+    return ['admin', 'super_admin'].includes(profile.role);
   };
 
   const value = {
     user,
+    profile,
     session,
     loading,
     signUp,

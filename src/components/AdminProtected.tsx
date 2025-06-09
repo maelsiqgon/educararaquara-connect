@@ -6,14 +6,10 @@ import { toast } from "sonner";
 
 interface AdminProtectedProps {
   children: React.ReactNode;
-  requiredPermission?: string;
 }
 
-const AdminProtected: React.FC<AdminProtectedProps> = ({ 
-  children, 
-  requiredPermission 
-}) => {
-  const { user, loading, isSuperAdmin, isAdmin } = useAuth();
+const AdminProtected: React.FC<AdminProtectedProps> = ({ children }) => {
+  const { user, profile, loading, isSuperAdmin, isAdmin } = useAuth();
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
   
   useEffect(() => {
@@ -22,6 +18,7 @@ const AdminProtected: React.FC<AdminProtectedProps> = ({
         userEmail: user?.email,
         userId: user?.id, 
         loading,
+        profile,
         isSuperAdminResult: isSuperAdmin(),
         isAdminResult: isAdmin()
       });
@@ -31,8 +28,8 @@ const AdminProtected: React.FC<AdminProtectedProps> = ({
         return;
       }
       
-      if (!user) {
-        console.log('❌ No user found, denying access');
+      if (!user || !profile) {
+        console.log('❌ No user or profile found, denying access');
         setIsAuthorized(false);
         return;
       }
@@ -51,7 +48,7 @@ const AdminProtected: React.FC<AdminProtectedProps> = ({
     };
     
     checkAuthorization();
-  }, [user, loading, isSuperAdmin, isAdmin]);
+  }, [user, profile, loading, isSuperAdmin, isAdmin]);
   
   if (loading || isAuthorized === null) {
     console.log('⏳ Showing loading state');
