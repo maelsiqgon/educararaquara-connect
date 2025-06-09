@@ -3,19 +3,19 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
-export interface Page {
+interface Page {
   id: string;
   title: string;
   slug: string;
   content: string;
-  status: 'published' | 'draft';
-  featured: boolean;
+  status: 'draft' | 'published';
   image_url?: string;
   category: string;
-  author_id?: string;
   meta_title?: string;
   meta_description?: string;
   tags?: string[];
+  featured: boolean;
+  author_id?: string;
   created_at: string;
   updated_at: string;
 }
@@ -34,7 +34,25 @@ export const usePages = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setPages(data || []);
+
+      const processedPages: Page[] = (data || []).map(item => ({
+        id: item.id,
+        title: item.title,
+        slug: item.slug,
+        content: item.content,
+        status: (item.status === 'published' ? 'published' : 'draft') as 'draft' | 'published',
+        image_url: item.image_url,
+        category: item.category,
+        meta_title: item.meta_title,
+        meta_description: item.meta_description,
+        tags: item.tags || [],
+        featured: item.featured,
+        author_id: item.author_id,
+        created_at: item.created_at,
+        updated_at: item.updated_at
+      }));
+
+      setPages(processedPages);
     } catch (err: any) {
       setError(err.message);
       toast.error('Erro ao carregar páginas');

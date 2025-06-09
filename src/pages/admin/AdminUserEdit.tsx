@@ -1,82 +1,92 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import AdminProtected from '@/components/AdminProtected';
-import AdminHeader from '@/components/admin/AdminHeader';
-import UserForm from '@/components/admin/users/UserForm';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
 import { useUsers, User } from '@/hooks/useUsers';
-import { Loader2 } from 'lucide-react';
+import UserForm from '@/components/admin/users/UserForm';
 
 const AdminUserEdit = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { users } = useUsers();
+  const { getUserById } = useUsers();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (id && users.length > 0) {
-      const foundUser = users.find(u => u.id === id);
-      setUser(foundUser || null);
-      setLoading(false);
-    }
-  }, [id, users]);
+    const loadUser = async () => {
+      if (!id) {
+        navigate('/admin/users');
+        return;
+      }
+
+      try {
+        const userData = await getUserById(id);
+        setUser(userData);
+      } catch (error) {
+        console.error('Erro ao carregar usuário:', error);
+        navigate('/admin/users');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadUser();
+  }, [id, getUserById, navigate]);
 
   const handleSuccess = () => {
-    navigate('/admin/usuarios');
+    navigate('/admin/users');
   };
 
   const handleCancel = () => {
-    navigate('/admin/usuarios');
+    navigate('/admin/users');
   };
 
   if (loading) {
     return (
-      <AdminProtected>
-        <div className="min-h-screen bg-gray-50">
-          <AdminHeader />
-          <div className="container mx-auto px-4 py-8 flex items-center justify-center">
-            <Loader2 className="h-8 w-8 animate-spin" />
-          </div>
-        </div>
-      </AdminProtected>
+      <div className="p-6">
+        <Card>
+          <CardContent className="p-6">
+            <div className="text-center">Carregando...</div>
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 
   if (!user) {
     return (
-      <AdminProtected>
-        <div className="min-h-screen bg-gray-50">
-          <AdminHeader />
-          <div className="container mx-auto px-4 py-8">
-            <div className="text-center">
-              <h1 className="text-2xl font-bold text-red-500">Usuário não encontrado</h1>
-              <p className="text-gray-600 mt-2">O usuário solicitado não foi encontrado.</p>
-            </div>
-          </div>
-        </div>
-      </AdminProtected>
+      <div className="p-6">
+        <Card>
+          <CardContent className="p-6">
+            <div className="text-center">Usuário não encontrado</div>
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 
   return (
-    <AdminProtected>
-      <div className="min-h-screen bg-gray-50">
-        <AdminHeader />
-        <div className="container mx-auto px-4 py-8">
-          <div className="mb-6">
-            <h1 className="text-3xl font-bold text-education-primary">Editar Usuário</h1>
-            <p className="text-gray-600">Edite as informações do usuário {user.name}</p>
-          </div>
-          
-          <UserForm
-            user={user}
-            onSuccess={handleSuccess}
-            onCancel={handleCancel}
-          />
-        </div>
+    <div className="p-6 space-y-6">
+      <div className="flex items-center gap-4">
+        <Button
+          variant="outline"
+          onClick={() => navigate('/admin/users')}
+          className="flex items-center gap-2"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Voltar
+        </Button>
+        <h1 className="text-2xl font-bold">Editar Usuário</h1>
       </div>
-    </AdminProtected>
+
+      <UserForm
+        user={user}
+        onSuccess={handleSuccess}
+        onCancel={handleCancel}
+      />
+    </div>
   );
 };
 

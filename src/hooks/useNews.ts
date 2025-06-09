@@ -1,52 +1,49 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
-export interface NewsCategory {
-  id: string;
-  name: string;
-  description?: string;
-  color: string;
-  active: boolean;
-  created_at: string;
-}
-
-export interface News {
+interface News {
   id: string;
   title: string;
   slug: string;
   excerpt?: string;
   content: string;
   image_url?: string;
-  category_id?: string;
-  author_id?: string;
-  school_id?: string;
-  status: 'draft' | 'scheduled' | 'published' | 'archived';
-  scheduled_at?: string;
+  status: 'draft' | 'published' | 'scheduled';
   published_at?: string;
+  scheduled_at?: string;
   views: number;
   featured: boolean;
+  author_id?: string;
+  category_id?: string;
+  school_id?: string;
   meta_title?: string;
   meta_description?: string;
   tags?: string[];
   created_at: string;
   updated_at: string;
-  category?: NewsCategory;
   author?: {
     id: string;
     name: string;
     email: string;
   };
+  category?: {
+    id: string;
+    name: string;
+    description?: string;
+    color: string;
+    active: boolean;
+    created_at: string;
+  };
   school?: {
     id: string;
     name: string;
+    type: string;
   };
 }
 
 export const useNews = () => {
   const [news, setNews] = useState<News[]>([]);
-  const [categories, setCategories] = useState<NewsCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -57,23 +54,66 @@ export const useNews = () => {
         .from('news')
         .select(`
           *,
-          category:news_categories(id, name, color, active, created_at),
-          author:profiles(id, name, email),
-          school:schools(id, name)
+          news_categories:category_id (
+            id,
+            name,
+            description,
+            color,
+            active,
+            created_at
+          ),
+          schools:school_id (
+            id,
+            name,
+            type
+          )
         `)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      
-      const transformedNews = (data || []).map(item => ({
-        ...item,
-        category: item.category ? {
-          ...item.category,
-          description: ''
+
+      // Sistema simplificado - não buscar autor por enquanto
+      const processedNews: News[] = (data || []).map(item => ({
+        id: item.id,
+        title: item.title,
+        slug: item.slug,
+        excerpt: item.excerpt,
+        content: item.content,
+        image_url: item.image_url,
+        status: item.status as 'draft' | 'published' | 'scheduled',
+        published_at: item.published_at,
+        scheduled_at: item.scheduled_at,
+        views: item.views || 0,
+        featured: item.featured || false,
+        author_id: item.author_id,
+        category_id: item.category_id,
+        school_id: item.school_id,
+        meta_title: item.meta_title,
+        meta_description: item.meta_description,
+        tags: item.tags || [],
+        created_at: item.created_at,
+        updated_at: item.updated_at,
+        author: item.author_id ? {
+          id: item.author_id,
+          name: 'Sistema',
+          email: 'sistema@araraquara.sp.gov.br'
+        } : undefined,
+        category: item.news_categories ? {
+          id: item.news_categories.id,
+          name: item.news_categories.name,
+          description: item.news_categories.description,
+          color: item.news_categories.color,
+          active: item.news_categories.active,
+          created_at: item.news_categories.created_at
+        } : undefined,
+        school: item.schools ? {
+          id: item.schools.id,
+          name: item.schools.name,
+          type: item.schools.type
         } : undefined
       }));
-      
-      setNews(transformedNews);
+
+      setNews(processedNews);
     } catch (err: any) {
       setError(err.message);
       toast.error('Erro ao carregar notícias');
@@ -82,22 +122,7 @@ export const useNews = () => {
     }
   };
 
-  const fetchCategories = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('news_categories')
-        .select('*')
-        .order('name');
-
-      if (error) throw error;
-      setCategories(data || []);
-    } catch (err: any) {
-      setError(err.message);
-      toast.error('Erro ao carregar categorias');
-    }
-  };
-
-  const createNews = async (newsData: Omit<News, 'id' | 'created_at' | 'updated_at' | 'views' | 'category' | 'author' | 'school'>) => {
+  const createNews = async (newsData: Omit<News, 'id' | 'created_at' | 'updated_at' | 'author' | 'category' | 'school' | 'views'>) => {
     try {
       const { data, error } = await supabase
         .from('news')
@@ -106,8 +131,7 @@ export const useNews = () => {
         .single();
 
       if (error) throw error;
-      
-      await fetchNews();
+      setNews(prevNews => [...prevNews, data]);
       toast.success('Notícia criada com sucesso!');
       return data;
     } catch (err: any) {
@@ -116,17 +140,19 @@ export const useNews = () => {
     }
   };
 
-  const updateNews = async (id: string, newsData: Partial<Omit<News, 'id' | 'created_at' | 'updated_at' | 'category' | 'author' | 'school'>>) => {
+  const updateNews = async (id: string, newsData: Partial<News>) => {
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('news')
         .update(newsData)
-        .eq('id', id);
+        .eq('id', id)
+        .select()
+        .single();
 
       if (error) throw error;
-      
-      await fetchNews();
+      setNews(prevNews => prevNews.map(newsItem => (newsItem.id === id ? { ...newsItem, ...data } : newsItem)));
       toast.success('Notícia atualizada com sucesso!');
+      return data;
     } catch (err: any) {
       toast.error('Erro ao atualizar notícia: ' + err.message);
       throw err;
@@ -141,8 +167,7 @@ export const useNews = () => {
         .eq('id', id);
 
       if (error) throw error;
-      
-      await fetchNews();
+      setNews(prevNews => prevNews.filter(newsItem => newsItem.id !== id));
       toast.success('Notícia removida com sucesso!');
     } catch (err: any) {
       toast.error('Erro ao remover notícia: ' + err.message);
@@ -150,148 +175,17 @@ export const useNews = () => {
     }
   };
 
-  const getNewsBySlug = async (slug: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('news')
-        .select(`
-          *,
-          category:news_categories(id, name, color, active, created_at),
-          author:profiles(id, name, email),
-          school:schools(id, name)
-        `)
-        .eq('slug', slug)
-        .single();
-
-      if (error) throw error;
-      
-      return {
-        ...data,
-        category: data.category ? {
-          ...data.category,
-          description: ''
-        } : undefined
-      };
-    } catch (err: any) {
-      toast.error('Notícia não encontrada');
-      throw err;
-    }
-  };
-
-  const getNewsById = async (id: string): Promise<News | null> => {
-    try {
-      const { data, error } = await supabase
-        .from('news')
-        .select(`
-          *,
-          category:news_categories(id, name, color, active, created_at),
-          author:profiles(id, name, email),
-          school:schools(id, name)
-        `)
-        .eq('id', id)
-        .single();
-
-      if (error) throw error;
-      
-      return {
-        ...data,
-        category: data.category ? {
-          ...data.category,
-          description: ''
-        } : undefined
-      };
-    } catch (err: any) {
-      toast.error('Notícia não encontrada');
-      return null;
-    }
-  };
-
-  const incrementViews = async (id: string) => {
-    try {
-      const { error } = await supabase
-        .from('news')
-        .update({ views: news.find(n => n.id === id)?.views || 0 + 1 })
-        .eq('id', id);
-
-      if (error) throw error;
-    } catch (err: any) {
-      console.error('Error incrementing views:', err);
-    }
-  };
-
-  const createCategory = async (categoryData: Omit<NewsCategory, 'id' | 'created_at'>) => {
-    try {
-      const { data, error } = await supabase
-        .from('news_categories')
-        .insert([categoryData])
-        .select()
-        .single();
-
-      if (error) throw error;
-      
-      await fetchCategories();
-      toast.success('Categoria criada com sucesso!');
-      return data;
-    } catch (err: any) {
-      toast.error('Erro ao criar categoria: ' + err.message);
-      throw err;
-    }
-  };
-
-  const updateCategory = async (id: string, categoryData: Partial<Omit<NewsCategory, 'id' | 'created_at'>>) => {
-    try {
-      const { error } = await supabase
-        .from('news_categories')
-        .update(categoryData)
-        .eq('id', id);
-
-      if (error) throw error;
-      
-      await fetchCategories();
-      toast.success('Categoria atualizada com sucesso!');
-    } catch (err: any) {
-      toast.error('Erro ao atualizar categoria: ' + err.message);
-      throw err;
-    }
-  };
-
-  const deleteCategory = async (id: string) => {
-    try {
-      const { error } = await supabase
-        .from('news_categories')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-      
-      await fetchCategories();
-      toast.success('Categoria removida com sucesso!');
-    } catch (err: any) {
-      toast.error('Erro ao remover categoria: ' + err.message);
-      throw err;
-    }
-  };
-
   useEffect(() => {
     fetchNews();
-    fetchCategories();
   }, []);
 
   return {
     news,
-    categories,
     loading,
     error,
     fetchNews,
     createNews,
     updateNews,
     deleteNews,
-    getNewsBySlug,
-    getNewsById,
-    incrementViews,
-    fetchCategories,
-    createCategory,
-    updateCategory,
-    deleteCategory
   };
 };

@@ -4,6 +4,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import type { User } from '@/types/user';
 
+export { User } from '@/types/user';
+
 export const useUsers = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -19,7 +21,21 @@ export const useUsers = () => {
 
       if (error) throw error;
       
-      setUsers(data || []);
+      // Garantir que os tipos estejam corretos
+      const typedUsers: User[] = (data || []).map(profile => ({
+        id: profile.id,
+        email: profile.email,
+        name: profile.name,
+        phone: profile.phone,
+        avatar_url: profile.avatar_url,
+        role: profile.role as 'super_admin' | 'admin' | 'user',
+        active: profile.active,
+        created_at: profile.created_at,
+        updated_at: profile.updated_at,
+        last_access: profile.last_access
+      }));
+      
+      setUsers(typedUsers);
     } catch (err: any) {
       setError(err.message);
       toast.error('Erro ao carregar usuários');
@@ -124,7 +140,19 @@ export const useUsers = () => {
         .single();
 
       if (error) throw error;
-      return data;
+      
+      return {
+        id: data.id,
+        email: data.email,
+        name: data.name,
+        phone: data.phone,
+        avatar_url: data.avatar_url,
+        role: data.role as 'super_admin' | 'admin' | 'user',
+        active: data.active,
+        created_at: data.created_at,
+        updated_at: data.updated_at,
+        last_access: data.last_access
+      };
     } catch (err: any) {
       toast.error('Usuário não encontrado');
       return null;

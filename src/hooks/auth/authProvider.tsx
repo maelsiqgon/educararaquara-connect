@@ -18,7 +18,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         .from('profiles')
         .select('*')
         .eq('id', userId)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error('❌ Error fetching profile:', error);
@@ -36,8 +36,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     console.log('🚀 Setting up auth state listener');
     
+    // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         console.log('🔐 Auth state changed:', event, {
           userEmail: session?.user?.email,
           userId: session?.user?.id
@@ -46,16 +47,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setSession(session);
         setUser(session?.user ?? null);
         
+        // Use setTimeout to avoid infinite loops
         if (session?.user) {
           console.log('👤 User found, fetching profile...');
-          const userProfile = await fetchProfile(session.user.id);
-          setProfile(userProfile);
+          setTimeout(async () => {
+            const userProfile = await fetchProfile(session.user.id);
+            setProfile(userProfile);
+            setLoading(false);
+          }, 0);
         } else {
           console.log('👤 No user, clearing profile');
           setProfile(null);
+          setLoading(false);
         }
-        
-        setLoading(false);
       }
     );
 
@@ -123,29 +127,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       if (data.user) {
         console.log('✅ Login successful for:', data.user.email);
-        
-        // Fetch profile immediately after login
-        const userProfile = await fetchProfile(data.user.id);
-        if (userProfile) {
-          setProfile(userProfile);
-          console.log('✅ Profile set after login:', userProfile);
-        }
-        
-        // Update last access
-        try {
-          await supabase.from('profiles')
-            .update({ last_access: new Date().toISOString() })
-            .eq('id', data.user.id);
-            
-          await supabase.from('activity_logs').insert([{
-            user_id: data.user.id,
-            action: 'login',
-            user_agent: navigator.userAgent,
-          }]);
-        } catch (err) {
-          console.warn('Failed to update last access or log activity:', err);
-        }
-        
         toast.success('Login realizado com sucesso!');
       }
       
@@ -159,18 +140,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signOut = async () => {
     try {
-      if (user) {
-        try {
-          await supabase.from('activity_logs').insert([{
-            user_id: user.id,
-            action: 'logout',
-            user_agent: navigator.userAgent,
-          }]);
-        } catch (err) {
-          console.warn('Failed to log logout activity:', err);
-        }
-      }
-      
       await supabase.auth.signOut();
       toast.success('Logout realizado com sucesso!');
     } catch (error: any) {
@@ -223,9 +192,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       result, 
       role: profile?.role,
       active: profile?.active,
-      hasProfile: !!profile,
-      userId: user?.id,
-      userEmail: user?.email 
+      hasProfile: !!profile
     });
     return result;
   };
