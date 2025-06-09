@@ -5,86 +5,14 @@ import { toast } from 'sonner';
 import { UserPlus, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
-interface AdminResponse {
-  message?: string;
-  user?: any;
-  email?: string;
-  password?: string;
-}
-
-interface SupabaseUser {
-  id: string;
-  email?: string;
-  // outras propriedades do usuário do Supabase
-}
-
-interface UsersResponse {
-  users: SupabaseUser[];
-  aud: string;
-  nextPage?: string | null;
-  lastPage?: number | null;
-  total?: number;
-}
-
 const CreateAdminButton = () => {
   const [isCreating, setIsCreating] = useState(false);
 
   const createAdminUser = async () => {
     setIsCreating(true);
     try {
-      console.log('🚀 Creating admin user...');
+      console.log('🚀 Creating admin user via edge function...');
       
-      // First check if admin already exists by checking auth.users
-      const { data: existingUsers, error: usersError } = await supabase.auth.admin.listUsers();
-      
-      let adminExists = false;
-      let adminUserId = null;
-      
-      if (!usersError && existingUsers?.users && Array.isArray(existingUsers.users)) {
-        const adminUser = existingUsers.users.find((u: SupabaseUser) => u.email === 'admin@araraquara.sp.gov.br');
-        if (adminUser) {
-          adminExists = true;
-          adminUserId = adminUser.id;
-          console.log('👤 Admin user already exists:', adminUser.id);
-        }
-      }
-
-      if (adminExists && adminUserId) {
-        // Check if super_admin role exists
-        const { data: adminRole } = await supabase
-          .from('user_school_roles')
-          .select('*')
-          .eq('user_id', adminUserId)
-          .eq('role', 'super_admin')
-          .single();
-
-        if (!adminRole) {
-          console.log('➕ Adding super_admin role to existing user...');
-          const { error: roleError } = await supabase
-            .from('user_school_roles')
-            .insert([{
-              user_id: adminUserId,
-              school_id: null,
-              role: 'super_admin',
-              active: true
-            }]);
-
-          if (roleError) {
-            console.error('❌ Error adding super_admin role:', roleError);
-            toast.error('Erro ao adicionar role de super admin');
-          } else {
-            console.log('✅ Super admin role added successfully');
-            toast.success('Role de super admin adicionada ao usuário existente!');
-          }
-        } else {
-          console.log('✅ Admin user already has super_admin role');
-          toast.info('Usuário admin já existe com role de super_admin. Use: admin@araraquara.sp.gov.br / admin123456');
-        }
-        return;
-      }
-
-      // Create new admin user via edge function
-      console.log('🔧 Creating admin via edge function...');
       const response = await fetch('https://epxmtbwmmptaricbiyjw.supabase.co/functions/v1/create-admin', {
         method: 'POST',
         headers: {
@@ -97,28 +25,22 @@ const CreateAdminButton = () => {
       console.log('📡 Edge function response status:', response.status);
       
       if (response.ok) {
-        const data: AdminResponse = await response.json();
+        const data = await response.json();
         console.log('✅ Admin user created successfully:', data);
-        
-        // Verificar se a resposta contém os dados esperados
-        if (data && data.email && data.password) {
-          toast.success(`Usuário admin criado! Email: ${data.email} | Senha: ${data.password}`);
-        } else {
-          toast.success('Usuário admin criado com sucesso!');
-        }
+        toast.success('Usuário admin criado com sucesso! Use: admin@araraquara.sp.gov.br / admin123456');
       } else {
         const errorText = await response.text();
         console.error('❌ Edge function error response:', errorText);
         
-        if (errorText.includes('already registered') || errorText.includes('already exists')) {
+        if (errorText.includes('already exists')) {
           toast.info('Usuário admin já existe. Use: admin@araraquara.sp.gov.br / admin123456');
         } else {
-          toast.error('Erro ao criar usuário admin. Verifique o console para detalhes.');
+          toast.error('Erro ao criar usuário admin.');
         }
       }
     } catch (error) {
       console.error('❌ Error creating admin user:', error);
-      toast.error('Erro ao criar usuário admin. Verifique o console para detalhes.');
+      toast.error('Erro ao criar usuário admin.');
     } finally {
       setIsCreating(false);
     }

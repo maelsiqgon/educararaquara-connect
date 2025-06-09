@@ -13,18 +13,17 @@ const AdminProtected: React.FC<AdminProtectedProps> = ({
   children, 
   requiredPermission 
 }) => {
-  const { user, loading, isSuperAdmin, userRoles } = useAuth();
+  const { user, loading, isSuperAdmin, isAdmin } = useAuth();
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
   
   useEffect(() => {
     const checkAuthorization = () => {
-      console.log('🛡️ AdminProtected simple check:', { 
+      console.log('🛡️ AdminProtected checking authorization:', { 
         userEmail: user?.email,
         userId: user?.id, 
-        loading, 
-        userRolesLength: userRoles.length,
-        userRoles: userRoles,
-        isSuperAdminResult: isSuperAdmin()
+        loading,
+        isSuperAdminResult: isSuperAdmin(),
+        isAdminResult: isAdmin()
       });
       
       if (loading) {
@@ -38,25 +37,22 @@ const AdminProtected: React.FC<AdminProtectedProps> = ({
         return;
       }
       
-      // Simple check: is the user a super admin?
-      const isSuper = isSuperAdmin();
-      console.log('🔍 Simple super admin check result:', isSuper);
+      const hasAccess = isSuperAdmin() || isAdmin();
+      console.log('🔍 Access check result:', hasAccess);
       
-      if (isSuper) {
-        console.log('✅ User is super admin, granting access');
+      if (hasAccess) {
+        console.log('✅ User has admin access, granting access');
         setIsAuthorized(true);
       } else {
-        console.log('❌ User is not super admin, denying access');
-        console.log('🔍 Available roles:', userRoles);
+        console.log('❌ User does not have admin access, denying access');
         toast.error("Você não tem permissão para acessar esta área administrativa");
         setIsAuthorized(false);
       }
     };
     
     checkAuthorization();
-  }, [user, loading, isSuperAdmin, userRoles]);
+  }, [user, loading, isSuperAdmin, isAdmin]);
   
-  // Loading state
   if (loading || isAuthorized === null) {
     console.log('⏳ Showing loading state');
     return (

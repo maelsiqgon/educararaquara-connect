@@ -32,7 +32,6 @@ export const useUserContacts = (userId?: string) => {
 
   const saveContacts = async (userId: string, contactsData: UserContact[]) => {
     try {
-      // Primeiro, deletar todos os contatos existentes do usuário
       const { error: deleteError } = await supabase
         .from('user_contacts')
         .delete()
@@ -40,7 +39,6 @@ export const useUserContacts = (userId?: string) => {
 
       if (deleteError) throw deleteError;
 
-      // Depois, inserir os novos contatos
       if (contactsData.length > 0) {
         const contactsToInsert = contactsData.map(contact => ({
           user_id: userId,

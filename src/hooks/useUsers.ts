@@ -1,9 +1,8 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import type { User, UserRole, UserContact } from '@/types/user';
-
-export type { User, UserRole } from '@/types/user';
+import type { User, UserContact } from '@/types/user';
 
 export const useUsers = () => {
   const [users, setUsers] = useState<User[]>([]);
@@ -15,30 +14,12 @@ export const useUsers = () => {
       setLoading(true);
       const { data, error } = await supabase
         .from('profiles')
-        .select(`
-          *,
-          userRoles:user_school_roles(
-            id,
-            school_id,
-            role,
-            active,
-            user_id,
-            created_at,
-            school:schools(id, name)
-          )
-        `)
+        .select('*')
         .order('name');
 
       if (error) throw error;
       
-      // Mapear os dados e adicionar aliases para compatibilidade
-      const usersWithRoles = (data || []).map(user => ({
-        ...user,
-        roles: user.userRoles || [], // Alias para compatibilidade
-        contacts: [] // Por enquanto, array vazio
-      }));
-      
-      setUsers(usersWithRoles);
+      setUsers(data || []);
     } catch (err: any) {
       setError(err.message);
       toast.error('Erro ao carregar usuários');
@@ -50,29 +31,26 @@ export const useUsers = () => {
   const createUser = async (userData: {
     email: string;
     name: string;
-    cpf?: string;
     phone?: string;
-    address?: string;
-    registration?: string;
+    role?: string;
     active?: boolean;
   }, contacts?: UserContact[]) => {
     try {
       const userId = crypto.randomUUID();
       
-      // Criar o usuário
       const { data, error } = await supabase
         .from('profiles')
         .insert([{
           id: userId,
           ...userData,
-          active: userData.active ?? true
+          active: userData.active ?? true,
+          role: userData.role ?? 'user'
         }])
         .select()
         .single();
 
       if (error) throw error;
 
-      // Por enquanto, apenas logar os contatos até resolver os tipos
       if (contacts && contacts.length > 0) {
         console.log('Contatos para salvar após criação:', contacts);
       }
@@ -86,17 +64,8 @@ export const useUsers = () => {
     }
   };
 
-  const updateUser = async (id: string, userData: Partial<{
-    email: string;
-    name: string;
-    cpf?: string;
-    phone?: string;
-    address?: string;
-    registration?: string;
-    active?: boolean;
-  }>, contacts?: UserContact[]) => {
+  const updateUser = async (id: string, userData: Partial<User>, contacts?: UserContact[]) => {
     try {
-      // Atualizar o usuário
       const { error } = await supabase
         .from('profiles')
         .update(userData)
@@ -104,7 +73,6 @@ export const useUsers = () => {
 
       if (error) throw error;
 
-      // Por enquanto, apenas logar os contatos até resolver os tipos
       if (contacts) {
         console.log('Contatos para salvar após atualização:', contacts);
       }
@@ -134,45 +102,6 @@ export const useUsers = () => {
     }
   };
 
-  const assignUserToSchool = async (userId: string, schoolId: string, role: UserRole['role']) => {
-    try {
-      const { error } = await supabase
-        .from('user_school_roles')
-        .insert({
-          user_id: userId,
-          school_id: schoolId,
-          role,
-          active: true
-        });
-
-      if (error) throw error;
-      
-      await fetchUsers();
-      toast.success('Usuário vinculado à escola com sucesso!');
-    } catch (err: any) {
-      toast.error('Erro ao vincular usuário à escola: ' + err.message);
-      throw err;
-    }
-  };
-
-  const removeUserFromSchool = async (userId: string, schoolId: string) => {
-    try {
-      const { error } = await supabase
-        .from('user_school_roles')
-        .delete()
-        .eq('user_id', userId)
-        .eq('school_id', schoolId);
-
-      if (error) throw error;
-      
-      await fetchUsers();
-      toast.success('Usuário removido da escola com sucesso!');
-    } catch (err: any) {
-      toast.error('Erro ao remover usuário da escola: ' + err.message);
-      throw err;
-    }
-  };
-
   const toggleUserStatus = async (id: string, active: boolean) => {
     try {
       const { error } = await supabase
@@ -194,84 +123,15 @@ export const useUsers = () => {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select(`
-          *,
-          userRoles:user_school_roles(
-            id,
-            school_id,
-            role,
-            active,
-            user_id,
-            created_at,
-            school:schools(id, name)
-          )
-        `)
+        .select('*')
         .eq('id', id)
         .single();
 
       if (error) throw error;
-      return {
-        ...data,
-        roles: data.userRoles || [],
-        contacts: []
-      };
+      return data;
     } catch (err: any) {
       toast.error('Usuário não encontrado');
       return null;
-    }
-  };
-
-  const bulkUpdateUsers = async (userIds: string[], updates: Partial<User>) => {
-    try {
-      const { error } = await supabase
-        .from('profiles')
-        .update(updates)
-        .in('id', userIds);
-
-      if (error) throw error;
-      
-      await fetchUsers();
-      toast.success(`${userIds.length} usuários atualizados com sucesso!`);
-    } catch (err: any) {
-      toast.error('Erro ao atualizar usuários em lote: ' + err.message);
-      throw err;
-    }
-  };
-
-  const blockUser = async (id: string, reason?: string) => {
-    try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ 
-          active: false,
-          last_access: new Date().toISOString()
-        })
-        .eq('id', id);
-
-      if (error) throw error;
-      
-      await fetchUsers();
-      toast.success('Usuário bloqueado com sucesso!');
-    } catch (err: any) {
-      toast.error('Erro ao bloquear usuário: ' + err.message);
-      throw err;
-    }
-  };
-
-  const unblockUser = async (id: string) => {
-    try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ active: true })
-        .eq('id', id);
-
-      if (error) throw error;
-      
-      await fetchUsers();
-      toast.success('Usuário desbloqueado com sucesso!');
-    } catch (err: any) {
-      toast.error('Erro ao desbloquear usuário: ' + err.message);
-      throw err;
     }
   };
 
@@ -287,12 +147,7 @@ export const useUsers = () => {
     createUser,
     updateUser,
     deleteUser,
-    assignUserToSchool,
-    removeUserFromSchool,
     toggleUserStatus,
-    getUserById,
-    bulkUpdateUsers,
-    blockUser,
-    unblockUser
+    getUserById
   };
 };
