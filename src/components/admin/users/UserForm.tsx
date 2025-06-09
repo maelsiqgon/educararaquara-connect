@@ -5,10 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { useUsers, User } from '@/hooks/useUsers';
+import { useUsers } from '@/hooks/useUsers';
 import { validateCPF, formatCPF } from '@/utils/cpfValidator';
 import UserContactsForm from './UserContactsForm';
-import type { UserContact } from '@/types/user';
+import type { User, UserContact } from '@/types/user';
 
 interface UserFormProps {
   user?: User;

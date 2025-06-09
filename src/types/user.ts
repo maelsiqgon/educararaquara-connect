@@ -20,5 +20,8 @@ export interface User {
   created_at: string;
   updated_at: string;
   last_access?: string;
+  cpf?: string;
+  address?: string;
+  registration?: string;
   contacts?: UserContact[];
 }

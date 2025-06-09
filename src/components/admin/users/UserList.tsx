@@ -18,7 +18,7 @@ const UserList = () => {
   const filteredUsers = users.filter(user => {
     const matchesSearch = user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          user.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesRole = roleFilter === 'all' || user.userRoles?.some(role => role.role === roleFilter);
+    const matchesRole = roleFilter === 'all' || user.role === roleFilter;
     return matchesSearch && matchesRole;
   });
 
@@ -160,21 +160,15 @@ const UserList = () => {
                 </div>
               )}
 
-              {user.userRoles && user.userRoles.length > 0 && (
-                <div className="space-y-2">
-                  <div className="flex items-center gap-1 text-sm text-gray-600">
-                    <Shield className="h-4 w-4" />
-                    <span>Funções:</span>
-                  </div>
-                  <div className="flex flex-wrap gap-1">
-                    {user.userRoles.map((userRole, index) => (
-                      <Badge key={index} className={getRoleBadgeColor(userRole.role)}>
-                        {getRoleLabel(userRole.role)}
-                      </Badge>
-                    ))}
-                  </div>
+              <div className="space-y-2">
+                <div className="flex items-center gap-1 text-sm text-gray-600">
+                  <Shield className="h-4 w-4" />
+                  <span>Função:</span>
                 </div>
-              )}
+                <Badge className={getRoleBadgeColor(user.role)}>
+                  {getRoleLabel(user.role)}
+                </Badge>
+              </div>
 
               {user.last_access && (
                 <div className="text-xs text-gray-500">
