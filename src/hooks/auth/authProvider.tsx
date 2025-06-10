@@ -18,7 +18,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         .from('profiles')
         .select('*')
         .eq('id', userId)
-        .maybeSingle();
+        .single();
 
       if (error) {
         console.error('❌ Error fetching profile:', error);
@@ -47,7 +47,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setSession(session);
         setUser(session?.user ?? null);
         
-        // Use setTimeout to avoid infinite loops
         if (session?.user) {
           console.log('👤 User found, fetching profile...');
           setTimeout(async () => {

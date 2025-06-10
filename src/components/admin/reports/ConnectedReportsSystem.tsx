@@ -32,7 +32,7 @@ const ConnectedReportsSystem = () => {
   const loadReportData = async () => {
     setIsGenerating(true);
     try {
-      const data = await generateReport();
+      const data = await generateReport('general');
       if (data) {
         setReportData(data);
       }
@@ -97,46 +97,6 @@ const ConnectedReportsSystem = () => {
           </Button>
         </div>
       </div>
-
-      {/* Filters */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Filtros</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className="text-sm font-medium">Período</label>
-              <DatePickerWithRange
-                date={dateRange}
-                onDateChange={setDateRange}
-              />
-            </div>
-            
-            <div>
-              <label className="text-sm font-medium">Tipo de Relatório</label>
-              <Select value={reportType} onValueChange={setReportType}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="general">Geral</SelectItem>
-                  <SelectItem value="schools">Escolas</SelectItem>
-                  <SelectItem value="users">Usuários</SelectItem>
-                  <SelectItem value="news">Notícias</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="flex items-end">
-              <Button className="w-full">
-                <TrendingUp className="h-4 w-4 mr-2" />
-                Aplicar Filtros
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">

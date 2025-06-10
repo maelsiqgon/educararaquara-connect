@@ -18,7 +18,7 @@ const ReportsModule = () => {
   }, []);
 
   const loadReport = async () => {
-    const data = await generateReport();
+    const data = await generateReport('general');
     setReportData(data);
   };
 
