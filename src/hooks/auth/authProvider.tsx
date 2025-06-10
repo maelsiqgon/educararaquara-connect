@@ -49,11 +49,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         
         if (session?.user) {
           console.log('👤 User found, fetching profile...');
+          // Use setTimeout to prevent blocking the auth state change
           setTimeout(async () => {
             const userProfile = await fetchProfile(session.user.id);
             setProfile(userProfile);
             setLoading(false);
-          }, 0);
+          }, 100);
         } else {
           console.log('👤 No user, clearing profile');
           setProfile(null);
@@ -90,29 +91,44 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signUp = async (email: string, password: string, userData?: any) => {
     try {
-      const { error } = await supabase.auth.signUp({
+      setLoading(true);
+      console.log('🔑 Attempting signup with:', email);
+      
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          data: userData || {}
+          data: userData || {},
+          emailRedirectTo: `${window.location.origin}/`
         }
       });
       
-      if (!error) {
+      if (error) {
+        console.error('❌ Signup error:', error);
+        toast.error('Erro ao criar usuário: ' + error.message);
+        return { error };
+      }
+
+      if (data.user) {
+        console.log('✅ Signup successful for:', data.user.email);
         toast.success('Usuário criado com sucesso!');
       }
       
-      return { error };
+      return { error: null };
     } catch (error: any) {
-      console.error('SignUp error:', error);
+      console.error('❌ SignUp error:', error);
       toast.error('Erro ao criar usuário: ' + error.message);
       return { error };
+    } finally {
+      setLoading(false);
     }
   };
 
   const signIn = async (email: string, password: string) => {
     try {
+      setLoading(true);
       console.log('🔑 Attempting login with:', email);
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
@@ -129,21 +145,35 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         toast.success('Login realizado com sucesso!');
       }
       
-      return { error };
+      return { error: null };
     } catch (error: any) {
       console.error('❌ SignIn error:', error);
       toast.error('Erro ao fazer login: ' + error.message);
       return { error };
+    } finally {
+      setLoading(false);
     }
   };
 
   const signOut = async () => {
     try {
-      await supabase.auth.signOut();
-      toast.success('Logout realizado com sucesso!');
+      setLoading(true);
+      console.log('🚪 Signing out...');
+      
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        console.error('❌ Signout error:', error);
+        toast.error('Erro ao fazer logout: ' + error.message);
+      } else {
+        console.log('✅ Signout successful');
+        toast.success('Logout realizado com sucesso!');
+      }
     } catch (error: any) {
-      console.error('SignOut error:', error);
+      console.error('❌ SignOut error:', error);
       toast.error('Erro ao fazer logout: ' + error.message);
+    } finally {
+      setLoading(false);
     }
   };
 

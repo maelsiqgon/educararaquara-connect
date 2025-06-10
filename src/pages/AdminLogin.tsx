@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import AuthForm from "@/components/admin/auth/AuthForm";
+import CreateAdminButton from "@/components/admin/CreateAdminButton";
 
 const AdminLogin = () => {
   const [email, setEmail] = useState("admin@araraquara.sp.gov.br");
@@ -19,8 +20,8 @@ const AdminLogin = () => {
       hasProfile: !!profile,
       userEmail: user?.email,
       profileRole: profile?.role,
-      isSuperAdminResult: isSuperAdmin(),
-      isAdminResult: isAdmin()
+      isSuperAdminResult: profile ? isSuperAdmin() : false,
+      isAdminResult: profile ? isAdmin() : false
     });
 
     if (!loading && user && profile) {
@@ -78,6 +79,8 @@ const AdminLogin = () => {
           <h1 className="text-3xl font-bold text-education-primary">EducAraraquara</h1>
           <p className="mt-2 text-education-gray">Área Administrativa</p>
         </div>
+        
+        <CreateAdminButton />
         
         <AuthForm
           title="Login Administrativo"
