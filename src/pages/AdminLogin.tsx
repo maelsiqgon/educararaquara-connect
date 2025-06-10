@@ -24,13 +24,16 @@ const AdminLogin = () => {
       isAdminResult: profile ? isAdmin() : false
     });
 
+    // Aguardar que o loading termine e tenhamos tanto user quanto profile
     if (!loading && user && profile) {
       const hasAdminAccess = isSuperAdmin() || isAdmin();
       console.log('🔍 Admin access check:', hasAdminAccess);
       
       if (hasAdminAccess) {
         console.log('✅ User has admin access, redirecting to admin panel');
-        navigate("/admin", { replace: true });
+        setTimeout(() => {
+          navigate("/admin", { replace: true });
+        }, 1000); // Dar tempo para o toast aparecer
       } else {
         console.log('❌ User does not have admin access');
         toast.error("Você não tem permissão para acessar esta área administrativa");

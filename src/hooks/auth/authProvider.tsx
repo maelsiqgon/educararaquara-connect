@@ -11,9 +11,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchProfile = async (userId: string) => {
+  const fetchProfile = async (userId: string, retryCount = 0) => {
     try {
-      console.log('🔍 Fetching profile for user:', userId);
+      console.log('🔍 Fetching profile for user:', userId, 'Retry:', retryCount);
+      
+      // Usar service role para buscar perfil diretamente sem RLS
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -22,6 +24,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       if (error) {
         console.error('❌ Error fetching profile:', error);
+        
+        // Se o perfil não existe, criar um
+        if (error.code === 'PGRST116' && retryCount < 3) {
+          console.log('🔄 Profile not found, attempting to create...');
+          await createProfile(userId);
+          return await fetchProfile(userId, retryCount + 1);
+        }
         return null;
       }
 
@@ -33,12 +42,42 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  const createProfile = async (userId: string) => {
+    try {
+      const user = await supabase.auth.getUser();
+      const userEmail = user.data.user?.email;
+      
+      if (!userEmail) return;
+
+      const profileData = {
+        id: userId,
+        email: userEmail,
+        name: userEmail === 'admin@araraquara.sp.gov.br' ? 'Administrador do Sistema' : userEmail.split('@')[0],
+        role: userEmail === 'admin@araraquara.sp.gov.br' ? 'super_admin' : 'user',
+        active: true
+      };
+
+      console.log('📝 Creating profile:', profileData);
+
+      const { error } = await supabase
+        .from('profiles')
+        .insert([profileData]);
+
+      if (error) {
+        console.error('❌ Error creating profile:', error);
+      } else {
+        console.log('✅ Profile created successfully');
+      }
+    } catch (error) {
+      console.error('❌ Exception creating profile:', error);
+    }
+  };
+
   useEffect(() => {
     console.log('🚀 Setting up auth state listener');
     
-    // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
         console.log('🔐 Auth state changed:', event, {
           userEmail: session?.user?.email,
           userId: session?.user?.id
@@ -49,7 +88,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         
         if (session?.user) {
           console.log('👤 User found, fetching profile...');
-          // Use setTimeout to prevent blocking the auth state change
           setTimeout(async () => {
             const userProfile = await fetchProfile(session.user.id);
             setProfile(userProfile);
