@@ -1,10 +1,9 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import type { User } from '@/types/user';
 
-export { User } from '@/types/user';
+export type { User } from '@/types/user';
 
 export const useUsers = () => {
   const [users, setUsers] = useState<User[]>([]);

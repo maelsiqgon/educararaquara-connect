@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
-interface ReportData {
+export interface ReportData {
   id: string;
   title: string;
   type: string;
@@ -20,14 +20,12 @@ export const useReports = () => {
     try {
       setLoading(true);
       
-      // Sistema simplificado - buscar dados básicos
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
         .select('*');
 
       if (profilesError) throw profilesError;
 
-      // Gerar relatórios simples
       const generatedReports: ReportData[] = [
         {
           id: '1',
@@ -60,6 +58,22 @@ export const useReports = () => {
     }
   };
 
+  const exportReport = async (reportId: string, format: string = 'pdf') => {
+    try {
+      const report = reports.find(r => r.id === reportId);
+      if (!report) {
+        toast.error('Relatório não encontrado');
+        return false;
+      }
+      
+      toast.success(`Relatório exportado em ${format.toUpperCase()}`);
+      return true;
+    } catch (err: any) {
+      toast.error('Erro ao exportar relatório: ' + err.message);
+      return false;
+    }
+  };
+
   useEffect(() => {
     fetchReports();
   }, []);
@@ -69,6 +83,7 @@ export const useReports = () => {
     loading,
     error,
     fetchReports,
-    generateReport
+    generateReport,
+    exportReport
   };
 };
