@@ -2,9 +2,9 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { ReportData } from '@/types/reports';
+import type { ReportData } from '@/types/reports';
 
-export { ReportData } from '@/types/reports';
+export type { ReportData } from '@/types/reports';
 
 export const useReports = () => {
   const [reports, setReports] = useState<ReportData[]>([]);
@@ -29,6 +29,26 @@ export const useReports = () => {
         .from('news')
         .select('*');
 
+      // Mapear tipos de escola corretamente
+      const schoolTypeMapping = {
+        'EMEI': 'Infantil',
+        'EMEF': 'Fundamental',
+        'CEMEI': 'Infantil',
+        'Creche': 'Infantil'
+      };
+
+      // Contar escolas por tipo mapeado
+      const schoolsByTypeCounts = {
+        'Infantil': 0,
+        'Fundamental': 0,
+        'Médio': 0
+      };
+
+      schoolsData?.forEach(school => {
+        const mappedType = schoolTypeMapping[school.type as keyof typeof schoolTypeMapping] || 'Fundamental';
+        schoolsByTypeCounts[mappedType as keyof typeof schoolsByTypeCounts]++;
+      });
+
       // Criar dados do relatório
       const reportData: ReportData = {
         id: '1',
@@ -41,9 +61,9 @@ export const useReports = () => {
         totalStudents: 0,
         totalNews: newsData?.length || 0,
         schoolsByType: [
-          { type: 'Infantil', count: schoolsData?.filter(s => s.type === 'infantil').length || 0 },
-          { type: 'Fundamental', count: schoolsData?.filter(s => s.type === 'fundamental').length || 0 },
-          { type: 'Médio', count: schoolsData?.filter(s => s.type === 'medio').length || 0 }
+          { type: 'Infantil', count: schoolsByTypeCounts.Infantil },
+          { type: 'Fundamental', count: schoolsByTypeCounts.Fundamental },
+          { type: 'Médio', count: schoolsByTypeCounts.Médio }
         ],
         usersByRole: [
           { role: 'super_admin', count: profilesData?.filter(p => p.role === 'super_admin').length || 0 },
