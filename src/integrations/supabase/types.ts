@@ -9,50 +9,6 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      activity_logs: {
-        Row: {
-          action: string
-          created_at: string
-          details: Json | null
-          id: string
-          ip_address: unknown | null
-          resource_id: string | null
-          resource_type: string | null
-          user_agent: string | null
-          user_id: string | null
-        }
-        Insert: {
-          action: string
-          created_at?: string
-          details?: Json | null
-          id?: string
-          ip_address?: unknown | null
-          resource_id?: string | null
-          resource_type?: string | null
-          user_agent?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          action?: string
-          created_at?: string
-          details?: Json | null
-          id?: string
-          ip_address?: unknown | null
-          resource_id?: string | null
-          resource_type?: string | null
-          user_agent?: string | null
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "activity_logs_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       agenda_events: {
         Row: {
           all_day: boolean | null
@@ -606,37 +562,28 @@ export type Database = {
       profiles: {
         Row: {
           active: boolean
-          avatar_url: string | null
           created_at: string
           email: string
           id: string
-          last_access: string | null
           name: string
-          phone: string | null
           role: string
           updated_at: string
         }
         Insert: {
           active?: boolean
-          avatar_url?: string | null
           created_at?: string
           email: string
           id: string
-          last_access?: string | null
           name: string
-          phone?: string | null
           role?: string
           updated_at?: string
         }
         Update: {
           active?: boolean
-          avatar_url?: string | null
           created_at?: string
           email?: string
           id?: string
-          last_access?: string | null
           name?: string
-          phone?: string | null
           role?: string
           updated_at?: string
         }
@@ -857,12 +804,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      is_admin: {
-        Args: { user_uuid?: string }
+      get_user_role: {
+        Args: { user_id?: string }
+        Returns: string
+      }
+      is_admin_user: {
+        Args: { user_id?: string }
         Returns: boolean
       }
       is_super_admin: {
-        Args: { user_uuid?: string }
+        Args: { user_id?: string }
         Returns: boolean
       }
     }

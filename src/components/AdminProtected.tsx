@@ -13,49 +13,43 @@ const AdminProtected: React.FC<AdminProtectedProps> = ({ children }) => {
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
   
   useEffect(() => {
-    const checkAuthorization = () => {
-      console.log('🛡️ AdminProtected checking authorization:', { 
-        userEmail: user?.email,
-        userId: user?.id, 
-        loading,
-        hasProfile: !!profile,
-        profileRole: profile?.role,
-        profileActive: profile?.active,
-        isSuperAdminResult: profile ? isSuperAdmin() : false,
-        isAdminResult: profile ? isAdmin() : false
-      });
-      
-      if (loading) {
-        console.log('⏳ Still loading auth state...');
-        return;
-      }
-      
-      if (!user) {
-        console.log('❌ No user found, denying access');
-        setIsAuthorized(false);
-        return;
-      }
-
-      if (!profile) {
-        console.log('❌ No profile found, denying access');
-        setIsAuthorized(false);
-        return;
-      }
-      
-      const hasAccess = isSuperAdmin() || isAdmin();
-      console.log('🔍 Access check result:', hasAccess);
-      
-      if (hasAccess) {
-        console.log('✅ User has admin access, granting access');
-        setIsAuthorized(true);
-      } else {
-        console.log('❌ User does not have admin access, denying access');
-        toast.error("Você não tem permissão para acessar esta área administrativa");
-        setIsAuthorized(false);
-      }
-    };
+    console.log('🛡️ AdminProtected checking authorization:', { 
+      userEmail: user?.email,
+      userId: user?.id, 
+      loading,
+      hasProfile: !!profile,
+      profileRole: profile?.role,
+      profileActive: profile?.active
+    });
     
-    checkAuthorization();
+    if (loading) {
+      console.log('⏳ Still loading auth state...');
+      return;
+    }
+    
+    if (!user) {
+      console.log('❌ No user found, denying access');
+      setIsAuthorized(false);
+      return;
+    }
+
+    if (!profile) {
+      console.log('❌ No profile found, denying access');
+      setIsAuthorized(false);
+      return;
+    }
+    
+    const hasAccess = isSuperAdmin() || isAdmin();
+    console.log('🔍 Access check result:', hasAccess);
+    
+    if (hasAccess) {
+      console.log('✅ User has admin access, granting access');
+      setIsAuthorized(true);
+    } else {
+      console.log('❌ User does not have admin access, denying access');
+      toast.error("Você não tem permissão para acessar esta área administrativa");
+      setIsAuthorized(false);
+    }
   }, [user, profile, loading, isSuperAdmin, isAdmin]);
   
   if (loading || isAuthorized === null) {

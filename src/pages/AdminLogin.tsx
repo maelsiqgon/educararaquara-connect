@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import AuthForm from "@/components/admin/auth/AuthForm";
-import CreateAdminButton from "@/components/admin/CreateAdminButton";
 
 const AdminLogin = () => {
   const [email, setEmail] = useState("admin@araraquara.sp.gov.br");
@@ -20,20 +19,16 @@ const AdminLogin = () => {
       hasProfile: !!profile,
       userEmail: user?.email,
       profileRole: profile?.role,
-      isSuperAdminResult: profile ? isSuperAdmin() : false,
-      isAdminResult: profile ? isAdmin() : false
+      profileActive: profile?.active
     });
 
-    // Aguardar que o loading termine e tenhamos tanto user quanto profile
     if (!loading && user && profile) {
       const hasAdminAccess = isSuperAdmin() || isAdmin();
       console.log('🔍 Admin access check:', hasAdminAccess);
       
       if (hasAdminAccess) {
         console.log('✅ User has admin access, redirecting to admin panel');
-        setTimeout(() => {
-          navigate("/admin", { replace: true });
-        }, 1000); // Dar tempo para o toast aparecer
+        navigate("/admin", { replace: true });
       } else {
         console.log('❌ User does not have admin access');
         toast.error("Você não tem permissão para acessar esta área administrativa");
@@ -54,7 +49,6 @@ const AdminLogin = () => {
         toast.error("Credenciais inválidas. Verifique email e senha.");
       } else {
         console.log('✅ Login successful, waiting for profile...');
-        // O redirecionamento será feito pelo useEffect quando o profile for carregado
       }
     } catch (error) {
       console.error('❌ Login error:', error);
@@ -82,8 +76,6 @@ const AdminLogin = () => {
           <h1 className="text-3xl font-bold text-education-primary">EducAraraquara</h1>
           <p className="mt-2 text-education-gray">Área Administrativa</p>
         </div>
-        
-        <CreateAdminButton />
         
         <AuthForm
           title="Login Administrativo"
