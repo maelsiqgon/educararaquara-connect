@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -97,7 +98,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       
       if (error) {
         console.error('❌ Login error:', error);
-        toast.error('Erro ao fazer login: ' + error.message);
+        if (error.message.includes('Invalid login credentials')) {
+          toast.error('Credenciais inválidas. Verifique email e senha.');
+        } else {
+          toast.error('Erro ao fazer login: ' + error.message);
+        }
         return { error };
       }
 
@@ -139,11 +144,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const isSuperAdmin = () => {
+    console.log('🔍 Checking super admin status:', { profile });
     if (!profile) return false;
     return profile.role === 'super_admin' && profile.active === true;
   };
 
   const isAdmin = () => {
+    console.log('🔍 Checking admin status:', { profile });
     if (!profile) return false;
     return ['admin', 'super_admin'].includes(profile.role) && profile.active === true;
   };

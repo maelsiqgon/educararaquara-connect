@@ -22,7 +22,6 @@ const UserForm: React.FC<UserFormProps> = ({ user, onSuccess, onCancel }) => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    phone: '',
     role: 'user' as 'super_admin' | 'admin' | 'user',
     active: true
   });
@@ -32,7 +31,6 @@ const UserForm: React.FC<UserFormProps> = ({ user, onSuccess, onCancel }) => {
       setFormData({
         name: user.name || '',
         email: user.email || '',
-        phone: user.phone || '',
         role: user.role,
         active: user.active
       });
@@ -94,29 +92,18 @@ const UserForm: React.FC<UserFormProps> = ({ user, onSuccess, onCancel }) => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="phone">Telefone</Label>
-              <Input
-                id="phone"
-                value={formData.phone}
-                onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="role">Função</Label>
-              <Select value={formData.role} onValueChange={(value: any) => setFormData(prev => ({ ...prev, role: value }))}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione a função" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="user">Usuário</SelectItem>
-                  <SelectItem value="admin">Administrador</SelectItem>
-                  <SelectItem value="super_admin">Super Admin</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="role">Função</Label>
+            <Select value={formData.role} onValueChange={(value: any) => setFormData(prev => ({ ...prev, role: value }))}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione a função" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="user">Usuário</SelectItem>
+                <SelectItem value="admin">Administrador</SelectItem>
+                <SelectItem value="super_admin">Super Admin</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="flex items-center space-x-2">
