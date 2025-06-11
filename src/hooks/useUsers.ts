@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -25,13 +26,10 @@ export const useUsers = () => {
         id: profile.id,
         email: profile.email,
         name: profile.name,
-        phone: profile.phone,
-        avatar_url: profile.avatar_url,
         role: profile.role as 'super_admin' | 'admin' | 'user',
         active: profile.active,
         created_at: profile.created_at,
-        updated_at: profile.updated_at,
-        last_access: profile.last_access
+        updated_at: profile.updated_at
       }));
       
       setUsers(typedUsers);
@@ -46,7 +44,6 @@ export const useUsers = () => {
   const createUser = async (userData: {
     email: string;
     name: string;
-    phone?: string;
     role?: string;
     active?: boolean;
   }) => {
@@ -67,7 +64,6 @@ export const useUsers = () => {
           .from('profiles')
           .update({
             name: userData.name,
-            phone: userData.phone || null,
             role: userData.role || 'user',
             active: userData.active !== false
           })
@@ -144,13 +140,10 @@ export const useUsers = () => {
         id: data.id,
         email: data.email,
         name: data.name,
-        phone: data.phone,
-        avatar_url: data.avatar_url,
         role: data.role as 'super_admin' | 'admin' | 'user',
         active: data.active,
         created_at: data.created_at,
-        updated_at: data.updated_at,
-        last_access: data.last_access
+        updated_at: data.updated_at
       };
     } catch (err: any) {
       toast.error('Usuário não encontrado');
